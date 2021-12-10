@@ -60,7 +60,7 @@ def stream_graph():
                          hidden=hidden)
 
     # to tweak physics related options
-    # net.show_buttons(filter_=['physics'])
+    net.show_buttons(filter_=['physics'])
     net.write_html(html_fn)
 
     graph_utils.add_js_click_functionality(net, html_fn)
