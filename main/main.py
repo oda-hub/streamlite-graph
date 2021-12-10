@@ -24,7 +24,7 @@ def stream_graph():
 
     pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
     net = Network(
-        height='750px', width='100%',
+        height='500px', width='100%',
     )
 
     for node in pydot_graph.get_nodes():
