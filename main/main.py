@@ -27,6 +27,9 @@ def stream_graph():
         height='500px', width='100%',
     )
 
+    hidden_nodes_dic = {}
+    hidden_edges = []
+
     for node in pydot_graph.get_nodes():
         id_node = graph_utils.get_id_node(node)
         if id_node is not None:
@@ -37,12 +40,22 @@ def stream_graph():
             hidden = False
             if type_node.startswith('CommandOutput') or type_node.startswith('CommandInput'):
                 hidden = True
-            net.add_node(node.get_name(),
-                         label=type_node,
-                         color=node_configuration['color'],
-                         shape=node_configuration['shape'],
-                         value=node_value,
-                         hidden=hidden)
+            if not hidden:
+                net.add_node(node.get_name(),
+                             label=type_node,
+                             color=node_configuration['color'],
+                             shape=node_configuration['shape'],
+                             value=node_value)
+            else:
+                node_info = dict(
+                    id=node.get_name(),
+                    label=type_node,
+                    color=node_configuration['color'],
+                    shape=node_configuration['shape'],
+                    value=node_value
+                )
+
+                hidden_nodes_dic[node.get_name()] = node_info
 
     # list of edges and simple color change
     for edge in pydot_graph.get_edge_list():
@@ -50,20 +63,28 @@ def stream_graph():
         source_node = edge.get_source()
         dest_node = edge.get_destination()
         hidden = False
-        node_id = (source_node + '_' + dest_node)
+        edge_id = (source_node + '_' + dest_node)
         if edge_label.startswith('isInputOf') or edge_label.startswith('hasOutputs'):
             hidden = True
         if source_node is not None and dest_node is not None:
-            net.add_edge(source_node, dest_node,
-                         id=node_id,
-                         title=edge_label,
-                         hidden=hidden)
+            if not hidden:
+                net.add_edge(source_node, dest_node,
+                             id=edge_id,
+                             title=edge_label)
+            else:
+                edge_info = dict(
+                    source_node=source_node,
+                    dest_node=dest_node,
+                    id=edge_id,
+                    title=edge_label
+                )
+                hidden_edges.append(edge_info)
 
     # to tweak physics related options
     net.show_buttons(filter_=['physics'])
     net.write_html(html_fn)
 
-    graph_utils.add_js_click_functionality(net, html_fn)
+    graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)
 
     # webbrowser.open('graph_data/graph.html')
     st.components.v1.html(open(html_fn).read(), width=1200, height=800, scrolling=True)
