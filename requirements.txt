@@ -1,0 +1,6 @@
+streamlit
+pyvis
+rdflib
+pydotplus
+pyyaml
+lxml
