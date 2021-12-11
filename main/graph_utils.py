@@ -31,7 +31,6 @@ def get_id_node(node: typing.Union[pydotplus.Node]) -> str:
 
 
 def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_dic):
-    print(hidden_nodes_dic)
     f_click = '''
     var toggle = false;
     network.on("click", function(e) {
@@ -41,26 +40,37 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
             console.log(selected_node);
         '''
     for hidden_edge in hidden_edges_dic:
+        hidden_node_id = None
         if hidden_edge['dest_node'] in hidden_nodes_dic:
+            hidden_node_id = hidden_edge['dest_node']
+        elif hidden_edge['source_node'] in hidden_nodes_dic:
+            hidden_node_id = hidden_edge['source_node']
+        if hidden_node_id is not None:
             f_click += f'''
-                if(selected_node.id == "{hidden_edge['source_node']}") {{
+                if(selected_node.id == "{hidden_edge['source_node']}" || selected_node.id == "{hidden_edge['dest_node']}") {{
                     if(edges.get("{hidden_edge['id']}") == null) {{
                         nodes.add([
-                            {{id: "{hidden_edge['dest_node']}", shape: "{hidden_nodes_dic[hidden_edge['dest_node']]['shape']}", color: "{hidden_nodes_dic[hidden_edge['dest_node']]['color']}", label: "{hidden_nodes_dic[hidden_edge['dest_node']]['label']}" }}
+                            {{id: "{hidden_node_id}", 
+                            shape: "{hidden_nodes_dic[hidden_node_id]['shape']}", 
+                            color: "{hidden_nodes_dic[hidden_node_id]['color']}", 
+                            label: "{hidden_nodes_dic[hidden_node_id]['label']}" }}
                         ])
                         edges.add([
-                            {{id: "{hidden_edge['id']}", from: "{hidden_edge['source_node']}", to: "{hidden_edge['dest_node']}", title:"{hidden_edge['title']}", hidden:false }}
+                            {{id: "{hidden_edge['id']}", 
+                            from: "{hidden_edge['source_node']}", 
+                            to: "{hidden_edge['dest_node']}", 
+                            title:"{hidden_edge['title']}", 
+                            hidden:false }}
                         ]);
                     }}
                     else {{
                         nodes.remove([
-                            {{id: "{hidden_edge['dest_node']}"}}
+                            {{id: "{hidden_node_id}"}}
                         ])
                         edges.remove([
                             {{id: "{hidden_edge['id']}"}},
                         ]);
                     }}
-                    console.log(edges);
                 }}
         '''
 
