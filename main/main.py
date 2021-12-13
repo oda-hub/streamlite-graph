@@ -27,13 +27,19 @@ def stream_graph():
         height='500px', width='100%',
     )
 
-    # net.set_options(
-    #     """{
-    #         "physics": {
-    #             "minVelocity": 0.75
-    #         }
-    #     }"""
-    # )
+    net.set_options(
+        """{
+            "physics": {
+                "barnesHut": {
+                  "gravitationalConstant": -2850,
+                  "centralGravity": 0.9,
+                  "springConstant": 0,
+                  "damping": 0.54
+                },
+                "minVelocity": 0.75
+            }
+        }"""
+    )
 
     hidden_nodes_dic = {}
     hidden_edges = []
