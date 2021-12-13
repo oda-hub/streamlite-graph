@@ -29,6 +29,9 @@ def stream_graph():
 
     net.set_options(
         """{
+            "hierarchical": {
+                "enabled": true
+            },
             "physics": {
                 "barnesHut": {
                   "gravitationalConstant": -2850,
@@ -39,6 +42,7 @@ def stream_graph():
                 },
                 "minVelocity": 0.75
             },
+            "configure": {},
             "edges": {
                 "arrows": {
                   "to": {
@@ -110,7 +114,7 @@ def stream_graph():
                 hidden_edges.append(edge_info)
 
     # to tweak physics related options
-    # net.show_buttons(filter_=['edges'])
+    # net.show_buttons(filter_=['edges', 'physics'])
     net.write_html(html_fn)
 
     graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)
