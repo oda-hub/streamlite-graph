@@ -36,8 +36,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     network.on("click", function(e) {
     
         selected_node = nodes.get(e.nodes[0]);
+        console.log(e)
         if (selected_node.label == "Action") {
-            console.log(selected_node);
         '''
     for hidden_edge in hidden_edges_dic:
         hidden_node_id = None

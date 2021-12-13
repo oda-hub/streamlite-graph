@@ -32,11 +32,26 @@ def stream_graph():
             "physics": {
                 "barnesHut": {
                   "gravitationalConstant": -2850,
-                  "centralGravity": 0.9,
+                  "centralGravity": 0.7,
                   "springConstant": 0,
-                  "damping": 0.54
+                  "damping": 0.54,
+                  "node_distance":150
                 },
                 "minVelocity": 0.75
+            },
+            "edges": {
+                "arrows": {
+                  "to": {
+                    "enabled": true,
+                    "scaleFactor": 0.45
+                    }
+                },
+                "arrowStrikethrough": false,
+                "color": {
+                    "inherit": true
+                },
+                "physics": false,
+                "smooth": false
             }
         }"""
     )
@@ -95,7 +110,7 @@ def stream_graph():
                 hidden_edges.append(edge_info)
 
     # to tweak physics related options
-    # net.show_buttons(filter_=['physics'])
+    # net.show_buttons(filter_=['edges'])
     net.write_html(html_fn)
 
     graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)
