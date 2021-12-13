@@ -80,8 +80,22 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         // network.fit();
         network.redraw();
     });
+    
+    var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
+    if(container_configure) {
+        container_configure = container_configure[0];
+        container_configure.style = {};
+        container_configure.style.height="300px";
+        container_configure.style.overflow="scroll";
+        console.log(container_configure);
+    }
+    
     return network;
     '''
+    # container_configure.style.overflow-x = "hidden";
+    # container_configure.style.overflow-y = "auto";
+    # container_configure.style.height: 150px;
+    # console.log(container_configure.style);
     net.html = net.html.replace('return network;', f_click)
 
     with open(output_path, "w+") as out:

@@ -29,20 +29,17 @@ def stream_graph():
 
     net.set_options(
         """{
-            "hierarchical": {
-                "enabled": true
-            },
             "physics": {
                 "barnesHut": {
                   "gravitationalConstant": -2850,
                   "centralGravity": 0.7,
                   "springConstant": 0,
-                  "damping": 0.54,
-                  "node_distance":150
+                  "damping": 0.54
                 },
                 "minVelocity": 0.75
             },
-            "configure": {},
+            "configure": {
+            },
             "edges": {
                 "arrows": {
                   "to": {
