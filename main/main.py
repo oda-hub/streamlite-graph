@@ -39,6 +39,7 @@ def stream_graph():
                 "minVelocity": 0.75
             },
             "configure": {
+                "filter": "physics, edges"
             },
             "edges": {
                 "arrows": {
