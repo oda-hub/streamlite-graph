@@ -27,6 +27,14 @@ def stream_graph():
         height='500px', width='100%',
     )
 
+    # net.set_options(
+    #     """{
+    #         "physics": {
+    #             "minVelocity": 0.75
+    #         }
+    #     }"""
+    # )
+
     hidden_nodes_dic = {}
     hidden_edges = []
 
@@ -81,7 +89,7 @@ def stream_graph():
                 hidden_edges.append(edge_info)
 
     # to tweak physics related options
-    net.show_buttons(filter_=['physics'])
+    # net.show_buttons(filter_=['physics'])
     net.write_html(html_fn)
 
     graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)

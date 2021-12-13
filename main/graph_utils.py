@@ -78,6 +78,7 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         }
         // switch toggle
         // network.fit();
+        network.redraw();
     });
     return network;
     '''
