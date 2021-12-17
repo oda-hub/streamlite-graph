@@ -1,6 +1,28 @@
 import typing
 import pydotplus
+
 from lxml import etree
+from dateutil import parser
+
+
+def get_node_label(node: typing.Union[pydotplus.Node],
+                   type_node) -> str:
+    node_label = ""
+    if 'label' in node.obj_dict['attributes']:
+        # parse the whole node table into a lxml object
+        table_html = etree.fromstring(node.get_label()[1:-1])
+        tr_list = table_html.findall('tr')
+        for tr in tr_list:
+            list_td = tr.findall('td')
+            if len(list_td) == 2:
+                list_left_column_element = list_td[0].text.split(':')
+                if type_node == 'Action' and 'command' in list_left_column_element:
+                    node_label = '<b>' + list_td[1].text[1:-1] + '</b>\n' + node_label
+                if 'startedAtTime' in list_left_column_element:
+                    parsed_startedAt_time = parser.parse(list_td[1].text.replace('^^xsd:dateTime', '')[1:-1])
+                    # create an additional row to attach at the bottom, so that time is always at the bottom
+                    node_label += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
+    return node_label
 
 
 def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:

@@ -3,6 +3,7 @@ import os
 import yaml
 
 from pyvis.network import Network
+from pyvis.node import Node as pyvisNode
 import graph_utils as graph_utils
 import streamlit as st
 import streamlit.components.v1 as components
@@ -38,7 +39,7 @@ def stream_graph():
                 "solver": "hierarchicalRepulsion"
             },
             "configure": {
-                "filter": "physics"
+                "filter": "nodes"
             },
             "layout": {
                 "hierarchical": {
@@ -54,6 +55,10 @@ def stream_graph():
                   "label": {
                     "enabled": true
                   }
+                },
+                "font": {
+                    "multi": true,
+                    "labelHighlightBold": true
                 }
             },
             "edges": {
@@ -80,6 +85,7 @@ def stream_graph():
         id_node = graph_utils.get_id_node(node)
         if id_node is not None:
             type_node = type_configuration[id_node]
+            node_label = graph_utils.get_node_label(node, type_node)
             node_configuration = graph_configuration.get(type_node,
                                                          graph_configuration['Default'])
             node_value = node_configuration.get('value', graph_configuration['Default']['value'])
@@ -89,15 +95,21 @@ def stream_graph():
                 hidden = True
             if not hidden:
                 net.add_node(node.get_name(),
-                             label=type_node,
+                             label=node_label,
+                             title=type_node,
                              color=node_configuration['color'],
                              shape=node_configuration['shape'],
                              value=node_value,
-                             level=node_level)
+                             level=node_level,
+                             font={
+                                  'multi': "html",
+                                  'face': "courier"
+                                })
             else:
                 node_info = dict(
                     id=node.get_name(),
-                    label=type_node,
+                    label=node_label,
+                    title=type_node,
                     color=node_configuration['color'],
                     shape=node_configuration['shape'],
                     value=node_value,

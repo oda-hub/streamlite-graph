@@ -90,7 +90,7 @@ CommandInput:
     level: 3
 
 Action:
-    shape: diamond
+    shape: circle
     color: '#D5C15D'
     style: filled
     display_type_title: False
