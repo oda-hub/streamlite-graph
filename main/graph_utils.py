@@ -34,9 +34,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     f_click = '''
     var toggle = false;
     network.on("click", function(e) {
-    
         selected_node = nodes.get(e.nodes[0]);
-        console.log(e)
+        console.log(selected_node)
         if (selected_node.label == "Action") {
         '''
     for hidden_edge in hidden_edges_dic:
@@ -53,7 +52,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                             {{id: "{hidden_node_id}", 
                             shape: "{hidden_nodes_dic[hidden_node_id]['shape']}", 
                             color: "{hidden_nodes_dic[hidden_node_id]['color']}", 
-                            label: "{hidden_nodes_dic[hidden_node_id]['label']}" }}
+                            label: "{hidden_nodes_dic[hidden_node_id]['label']}",
+                            level: "{hidden_nodes_dic[hidden_node_id]['level']}"}}
                         ])
                         edges.add([
                             {{id: "{hidden_edge['id']}", 
@@ -76,9 +76,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
 
     f_click += '''
         }
-        // switch toggle
         // network.fit();
-        network.redraw();
+        // network.redraw();
     });
     
     var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
@@ -87,9 +86,7 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         container_configure.style = {};
         container_configure.style.height="300px";
         container_configure.style.overflow="scroll";
-        console.log(container_configure);
     }
-    
     return network;
     '''
     # container_configure.style.overflow-x = "hidden";

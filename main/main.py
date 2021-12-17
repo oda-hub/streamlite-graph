@@ -30,16 +30,31 @@ def stream_graph():
     net.set_options(
         """{
             "physics": {
-                "barnesHut": {
-                  "gravitationalConstant": -2850,
-                  "centralGravity": 0.7,
-                  "springConstant": 0,
-                  "damping": 0.54
+                "hierarchicalRepulsion": {
+                    "avoidOverlap": 1,
+                    "nodeDistance": 150
                 },
-                "minVelocity": 0.75
+                "minVelocity": 0.75,
+                "solver": "hierarchicalRepulsion"
             },
             "configure": {
-                "filter": "physics, edges"
+                "filter": "physics"
+            },
+            "layout": {
+                "hierarchical": {
+                    "enabled": true,
+                    "levelSeparation": -150,
+                    "sortMethod": "directed"
+                }
+            },
+            "nodes": {
+                "scaling": {
+                  "min": 10,
+                  "max": 100,
+                  "label": {
+                    "enabled": true
+                  }
+                }
             },
             "edges": {
                 "arrows": {
@@ -48,7 +63,7 @@ def stream_graph():
                     "scaleFactor": 0.45
                     }
                 },
-                "arrowStrikethrough": false,
+                "arrowStrikethrough": true,
                 "color": {
                     "inherit": true
                 },
@@ -68,6 +83,7 @@ def stream_graph():
             node_configuration = graph_configuration.get(type_node,
                                                          graph_configuration['Default'])
             node_value = node_configuration.get('value', graph_configuration['Default']['value'])
+            node_level = node_configuration.get('level', graph_configuration['Default']['level'])
             hidden = False
             if type_node.startswith('CommandOutput') or type_node.startswith('CommandInput'):
                 hidden = True
@@ -76,14 +92,16 @@ def stream_graph():
                              label=type_node,
                              color=node_configuration['color'],
                              shape=node_configuration['shape'],
-                             value=node_value)
+                             value=node_value,
+                             level=node_level)
             else:
                 node_info = dict(
                     id=node.get_name(),
                     label=type_node,
                     color=node_configuration['color'],
                     shape=node_configuration['shape'],
-                    value=node_value
+                    value=node_value,
+                    level=node_level
                 )
 
                 hidden_nodes_dic[node.get_name()] = node_info
