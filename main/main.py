@@ -32,7 +32,6 @@ def stream_graph():
         """{
             "physics": {
                 "hierarchicalRepulsion": {
-                    "avoidOverlap": 1,
                     "nodeDistance": 150
                 },
                 "minVelocity": 0.75,
@@ -56,10 +55,7 @@ def stream_graph():
                     "enabled": true
                   }
                 },
-                "font": {
-                    "multi": true,
-                    "labelHighlightBold": true
-                }
+                "labelHighlightBold": true
             },
             "edges": {
                 "arrows": {
@@ -97,12 +93,12 @@ def stream_graph():
                 net.add_node(node.get_name(),
                              label=node_label,
                              title=type_node,
+                             type=type_node,
                              color=node_configuration['color'],
                              shape=node_configuration['shape'],
                              value=node_value,
                              level=node_level,
                              font={
-                                  'multi': "html",
                                   'face': "courier"
                                 })
             else:
@@ -110,10 +106,14 @@ def stream_graph():
                     id=node.get_name(),
                     label=node_label,
                     title=type_node,
+                    type=type_node,
                     color=node_configuration['color'],
                     shape=node_configuration['shape'],
                     value=node_value,
-                    level=node_level
+                    level=node_level,
+                    font={
+                        'face': "courier"
+                    }
                 )
 
                 hidden_nodes_dic[node.get_name()] = node_info

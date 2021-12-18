@@ -17,24 +17,14 @@ def get_node_label(node: typing.Union[pydotplus.Node],
             if len(list_td) == 2:
                 list_left_column_element = list_td[0].text.split(':')
                 if type_node == 'Action' and 'command' in list_left_column_element:
-                    node_label = '<b>' + list_td[1].text[1:-1] + '</b>\n' + node_label
+                    node_label = '' + list_td[1].text[1:-1] + '\n' + node_label
                 if 'startedAtTime' in list_left_column_element:
                     parsed_startedAt_time = parser.parse(list_td[1].text.replace('^^xsd:dateTime', '')[1:-1])
                     # create an additional row to attach at the bottom, so that time is always at the bottom
                     node_label += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
+    if node_label == "":
+        node_label = get_id_node(node)
     return node_label
-
-
-def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
-    edge_label = None
-    if 'label' in edge.obj_dict['attributes']:
-        edge_html = etree.fromstring(edge.obj_dict['attributes']['label'][1:-1])
-        edge_label_list = edge_html.text.split(":")
-        if len(edge_label_list) == 1:
-            edge_label = edge_html.text.split(":")[0]
-        else:
-            edge_label = edge_html.text.split(":")[1]
-    return edge_label
 
 
 def get_id_node(node: typing.Union[pydotplus.Node]) -> str:
@@ -52,13 +42,25 @@ def get_id_node(node: typing.Union[pydotplus.Node]) -> str:
     return id_node
 
 
+def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
+    edge_label = None
+    if 'label' in edge.obj_dict['attributes']:
+        edge_html = etree.fromstring(edge.obj_dict['attributes']['label'][1:-1])
+        edge_label_list = edge_html.text.split(":")
+        if len(edge_label_list) == 1:
+            edge_label = edge_html.text.split(":")[0]
+        else:
+            edge_label = edge_html.text.split(":")[1]
+    return edge_label
+
+
 def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_dic):
     f_click = '''
     var toggle = false;
     network.on("click", function(e) {
         selected_node = nodes.get(e.nodes[0]);
-        console.log(selected_node)
-        if (selected_node.label == "Action") {
+        console.log(selected_node);
+        if (selected_node.type == "Action") {
         '''
     for hidden_edge in hidden_edges_dic:
         hidden_node_id = None
@@ -75,8 +77,10 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                             shape: "{hidden_nodes_dic[hidden_node_id]['shape']}", 
                             color: "{hidden_nodes_dic[hidden_node_id]['color']}", 
                             label: "{hidden_nodes_dic[hidden_node_id]['label']}",
-                            level: "{hidden_nodes_dic[hidden_node_id]['level']}"}}
-                        ])
+                            level: "{hidden_nodes_dic[hidden_node_id]['level']}",
+                            value: "{hidden_nodes_dic[hidden_node_id]['value']}",
+                            font: "{hidden_nodes_dic[hidden_node_id]['font']}"}}
+                        ]);
                         edges.add([
                             {{id: "{hidden_edge['id']}", 
                             from: "{hidden_edge['source_node']}", 
@@ -98,8 +102,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
 
     f_click += '''
         }
-        // network.fit();
-        // network.redraw();
+        network.fit();
+        network.redraw();
     });
     
     var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
