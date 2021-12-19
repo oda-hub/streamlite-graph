@@ -23,7 +23,7 @@ def get_node_label(node: typing.Union[pydotplus.Node],
                     # create an additional row to attach at the bottom, so that time is always at the bottom
                     node_label += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
     if node_label == "":
-        node_label = get_id_node(node)
+        node_label = type_node
     return node_label
 
 
