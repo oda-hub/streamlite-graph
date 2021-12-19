@@ -1,13 +1,15 @@
 import typing
 import pydotplus
+import json
 
 from lxml import etree
 from dateutil import parser
 
 
-def get_node_label(node: typing.Union[pydotplus.Node],
-                   type_node) -> str:
+def get_node_graphical_info(node: typing.Union[pydotplus.Node],
+                   type_node) -> [str, str]:
     node_label = ""
+    node_title = ""
     if 'label' in node.obj_dict['attributes']:
         # parse the whole node table into a lxml object
         table_html = etree.fromstring(node.get_label()[1:-1])
@@ -17,14 +19,16 @@ def get_node_label(node: typing.Union[pydotplus.Node],
             if len(list_td) == 2:
                 list_left_column_element = list_td[0].text.split(':')
                 if type_node == 'Action' and 'command' in list_left_column_element:
-                    node_label = '' + list_td[1].text[1:-1] + '\n' + node_label
-                # if 'startedAtTime' in list_left_column_element:
-                #     parsed_startedAt_time = parser.parse(list_td[1].text.replace('^^xsd:dateTime', '')[1:-1])
-                #     # create an additional row to attach at the bottom, so that time is always at the bottom
-                #     node_label += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
+                    node_label = '<b>' + list_td[1].text[1:-1] + '</b>\n' + node_label
+                if 'startedAtTime' in list_left_column_element:
+                    parsed_startedAt_time = parser.parse(list_td[1].text.replace('^^xsd:dateTime', '')[1:-1])
+                    # create an additional row to attach at the bottom, so that time is always at the bottom
+                    node_title += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
     if node_label == "":
         node_label = type_node
-    return node_label
+    if node_title == "":
+        node_title = type_node
+    return node_label, node_title
 
 
 def get_id_node(node: typing.Union[pydotplus.Node]) -> str:
@@ -59,7 +63,6 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     var toggle = false;
     network.on("click", function(e) {
         selected_node = nodes.get(e.nodes[0]);
-        console.log(selected_node);
         if (selected_node.type == "Action") {
         '''
     for hidden_edge in hidden_edges_dic:
@@ -69,19 +72,19 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         elif hidden_edge['source_node'] in hidden_nodes_dic:
             hidden_node_id = hidden_edge['source_node']
         if hidden_node_id is not None:
+            print(json.dumps(hidden_nodes_dic[hidden_node_id]['font']))
             f_click += f'''
                 if(selected_node.id == "{hidden_edge['source_node']}" || selected_node.id == "{hidden_edge['dest_node']}") {{
                     if(edges.get("{hidden_edge['id']}") == null) {{
                         nodes.add([
-                            {{id: "{hidden_node_id}", 
+                            {{id: "{hidden_node_id}",
                             label: "{hidden_nodes_dic[hidden_node_id]['label']}",
                             title: "{hidden_nodes_dic[hidden_node_id]['title']}",
+                            color: "{hidden_nodes_dic[hidden_node_id]['color']}",
+                            shape: "{hidden_nodes_dic[hidden_node_id]['shape']}",
                             type: "{hidden_nodes_dic[hidden_node_id]['type']}",
-                            color: "{hidden_nodes_dic[hidden_node_id]['color']}", 
-                            shape: "{hidden_nodes_dic[hidden_node_id]['shape']}", 
-                            value: "{hidden_nodes_dic[hidden_node_id]['value']}",
-                            level: "{hidden_nodes_dic[hidden_node_id]['level']}",
-                            font: "{hidden_nodes_dic[hidden_node_id]['font']}"}}
+                            font: {hidden_nodes_dic[hidden_node_id]['font']},
+                            level: "{hidden_nodes_dic[hidden_node_id]['level']}"}}
                         ]);
                         edges.add([
                             {{id: "{hidden_edge['id']}", 

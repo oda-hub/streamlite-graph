@@ -1,6 +1,7 @@
 import pydotplus
 import os
 import yaml
+import bs4
 
 from pyvis.network import Network
 from pyvis.node import Node as pyvisNode
@@ -81,7 +82,7 @@ def stream_graph():
         id_node = graph_utils.get_id_node(node)
         if id_node is not None:
             type_node = type_configuration[id_node]
-            node_label = graph_utils.get_node_label(node, type_node)
+            node_label, node_title = graph_utils.get_node_graphical_info(node, type_node)
             node_configuration = graph_configuration.get(type_node,
                                                          graph_configuration['Default'])
             node_value = node_configuration.get('value', graph_configuration['Default']['value'])
@@ -92,29 +93,31 @@ def stream_graph():
             if not hidden:
                 net.add_node(node.get_name(),
                              label=node_label,
-                             title=type_node,
+                             title=node_title,
                              type=type_node,
                              color=node_configuration['color'],
-                             shape=node_configuration['shape'],
-                             value=node_value,
                              level=node_level,
+                             shape=node_configuration['shape'],
                              font={
-                                  'face': "courier"
+                                 'multi': "html",
+                                 'face': "courier"
                                 })
+                             # value=node_value)
             else:
                 node_info = dict(
                     id=node.get_name(),
                     label=node_label,
-                    title=type_node,
+                    title=node_title,
                     type=type_node,
                     color=node_configuration['color'],
                     shape=node_configuration['shape'],
-                    value=node_value,
                     level=node_level,
                     font={
+                        'multi': "html",
                         'face': "courier"
                     }
                 )
+                    # value=node_value,
 
                 hidden_nodes_dic[node.get_name()] = node_info
 
@@ -147,6 +150,25 @@ def stream_graph():
 
     graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)
 
+    # let's patch the template
+    # load the file
+    with open(html_fn) as template:
+        html_code = template.read()
+        soup = bs4.BeautifulSoup(html_code, "html.parser")
+
+    soup.head.link.decompose()
+    soup.head.script.decompose()
+
+    new_stylesheet = soup.new_tag("link", type="text/css",
+                                  href="https://unpkg.com/browse/vis-network@9.1.0/dist/dist/vis-network.css")
+    soup.head.append(new_stylesheet)
+    new_script = soup.new_tag("script", type="application/javascript",
+                              src="https://unpkg.com/vis-network/standalone/umd/vis-network.js")
+    soup.head.append(new_script)
+
+    # save the file again
+    with open(html_fn, "w") as outf:
+        outf.write(str(soup))
     # webbrowser.open('graph_data/graph.html')
     st.components.v1.html(open(html_fn).read(), width=1200, height=800, scrolling=True)
     st.markdown("***")
