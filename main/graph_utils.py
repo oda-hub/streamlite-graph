@@ -18,10 +18,10 @@ def get_node_label(node: typing.Union[pydotplus.Node],
                 list_left_column_element = list_td[0].text.split(':')
                 if type_node == 'Action' and 'command' in list_left_column_element:
                     node_label = '' + list_td[1].text[1:-1] + '\n' + node_label
-                if 'startedAtTime' in list_left_column_element:
-                    parsed_startedAt_time = parser.parse(list_td[1].text.replace('^^xsd:dateTime', '')[1:-1])
-                    # create an additional row to attach at the bottom, so that time is always at the bottom
-                    node_label += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
+                # if 'startedAtTime' in list_left_column_element:
+                #     parsed_startedAt_time = parser.parse(list_td[1].text.replace('^^xsd:dateTime', '')[1:-1])
+                #     # create an additional row to attach at the bottom, so that time is always at the bottom
+                #     node_label += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
     if node_label == "":
         node_label = type_node
     return node_label
@@ -74,11 +74,13 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                     if(edges.get("{hidden_edge['id']}") == null) {{
                         nodes.add([
                             {{id: "{hidden_node_id}", 
-                            shape: "{hidden_nodes_dic[hidden_node_id]['shape']}", 
-                            color: "{hidden_nodes_dic[hidden_node_id]['color']}", 
                             label: "{hidden_nodes_dic[hidden_node_id]['label']}",
-                            level: "{hidden_nodes_dic[hidden_node_id]['level']}",
+                            title: "{hidden_nodes_dic[hidden_node_id]['title']}",
+                            type: "{hidden_nodes_dic[hidden_node_id]['type']}",
+                            color: "{hidden_nodes_dic[hidden_node_id]['color']}", 
+                            shape: "{hidden_nodes_dic[hidden_node_id]['shape']}", 
                             value: "{hidden_nodes_dic[hidden_node_id]['value']}",
+                            level: "{hidden_nodes_dic[hidden_node_id]['level']}",
                             font: "{hidden_nodes_dic[hidden_node_id]['font']}"}}
                         ]);
                         edges.add([
@@ -102,8 +104,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
 
     f_click += '''
         }
-        network.fit();
-        network.redraw();
+        // network.fit();
+        // network.redraw();
     });
     
     var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
