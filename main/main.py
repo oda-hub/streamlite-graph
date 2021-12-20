@@ -158,9 +158,6 @@ def stream_graph():
     soup.head.link.decompose()
     soup.head.script.decompose()
 
-    # new_stylesheet = soup.new_tag("link", type="text/css",
-    #                               href="https://unpkg.com/browse/vis-network@9.1.0/dist/dist/vis-network.css")
-    # soup.head.append(new_stylesheet)
     new_script = soup.new_tag("script", type="application/javascript",
                               src="https://unpkg.com/vis-network/standalone/umd/vis-network.js")
     soup.head.append(new_script)
