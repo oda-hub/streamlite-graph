@@ -18,14 +18,22 @@ def get_node_graphical_info(node: typing.Union[pydotplus.Node],
             list_td = tr.findall('td')
             if len(list_td) == 2:
                 list_left_column_element = list_td[0].text.split(':')
-                if type_node == 'Action' and 'command' in list_left_column_element:
-                    node_label = '<b>' + list_td[1].text[1:-1] + '</b>\n' + node_label
+                # setting label
+                if type_node == 'Action':
+                    if 'command' in list_left_column_element:
+                        node_label = '<b>' + list_td[1].text[1:-1] + '</b>'
+                elif type_node == 'CommandInput':
+                    node_label = '<b><i>' + list_td[1].text[1:-1] + '</i></b>'
+                else:
+                    node_label = ('<b>' + type_node + '</b>\n' + list_td[1].text[1:-1])
+                # setting title
                 if 'startedAtTime' in list_left_column_element:
                     parsed_startedAt_time = parser.parse(list_td[1].text.replace('^^xsd:dateTime', '')[1:-1])
                     # create an additional row to attach at the bottom, so that time is always at the bottom
                     node_title += parsed_startedAt_time.strftime('%Y-%m-%d %H:%M:%S') + '\n'
+
     if node_label == "":
-        node_label = type_node
+        node_label = '<b>' + type_node + '</b>'
     if node_title == "":
         node_title = type_node
     return node_label, node_title
@@ -72,14 +80,15 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         elif hidden_edge['source_node'] in hidden_nodes_dic:
             hidden_node_id = hidden_edge['source_node']
         if hidden_node_id is not None:
-            print(json.dumps(hidden_nodes_dic[hidden_node_id]['font']))
+            node_label = hidden_nodes_dic[hidden_node_id]['label'].replace("\n", '\\n')
+            node_title = hidden_nodes_dic[hidden_node_id]['title'].replace("\n", '\\n')
             f_click += f'''
                 if(selected_node.id == "{hidden_edge['source_node']}" || selected_node.id == "{hidden_edge['dest_node']}") {{
                     if(edges.get("{hidden_edge['id']}") == null) {{
                         nodes.add([
                             {{id: "{hidden_node_id}",
-                            label: "{hidden_nodes_dic[hidden_node_id]['label']}",
-                            title: "{hidden_nodes_dic[hidden_node_id]['title']}",
+                            label: "{node_label}",
+                            title: "{node_title}",
                             color: "{hidden_nodes_dic[hidden_node_id]['color']}",
                             shape: "{hidden_nodes_dic[hidden_node_id]['shape']}",
                             type: "{hidden_nodes_dic[hidden_node_id]['type']}",

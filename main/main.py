@@ -33,13 +33,14 @@ def stream_graph():
         """{
             "physics": {
                 "hierarchicalRepulsion": {
-                    "nodeDistance": 150
+                    "nodeDistance": 175,
+                    "damping": 0.15
                 },
                 "minVelocity": 0.75,
                 "solver": "hierarchicalRepulsion"
             },
             "configure": {
-                "filter": "nodes"
+                "filter": "physics"
             },
             "layout": {
                 "hierarchical": {
@@ -145,7 +146,6 @@ def stream_graph():
                 hidden_edges.append(edge_info)
 
     # to tweak physics related options
-    # net.show_buttons(filter_=['edges', 'physics'])
     net.write_html(html_fn)
 
     graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)
