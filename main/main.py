@@ -4,7 +4,6 @@ import yaml
 import bs4
 
 from pyvis.network import Network
-from pyvis.node import Node as pyvisNode
 import graph_utils as graph_utils
 import streamlit as st
 import streamlit.components.v1 as components
