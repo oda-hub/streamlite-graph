@@ -4,3 +4,4 @@ rdflib
 pydotplus
 pyyaml
 lxml
+bs4
