@@ -28,52 +28,7 @@ def stream_graph():
         height='500px', width='100%',
     )
 
-    net.set_options(
-        """{
-            "physics": {
-                "hierarchicalRepulsion": {
-                    "nodeDistance": 175,
-                    "damping": 0.15
-                },
-                "minVelocity": 0.75,
-                "solver": "hierarchicalRepulsion"
-            },
-            "configure": {
-                "filter": "physics"
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": true,
-                    "levelSeparation": -150,
-                    "sortMethod": "directed"
-                }
-            },
-            "nodes": {
-                "scaling": {
-                  "min": 10,
-                  "max": 100,
-                  "label": {
-                    "enabled": true
-                  }
-                },
-                "labelHighlightBold": true
-            },
-            "edges": {
-                "arrows": {
-                  "to": {
-                    "enabled": true,
-                    "scaleFactor": 0.45
-                    }
-                },
-                "arrowStrikethrough": true,
-                "color": {
-                    "inherit": true
-                },
-                "physics": false,
-                "smooth": false
-            }
-        }"""
-    )
+    graph_utils.set_graph_options(net)
 
     hidden_nodes_dic = {}
     hidden_edges = []
