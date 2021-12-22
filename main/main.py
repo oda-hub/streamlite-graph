@@ -38,8 +38,6 @@ def stream_graph():
         if id_node is not None:
             type_node = type_configuration[id_node]
             node_label, node_title = graph_utils.get_node_graphical_info(node, type_node)
-            print("node_label: ", node_label)
-            print("node_title: ", node_title)
             node_configuration = graph_configuration.get(type_node,
                                                          graph_configuration['Default'])
             node_value = node_configuration.get('value', graph_configuration['Default']['value'])
