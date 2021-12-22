@@ -1,6 +1,6 @@
 import typing
 import pydotplus
-import json
+import bs4
 
 from lxml import etree
 from dateutil import parser
@@ -186,3 +186,22 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
 
     with open(output_path, "w+") as out:
         out.write(net.html)
+
+
+def update_vis_library_version(html_fn):
+    # let's patch the template
+    # load the file
+    with open(html_fn) as template:
+        html_code = template.read()
+        soup = bs4.BeautifulSoup(html_code, "html.parser")
+
+    soup.head.link.decompose()
+    soup.head.script.decompose()
+
+    new_script = soup.new_tag("script", type="application/javascript",
+                              src="https://unpkg.com/vis-network/standalone/umd/vis-network.js")
+    soup.head.append(new_script)
+
+    # save the file again
+    with open(html_fn, "w") as outf:
+        outf.write(str(soup))
