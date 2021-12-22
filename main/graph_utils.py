@@ -18,7 +18,7 @@ def set_graph_options(graph):
                 "solver": "hierarchicalRepulsion"
             },
             "configure": {
-                "filter": "physics"
+                "filter": ""
             },
             "layout": {
                 "hierarchical": {
