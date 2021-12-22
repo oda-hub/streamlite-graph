@@ -25,7 +25,7 @@ def stream_graph():
 
     pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
     net = Network(
-        height='500px', width='100%',
+        height='750px', width='100%',
     )
 
     graph_utils.set_graph_options(net)
@@ -38,6 +38,8 @@ def stream_graph():
         if id_node is not None:
             type_node = type_configuration[id_node]
             node_label, node_title = graph_utils.get_node_graphical_info(node, type_node)
+            print("node_label: ", node_label)
+            print("node_title: ", node_title)
             node_configuration = graph_configuration.get(type_node,
                                                          graph_configuration['Default'])
             node_value = node_configuration.get('value', graph_configuration['Default']['value'])
@@ -121,7 +123,7 @@ def stream_graph():
     with open(html_fn, "w") as outf:
         outf.write(str(soup))
     # webbrowser.open('graph_data/graph.html')
-    st.components.v1.html(open(html_fn).read(), width=1200, height=800, scrolling=True)
+    st.components.v1.html(open(html_fn).read(), width=1700, height=1000, scrolling=True)
     st.markdown("***")
 
 
