@@ -43,7 +43,10 @@ def stream_graph():
             node_value = node_configuration.get('value', graph_configuration['Default']['value'])
             node_level = node_configuration.get('level', graph_configuration['Default']['level'])
             hidden = False
-            if type_node.startswith('CommandOutput') or type_node.startswith('CommandInput'):
+            if type_node.startswith('CommandOutput') or type_node.startswith('CommandInput')\
+                    or type_node.startswith('Angle') or type_node.startswith('Pixels') \
+                    or type_node.startswith('Coordinates') or type_node.startswith('Position') \
+                    or type_node.startswith('SkyCoordinates'):
                 hidden = True
             if not hidden:
                 net.add_node(node.get_name(),
@@ -83,7 +86,8 @@ def stream_graph():
         dest_node = edge.get_destination()
         hidden = False
         edge_id = (source_node + '_' + dest_node)
-        if edge_label.startswith('isInputOf') or edge_label.startswith('hasOutputs'):
+        if edge_label.startswith('isInputOf') or edge_label.startswith('hasOutputs') \
+                or edge_label.startswith('isUsing'):
             hidden = True
         if source_node is not None and dest_node is not None:
             if not hidden:
