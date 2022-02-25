@@ -20,7 +20,8 @@ st.title('Graph Quick-Look')
 
 
 def stream_graph():
-    dot_fn = 'graph_data/graph_base.dot'
+    # dot_fn = 'graph_data/graph_base.dot'
+    dot_fn = 'graph_data/graph.dot'
     html_fn = 'graph_data/graph.html'
 
     pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
