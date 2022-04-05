@@ -1,9 +1,10 @@
 import pydotplus
 import os
 import yaml
-import bs4
+import threading
 
 from pyvis.network import Network
+
 import graph_utils as graph_utils
 import streamlit as st
 import streamlit.components.v1 as components
@@ -23,6 +24,7 @@ def stream_graph():
     # dot_fn = 'graph_data/graph_base.dot'
     dot_fn = 'graph_data/graph.dot'
     html_fn = 'graph_data/graph.html'
+    ttl_fn = 'graph_data/graph.ttl'
 
     pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
     net = Network(
@@ -107,11 +109,16 @@ def stream_graph():
     # to tweak physics related options
     net.write_html(html_fn)
 
-    graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)
+    fd = open(ttl_fn, 'r')
+    graph_ttl_str = fd.read()
+    fd.close()
 
-    graph_utils.update_vis_library_version(html_fn)
+    graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges, graph_ttl_stream=graph_ttl_str)
+    graph_utils.update_js_libraries(html_fn)
+
     # webbrowser.open('graph_data/graph.html')
     st.components.v1.html(open(html_fn).read(), width=1700, height=1000, scrolling=True)
+
     st.markdown("***")
 
 

@@ -115,12 +115,69 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_dic):
-    f_click = '''
+def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_dic, graph_ttl_stream=None):
+    f_click = f'''
+     
+    const parser = new N3.Parser();
+    const store = new N3.Store();
+    const myEngine = new Comunica.QueryEngine();
+    parsed_graph = parser.parse(`{graph_ttl_stream}`,
+        function (error, triple, prefixes) {{
+            // Always log errors
+            if (error) {{
+                console.error(error);
+            }}
+            if (triple) {{
+                store.addQuad(triple.subject, triple.predicate, triple.object);
+            }}
+        }}
+    );
+    
+    myEngine.queryQuads(
+            `CONSTRUCT {{
+                ?action a <http://schema.org/Action> ;
+                    <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+        
+                ?activity a ?activityType ;
+                    <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                    <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+    
+                ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+            }}
+            WHERE {{ 
+                ?action a <http://schema.org/Action> ;
+                    <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+                     
+                ?activity a ?activityType ;
+                    <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                    <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+                
+                ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+            }} `,
+        {{
+            sources: [ store ] 
+        }}
+    ).then(
+        function (bindingsStream) {{
+            // Consume results as a stream (best performance)
+            bindingsStream.on('data', (binding) => {{
+                // Obtaining values     
+                console.log(binding.value + ' ' + binding.subject.value + ' ' + binding.predicate.value + ' ' + binding.object.value);
+            }});
+            bindingsStream.on('end', () => {{
+                // The data-listener will not be called anymore once we get here.
+                console.log('end');
+            }});
+            bindingsStream.on('error', (error) => {{
+                console.error(error);
+            }});
+        }}
+    );
+    
     var toggle = false;
-    network.on("click", function(e) {
+    network.on("click", function(e) {{
         selected_node = nodes.get(e.nodes[0]);
-        if (selected_node.hasOwnProperty('type') && (selected_node.type == "Action" || selected_node.type.startsWith("Astrophysical"))) {
+        if (selected_node.hasOwnProperty('type') && (selected_node.type == "Action" || selected_node.type.startsWith("Astrophysical"))) {{
         '''
     for hidden_edge in hidden_edges_dic:
         hidden_node_id = None
@@ -188,7 +245,7 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         out.write(net.html)
 
 
-def update_vis_library_version(html_fn):
+def update_js_libraries(html_fn):
     # let's patch the template
     # load the file
     with open(html_fn) as template:
@@ -198,9 +255,23 @@ def update_vis_library_version(html_fn):
     soup.head.link.decompose()
     soup.head.script.decompose()
 
-    new_script = soup.new_tag("script", type="application/javascript",
+    new_script_updated_vis_library = soup.new_tag("script", type="application/javascript",
                               src="https://unpkg.com/vis-network/standalone/umd/vis-network.js")
-    soup.head.append(new_script)
+    soup.head.append(new_script_updated_vis_library)
+
+    new_script_rdflib_library = soup.new_tag("script", type="application/javascript",
+                              src="https://unpkg.com/n3/browser/n3.min.js")
+    soup.head.append(new_script_rdflib_library)
+
+    new_script_query_sparql_library = soup.new_tag("script", type="application/javascript",
+                                             src="http://rdf.js.org/comunica-browser/versions/latest"
+                                                 "/engines/query-sparql/comunica-browser.js")
+    soup.head.append(new_script_query_sparql_library)
+
+    new_script_query_sparql_file_library = soup.new_tag("script", type="application/javascript",
+                                                   src="http://rdf.js.org/comunica-browser/versions/latest"
+                                                       "/engines/query-sparql-file/comunica-browser.js")
+    soup.head.append(new_script_query_sparql_file_library)
 
     # save the file again
     with open(html_fn, "w") as outf:
