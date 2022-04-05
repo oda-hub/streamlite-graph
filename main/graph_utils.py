@@ -162,7 +162,49 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
             // Consume results as a stream (best performance)
             bindingsStream.on('data', (binding) => {{
                 // Obtaining values     
-                console.log(binding.value + ' ' + binding.subject.value + ' ' + binding.predicate.value + ' ' + binding.object.value);
+                console.log(binding.subject);
+                console.log(binding.predicate);
+                console.log(binding.object);
+                console.log('------------------');
+                let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
+                let obj_id = binding.object.id ? binding.object.id : binding.object.value;
+                let edge_id = subj_id + "_" + obj_id;
+                
+                if(!nodes.get(subj_id)) {{
+                    nodes.add([
+                        {{
+                            id: subj_id,
+                            label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                            title: binding.subject.value ? binding.subject.value : binding.subject.id
+                        }}
+                    ]); 
+                }} else {{
+                    console.log('subject node already added!');
+                }}
+                if(!edges.get(edge_id)) {{
+                    edges.add([
+                        {{
+                            id: edge_id,
+                            from: subj_id,
+                            to: obj_id,
+                            title: binding.predicate.value,
+                            hidden: false 
+                        }}
+                    ]);
+                }} else {{
+                    console.log('edge already added!'); 
+                }}
+                if(!nodes.get(obj_id)) {{
+                    nodes.add([
+                        {{
+                            id: obj_id,
+                            label: binding.object.value ? binding.object.value : binding.object.id,
+                            title: binding.object.value ? binding.object.value : binding.object.id
+                        }}
+                    ]);
+                }} else {{
+                    console.log('object node already added!');
+                }}
             }});
             bindingsStream.on('end', () => {{
                 // The data-listener will not be called anymore once we get here.
@@ -176,69 +218,93 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     
     var toggle = false;
     network.on("click", function(e) {{
-        selected_node = nodes.get(e.nodes[0]);
-        if (selected_node.hasOwnProperty('type') && (selected_node.type == "Action" || selected_node.type.startsWith("Astrophysical"))) {{
-        '''
-    for hidden_edge in hidden_edges_dic:
-        hidden_node_id = None
-        if hidden_edge['dest_node'] in hidden_nodes_dic:
-            hidden_node_id = hidden_edge['dest_node']
-        elif hidden_edge['source_node'] in hidden_nodes_dic:
-            hidden_node_id = hidden_edge['source_node']
-        if hidden_node_id is not None:
-            node_label = hidden_nodes_dic[hidden_node_id]['label'].replace("\n", '\\n')
-            node_title = hidden_nodes_dic[hidden_node_id]['title'].replace("\n", '\\n')
-            f_click += f'''
-                if(selected_node.id == "{hidden_edge['source_node']}" || selected_node.id == "{hidden_edge['dest_node']}") {{
-                    if(edges.get("{hidden_edge['id']}") == null) {{
-                        nodes.add([
-                            {{id: "{hidden_node_id}",
-                            label: "{node_label}",
-                            title: "{node_title}",
-                            color: "{hidden_nodes_dic[hidden_node_id]['color']}",
-                            shape: "{hidden_nodes_dic[hidden_node_id]['shape']}",
-                            type: "{hidden_nodes_dic[hidden_node_id]['type']}",
-                            font: {hidden_nodes_dic[hidden_node_id]['font']},
-                            level: "{hidden_nodes_dic[hidden_node_id]['level']}"}}
-                        ]);
-                        edges.add([
-                            {{id: "{hidden_edge['id']}", 
-                            from: "{hidden_edge['source_node']}", 
-                            to: "{hidden_edge['dest_node']}", 
-                            title:"{hidden_edge['title']}", 
-                            hidden:false }}
-                        ]);
+        if(e.nodes[0]) {{
+            selected_node = nodes.get(e.nodes[0]);
+            console.log(selected_node.id);
+            if (selected_node) {{
+                 myEngine.queryQuads(
+                    `CONSTRUCT {{
+                        ?s ?p ?o .    
                     }}
-                    else {{
-                        nodes.remove([
-                            {{id: "{hidden_node_id}"}}
-                        ])
-                        edges.remove([
-                            {{id: "{hidden_edge['id']}"}},
-                        ]);
-                    }}
+                    WHERE {{ 
+                        ?s ?p ?o .
+                        
+                    }}`,
+                {{
+                    sources: [ store ]
                 }}
-        '''
-
-    f_click += '''
-        }
-        // network.fit();
-        // network.redraw();
-    });
+            ).then(
+                function (bindingsStream) {{
+                    // Consume results as a stream (best performance)
+                    bindingsStream.on('data', (binding) => {{
+                        // Obtaining values     
+                        console.log(binding.subject);
+                        console.log(binding.predicate);
+                        console.log(binding.object);
+                        console.log('------------------');
+                        let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
+                        let obj_id = binding.object.id ? binding.object.id : binding.object.value;
+                        let edge_id = subj_id + "_" + obj_id;
+                        
+                        if(!nodes.get(subj_id)) {{
+                            nodes.add([
+                                {{
+                                    id: subj_id,
+                                    label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                                    title: binding.subject.value ? binding.subject.value : binding.subject.id
+                                }}
+                            ]); 
+                        }} else {{
+                            console.log('subject node already added!');
+                        }}
+                        if(!edges.get(edge_id)) {{
+                            edges.add([
+                                {{
+                                    id: edge_id,
+                                    from: subj_id,
+                                    to: obj_id,
+                                    title: binding.predicate.value,
+                                    hidden: false 
+                                }}
+                            ]);
+                        }} else {{
+                            console.log('edge already added!'); 
+                        }}
+                        if(!nodes.get(obj_id)) {{
+                            nodes.add([
+                                {{
+                                    id: obj_id,
+                                    label: binding.object.value ? binding.object.value : binding.object.id,
+                                    title: binding.object.value ? binding.object.value : binding.object.id
+                                }}
+                            ]);
+                        }} else {{
+                            console.log('object node already added!');
+                        }}
+                    }});
+                    bindingsStream.on('end', () => {{
+                        // The data-listener will not be called anymore once we get here.
+                        console.log('end');
+                    }});
+                    bindingsStream.on('error', (error) => {{
+                        console.error(error);
+                    }});
+                }}
+            );
+        }}
+        }}
+    }});
     
     var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
-    if(container_configure) {
+    if(container_configure) {{
         container_configure = container_configure[0];
-        container_configure.style = {};
+        container_configure.style = {{}};
         container_configure.style.height="300px";
         container_configure.style.overflow="scroll";
-    }
+    }}
     return network;
     '''
-    # container_configure.style.overflow-x = "hidden";
-    # container_configure.style.overflow-y = "auto";
-    # container_configure.style.height: 150px;
-    # console.log(container_configure.style);
+
     net.html = net.html.replace('return network;', f_click)
 
     with open(output_path, "w+") as out:
