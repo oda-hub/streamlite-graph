@@ -162,10 +162,10 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
             // Consume results as a stream (best performance)
             bindingsStream.on('data', (binding) => {{
                 // Obtaining values     
-                console.log(binding.subject);
-                console.log(binding.predicate);
-                console.log(binding.object);
-                console.log('------------------');
+                // console.log(binding.subject);
+                // console.log(binding.predicate);
+                // console.log(binding.object);
+                // console.log('------------------');
                 let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
                 let obj_id = binding.object.id ? binding.object.id : binding.object.value;
                 let edge_id = subj_id + "_" + obj_id;
@@ -224,13 +224,10 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
             if (selected_node) {{
                  myEngine.queryQuads(
                     `CONSTRUCT {{
-                        ?s ?p ?o .    
+                        <` + selected_node.id + `> ?p ?o .    
                     }}
                     WHERE {{
-                        
-                        ?s ?p `+ selected_node.id +`.
-                                             
-                        ?s ?p ?o .
+                        <` + selected_node.id + `> ?p ?o . 
                     }}`,
                 {{
                     sources: [ store ]
