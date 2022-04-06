@@ -210,7 +210,7 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                 // The data-listener will not be called anymore once we get here.
                 console.log('end');
             }});
-            bindingsStream.on('error', (error) => {{
+            bindingsStream.on('error', (error) => {{ 
                 console.error(error);
             }});
         }}
@@ -220,15 +220,17 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     network.on("click", function(e) {{
         if(e.nodes[0]) {{
             selected_node = nodes.get(e.nodes[0]);
-            console.log(selected_node.id);
+            console.log(selected_node.label);
             if (selected_node) {{
                  myEngine.queryQuads(
                     `CONSTRUCT {{
                         ?s ?p ?o .    
                     }}
-                    WHERE {{ 
-                        ?s ?p ?o .
+                    WHERE {{
                         
+                        ?s ?p `+ selected_node.id +`.
+                                             
+                        ?s ?p ?o .
                     }}`,
                 {{
                     sources: [ store ]
