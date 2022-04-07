@@ -31,7 +31,7 @@ def stream_graph():
         height='750px', width='100%',
     )
 
-    graph_utils.set_graph_options(net)
+    # graph_utils.set_graph_options(net)
 
     hidden_nodes_dic = {}
     hidden_edges = []

@@ -118,7 +118,7 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
 def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_dic, graph_ttl_stream=None):
     f_click = f'''
      
-    const parser = new N3.Parser();
+    const parser = new N3.Parser({{ format: 'ttl' }});
     let store = new N3.Store();
     let quad_list = [];
     const myEngine = new Comunica.QueryEngine();
@@ -256,7 +256,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                                 {{
                                     id: subj_id,
                                     label: binding.subject.value ? binding.subject.value : binding.subject.id,
-                                    title: binding.subject.value ? binding.subject.value : binding.subject.id
+                                    title: binding.subject.value ? binding.subject.value : binding.subject.id,
+                                    clickable: true
                                 }}
                             ]); 
                         }} else {{
@@ -276,13 +277,16 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                             console.log('edge already added!'); 
                         }}
                         if(!nodes.get(obj_id)) {{
-                            nodes.add([
-                                {{
-                                    id: obj_id,
-                                    label: binding.object.value ? binding.object.value : binding.object.id,
-                                    title: binding.object.value ? binding.object.value : binding.object.id
-                                }}
-                            ]);
+                            node = {{
+                                id: obj_id,
+                                label: binding.object.value ? binding.object.value : binding.object.id,
+                                title: binding.object.value ? binding.object.value : binding.object.id,
+                                clickable: true
+                            }}
+                            if(binding.predicate.value.endsWith('type')) {{
+                                node['clickable'] = false;
+                            }}
+                            nodes.add(node);
                         }} else {{
                             console.log('object node already added!');
                         }}
