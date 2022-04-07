@@ -119,7 +119,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     f_click = f'''
      
     const parser = new N3.Parser();
-    const store = new N3.Store();
+    let store = new N3.Store();
+    let quad_list = [];
     const myEngine = new Comunica.QueryEngine();
     parsed_graph = parser.parse(`{graph_ttl_stream}`,
         function (error, triple, prefixes) {{
@@ -162,10 +163,10 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
             // Consume results as a stream (best performance)
             bindingsStream.on('data', (binding) => {{
                 // Obtaining values     
-                // console.log(binding.subject);
-                // console.log(binding.predicate);
-                // console.log(binding.object);
-                // console.log('------------------');
+                console.log(binding.subject);
+                console.log(binding.predicate.value);
+                console.log(binding.object);
+                console.log('-------------------');
                 let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
                 let obj_id = binding.object.id ? binding.object.id : binding.object.value;
                 let edge_id = subj_id + "_" + obj_id;
@@ -175,7 +176,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                         {{
                             id: subj_id,
                             label: binding.subject.value ? binding.subject.value : binding.subject.id,
-                            title: binding.subject.value ? binding.subject.value : binding.subject.id
+                            title: binding.subject.value ? binding.subject.value : binding.subject.id,
+                            clickable: true
                         }}
                     ]); 
                 }} else {{
@@ -195,13 +197,16 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                     console.log('edge already added!'); 
                 }}
                 if(!nodes.get(obj_id)) {{
-                    nodes.add([
-                        {{
-                            id: obj_id,
-                            label: binding.object.value ? binding.object.value : binding.object.id,
-                            title: binding.object.value ? binding.object.value : binding.object.id
-                        }}
-                    ]);
+                    node = {{
+                        id: obj_id,
+                        label: binding.object.value ? binding.object.value : binding.object.id,
+                        title: binding.object.value ? binding.object.value : binding.object.id,
+                        clickable: true
+                    }}
+                    if(binding.predicate.value.endsWith('type')) {{
+                        node['clickable'] = false;
+                    }}
+                    nodes.add(node);
                 }} else {{
                     console.log('object node already added!');
                 }}
@@ -221,7 +226,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         if(e.nodes[0]) {{
             selected_node = nodes.get(e.nodes[0]);
             console.log(selected_node.label);
-            if (selected_node) {{
+            console.log(selected_node.clickable);
+            if (selected_node && selected_node.clickable) {{
                  myEngine.queryQuads(
                     `CONSTRUCT {{
                         <` + selected_node.id + `> ?p ?o .    
