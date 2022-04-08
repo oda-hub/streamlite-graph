@@ -1,3 +1,4 @@
+import re
 import typing
 import pydotplus
 import bs4
@@ -115,211 +116,222 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_dic, graph_ttl_stream=None):
-    f_click = f'''
-     
-    const parser = new N3.Parser({{ format: 'ttl' }}); 
-    let store = new N3.Store();
-    let quad_list = [];
-    const myEngine = new Comunica.QueryEngine();
-    parsed_graph = parser.parse(`{graph_ttl_stream}`,
-        function (error, triple, prefixes) {{
-            // Always log errors
-            if (error) {{
-                console.error(error);
-            }}
-            if (triple) {{
-                // console.log(triple);
-                store.addQuad(triple.subject, triple.predicate, triple.object);
-            }}
-        }}
-    );
-    
-    (async() => {{
-        const bindingsStreamCall = await myEngine.queryQuads(
-            `CONSTRUCT {{
-                ?action a <http://schema.org/Action> ;
-                    <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
-        
-                ?activity a ?activityType ;
-                    <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                    <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-    
-                ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-            }}
-            WHERE {{ 
-                ?action a <http://schema.org/Action> ;
-                    <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
-                     
-                ?activity a ?activityType ;
-                    <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                    <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-                
-                ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-            }} `,
-            {{
-                sources: [ store ] 
-            }}
-        ); 
-        bindingsStreamCall.on('data', (binding) => {{
+def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
+    f_process_binding = '''
+        function process_binding(binding) {
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             // subj_id = subj_id.replaceAll('"', '');
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             // obj_id = obj_id.replaceAll('"', '');
             let edge_id = subj_id + "_" + obj_id;
             
-            subj_node = {{
+            subj_node = {
                 id: subj_id,
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: binding.subject.value ? binding.subject.value : binding.subject.id,
-                font: {{
+                font: {
                       'multi': "html",
                       'face': "courier"
-                     }}
-            }}
-            obj_node = {{
+                     }
+            }
+            edge_obj = {
+                id: edge_id,
+                from: subj_id,
+                to: obj_id,
+                title: binding.predicate.value
+            }
+            obj_node = {
                 id: obj_id,
                 label: binding.object.value ? binding.object.value : binding.object.id,
                 title: binding.object.value ? binding.object.value : binding.object.id,
-                font: {{
+                font: {
                       'multi': "html",
                       'face': "courier"
-                     }}
-            }}
-            if(!nodes.get(subj_id)) {{
+                     }
+            }
+            if(!nodes.get(subj_id)) {
                 nodes.add([subj_node]); 
-            }}
-            if(binding.predicate.value.endsWith('#type')) {{
+            }
+            if(binding.predicate.value.endsWith('#type')) {
                 subj_node_to_update = nodes.get(subj_id);
                 subj_node_to_update['label'] = '<b>' + subj_node_to_update['label'] + '</b>\\n' + obj_node['label']
-                nodes.update({{ id: subj_id, label: subj_node_to_update['label'] }});
-            }}
-            else if(obj_node.id[0] === '"') {{
+                nodes.update({ id: subj_id, label: subj_node_to_update['label'] });
+            }
+            else if(obj_node.id[0] === '"') {
                 subj_node_to_update = nodes.get(subj_id);
                 subj_node_to_update['label'] = subj_node_to_update['label'] + '\\n' + obj_node['id']
-                nodes.update({{ id: subj_id, label: subj_node_to_update['label'] }});
-            }}
-            else {{
-                if(!edges.get(edge_id)) {{
-                    edges.add([
-                        {{
-                            id: edge_id,
-                            from: subj_id,
-                            to: obj_id,
-                            title: binding.predicate.value,
-                            hidden: false 
-                        }}
-                    ]);
-                }}
-                if(!nodes.get(obj_id)) {{
+                nodes.update({ id: subj_id, label: subj_node_to_update['label'] });
+            }
+            else {
+                if(!edges.get(edge_id)) {
+                    edges.add([edge_obj]);
+                }
+                if(!nodes.get(obj_id)) {
                     nodes.add(obj_node);
+                }
+            }
+        }
+        
+        function drawGraph() {
+    '''
+
+    f_draw_graph = f'''
+     
+        const parser = new N3.Parser({{ format: 'ttl' }}); 
+        let store = new N3.Store();
+        let quad_list = [];
+        const myEngine = new Comunica.QueryEngine();
+        parsed_graph = parser.parse(`{graph_ttl_stream}`,
+            function (error, triple, prefixes) {{
+                // Always log errors
+                if (error) {{
+                    console.error(error);
                 }}
+                if (triple) {{
+                    // console.log(triple);
+                    store.addQuad(triple.subject, triple.predicate, triple.object);
+                }}
+            }}
+        );
+        
+        (async() => {{
+            const bindingsStreamCall = await myEngine.queryQuads(
+                `CONSTRUCT {{
+                    ?action a <http://schema.org/Action> ;
+                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+            
+                    ?activity a ?activityType ;
+                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+        
+                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                }}
+                WHERE {{ 
+                    ?action a <http://schema.org/Action> ;
+                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+                         
+                    ?activity a ?activityType ;
+                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+                    
+                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                }} `,
+                {{
+                    sources: [ store ] 
+                }}
+            ); 
+            bindingsStreamCall.on('data', (binding) => {{
+                process_binding(binding);
+            }});
+            bindingsStreamCall.on('end', () => {{
+                // The data-listener will not be called anymore once we get here.
+                // console.log('end\\n');
+                // console.log(nodes.get());
+            }});
+            bindingsStreamCall.on('error', (error) => {{ 
+                console.error(error);
+            }});
+        }})();
+        
+        network.on("click", function(e) {{
+            if(e.nodes[0]) {{
+                selected_node = nodes.get(e.nodes[0]);
+                console.log(selected_node.id);
+                if (selected_node) {{
+                     myEngine.queryQuads(
+                        `CONSTRUCT {{
+                            <` + selected_node.id + `> ?p ?o .
+                            ?o a ?o_type . 
+                        }}
+                        WHERE {{
+                            <` + selected_node.id + `> ?p ?o .
+                            ?o a ?o_type . 
+                        }}`,
+                    {{
+                        sources: [ store ]
+                    }}
+                ).then(
+                    function (bindingsStream) {{
+                        // Consume results as a stream (best performance)
+                        bindingsStream.on('data', (binding) => {{
+                            console.log(binding);
+                            // Obtaining values
+                            let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
+                            let obj_id = binding.object.id ? binding.object.id : binding.object.value;
+                            let edge_id = subj_id + "_" + obj_id;
+                            subj_node = {{
+                                id: subj_id,
+                                label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                                title: binding.subject.value ? binding.subject.value : binding.subject.id,
+                                font: {{
+                                      'multi': "html",
+                                      'face': "courier"
+                                     }}
+                            }}
+                            obj_node = {{
+                                id: obj_id,
+                                label: binding.object.value ? binding.object.value : binding.object.id,
+                                title: binding.object.value ? binding.object.value : binding.object.id,
+                                font: {{
+                                      'multi': "html",
+                                      'face': "courier"
+                                     }}
+                            }}
+                            
+                            if(!nodes.get(subj_id)) {{
+                                nodes.add(subj_node); 
+                            }}
+                            if(binding.predicate.value.endsWith('type')) {{
+                                nodes.update({{ id: subj_node['id'], label: '<b>' + subj_node['label'] + '</b>\\n' + obj_node['label'] }})
+                            }} else {{
+                                if(!edges.get(edge_id)) {{
+                                    edges.add([
+                                        {{
+                                            id: edge_id,
+                                            from: subj_id,
+                                            to: obj_id,
+                                            title: binding.predicate.value,
+                                            hidden: false 
+                                        }}
+                                    ]);
+                                }}
+                                if(!nodes.get(obj_id)) {{
+                                    nodes.add([obj_node]);
+                                }}
+                            }}
+                        }});
+                        bindingsStream.on('end', () => {{
+                            // The data-listener will not be called anymore once we get here.
+                            // console.log('end\\n');
+                        }});
+                        bindingsStream.on('error', (error) => {{
+                            console.error("error when clicked a node: " + error);
+                        }});
+                    }}
+                );
+            }}
             }}
         }});
         
-        bindingsStreamCall.on('end', () => {{
-            // The data-listener will not be called anymore once we get here.
-            // console.log('end\\n');
-            // console.log(nodes.get());
-        }});
-        bindingsStreamCall.on('error', (error) => {{ 
-            console.error(error);
-        }});
-    }})();
-    
-    var toggle = false;
-    network.on("click", function(e) {{
-        if(e.nodes[0]) {{
-            selected_node = nodes.get(e.nodes[0]);
-            console.log(selected_node.id);
-            if (selected_node) {{
-                 myEngine.queryQuads(
-                    `CONSTRUCT {{
-                        <` + selected_node.id + `> ?p ?o .
-                        ?o a ?o_type . 
-                    }}
-                    WHERE {{
-                        <` + selected_node.id + `> ?p ?o .
-                        ?o a ?o_type . 
-                    }}`,
-                {{
-                    sources: [ store ]
-                }}
-            ).then(
-                function (bindingsStream) {{
-                    // Consume results as a stream (best performance)
-                    bindingsStream.on('data', (binding) => {{
-                        console.log(binding);
-                        // Obtaining values
-                        let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
-                        let obj_id = binding.object.id ? binding.object.id : binding.object.value;
-                        let edge_id = subj_id + "_" + obj_id;
-                        subj_node = {{
-                            id: subj_id,
-                            label: binding.subject.value ? binding.subject.value : binding.subject.id,
-                            title: binding.subject.value ? binding.subject.value : binding.subject.id,
-                            font: {{
-                                  'multi': "html",
-                                  'face': "courier"
-                                 }}
-                        }}
-                        obj_node = {{
-                            id: obj_id,
-                            label: binding.object.value ? binding.object.value : binding.object.id,
-                            title: binding.object.value ? binding.object.value : binding.object.id,
-                            font: {{
-                                  'multi': "html",
-                                  'face': "courier"
-                                 }}
-                        }}
-                        
-                        if(!nodes.get(subj_id)) {{
-                            nodes.add(subj_node); 
-                        }}
-                        if(binding.predicate.value.endsWith('type')) {{
-                            nodes.update({{ id: subj_node['id'], label: '<b>' + subj_node['label'] + '</b>\\n' + obj_node['label'] }})
-                        }} else {{
-                            if(!edges.get(edge_id)) {{
-                                edges.add([
-                                    {{
-                                        id: edge_id,
-                                        from: subj_id,
-                                        to: obj_id,
-                                        title: binding.predicate.value,
-                                        hidden: false 
-                                    }}
-                                ]);
-                            }}
-                            if(!nodes.get(obj_id)) {{
-                                nodes.add([obj_node]);
-                            }}
-                        }}
-                    }});
-                    bindingsStream.on('end', () => {{
-                        // The data-listener will not be called anymore once we get here.
-                        // console.log('end');
-                    }});
-                    bindingsStream.on('error', (error) => {{
-                        console.error("error when clicked a node: " + error);
-                    }});
-                }}
-            );
+        var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
+        if(container_configure && container_configure.length > 0) {{
+            container_configure = container_configure[0];
+            container_configure.style = {{}};
+            container_configure.style.height="300px";
+            container_configure.style.overflow="scroll";
         }}
-        }}
-    }});
-    
-    var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
-    if(container_configure && container_configure.length > 0) {{
-        container_configure = container_configure[0];
-        container_configure.style = {{}};
-        container_configure.style.height="300px";
-        container_configure.style.overflow="scroll";
+        
+        return network;
     }}
-    return network;
     '''
+    net_html_match = re.search(r'return network;.*}', net.html, flags=re.DOTALL)
+    if net_html_match is not None:
+        net.html = net.html.replace(net_html_match.group(0), f_draw_graph)
 
-    net.html = net.html.replace('return network;', f_click)
-
+    net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
+    if net_html_match is not None:
+        net.html = net.html.replace(net_html_match.group(0), f_process_binding)
+    print(net.html)
     with open(output_path, "w+") as out:
         out.write(net.html)
 

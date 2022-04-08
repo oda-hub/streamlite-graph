@@ -113,7 +113,7 @@ def stream_graph():
     graph_ttl_str = fd.read()
     fd.close()
 
-    graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges, graph_ttl_stream=graph_ttl_str)
+    graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str)
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')
