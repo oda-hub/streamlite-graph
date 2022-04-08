@@ -162,58 +162,56 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
         function (bindingsStream) {{
             // Consume results as a stream (best performance)
             bindingsStream.on('data', (binding) => {{
-                // Obtaining values     
-                console.log(binding.subject);
-                console.log(binding.predicate.value);
-                console.log(binding.object);
-                console.log('-------------------');
+                // Obtaining values
                 let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
+                subj_id = subj_id.replaceAll('"', '');
                 let obj_id = binding.object.id ? binding.object.id : binding.object.value;
+                obj_id = obj_id.replaceAll('"', '');
                 let edge_id = subj_id + "_" + obj_id;
                 
+                subj_node = {{
+                    id: subj_id,
+                    label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                    title: binding.subject.value ? binding.subject.value : binding.subject.id,
+                    font: {{
+                          'multi': "html",
+                          'face': "courier"
+                         }}
+                }}
+                obj_node = {{
+                    id: obj_id,
+                    label: binding.object.value ? binding.object.value : binding.object.id,
+                    title: binding.object.value ? binding.object.value : binding.object.id,
+                    font: {{
+                          'multi': "html",
+                          'face': "courier"
+                         }}
+                }}
                 if(!nodes.get(subj_id)) {{
-                    nodes.add([
-                        {{
-                            id: subj_id,
-                            label: binding.subject.value ? binding.subject.value : binding.subject.id,
-                            title: binding.subject.value ? binding.subject.value : binding.subject.id,
-                            clickable: true
-                        }}
-                    ]); 
-                }} else {{
-                    console.log('subject node already added!');
+                    nodes.add([subj_node]); 
                 }}
-                if(!edges.get(edge_id)) {{
-                    edges.add([
-                        {{
-                            id: edge_id,
-                            from: subj_id,
-                            to: obj_id,
-                            title: binding.predicate.value,
-                            hidden: false 
-                        }}
-                    ]);
+                if(binding.predicate.value.endsWith('type')) {{
+                    nodes.update({{ id: subj_node['id'], label: '<b>' + subj_node['label'] + '</b>\\n' + obj_node['label'] }})
                 }} else {{
-                    console.log('edge already added!'); 
-                }}
-                if(!nodes.get(obj_id)) {{
-                    node = {{
-                        id: obj_id,
-                        label: binding.object.value ? binding.object.value : binding.object.id,
-                        title: binding.object.value ? binding.object.value : binding.object.id,
-                        clickable: true
+                    if(!edges.get(edge_id)) {{
+                        edges.add([
+                            {{
+                                id: edge_id,
+                                from: subj_id,
+                                to: obj_id,
+                                title: binding.predicate.value,
+                                hidden: false 
+                            }}
+                        ]);
                     }}
-                    if(binding.predicate.value.endsWith('type')) {{
-                        node['clickable'] = false;
+                    if(!nodes.get(obj_id)) {{
+                        nodes.add(obj_node);
                     }}
-                    nodes.add(node);
-                }} else {{
-                    console.log('object node already added!');
                 }}
             }});
             bindingsStream.on('end', () => {{
                 // The data-listener will not be called anymore once we get here.
-                console.log('end');
+                // console.log('end');
             }});
             bindingsStream.on('error', (error) => {{ 
                 console.error(error);
@@ -225,15 +223,16 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     network.on("click", function(e) {{
         if(e.nodes[0]) {{
             selected_node = nodes.get(e.nodes[0]);
-            console.log(selected_node.label);
-            console.log(selected_node.clickable);
-            if (selected_node && selected_node.clickable) {{
+            console.log(selected_node.id);
+            if (selected_node) {{
                  myEngine.queryQuads(
                     `CONSTRUCT {{
-                        <` + selected_node.id + `> ?p ?o .    
+                        <` + selected_node.id + `> ?p ?o .
+                        ?o a ?o_type . 
                     }}
                     WHERE {{
-                        <` + selected_node.id + `> ?p ?o . 
+                        <` + selected_node.id + `> ?p ?o .
+                        ?o a ?o_type . 
                     }}`,
                 {{
                     sources: [ store ]
@@ -242,26 +241,32 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                 function (bindingsStream) {{
                     // Consume results as a stream (best performance)
                     bindingsStream.on('data', (binding) => {{
-                        // Obtaining values     
-                        console.log(binding.subject);
-                        console.log(binding.predicate);
-                        console.log(binding.object);
-                        console.log('------------------');
+                        console.log(binding);
+                        // Obtaining values
                         let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
                         let obj_id = binding.object.id ? binding.object.id : binding.object.value;
                         let edge_id = subj_id + "_" + obj_id;
+                        subj_node = {{
+                            id: subj_id,
+                            label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                            title: binding.subject.value ? binding.subject.value : binding.subject.id,
+                            font: {{
+                                  'multi': "html",
+                                  'face': "courier"
+                                 }}
+                        }}
+                        obj_node = {{
+                            id: obj_id,
+                            label: binding.object.value ? binding.object.value : binding.object.id,
+                            title: binding.object.value ? binding.object.value : binding.object.id,
+                            font: {{
+                                  'multi': "html",
+                                  'face': "courier"
+                                 }}
+                        }}
                         
                         if(!nodes.get(subj_id)) {{
-                            nodes.add([
-                                {{
-                                    id: subj_id,
-                                    label: binding.subject.value ? binding.subject.value : binding.subject.id,
-                                    title: binding.subject.value ? binding.subject.value : binding.subject.id,
-                                    clickable: true
-                                }}
-                            ]); 
-                        }} else {{
-                            console.log('subject node already added!');
+                            nodes.add(subj_node); 
                         }}
                         if(!edges.get(edge_id)) {{
                             edges.add([
@@ -273,30 +278,17 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                                     hidden: false 
                                 }}
                             ]);
-                        }} else {{
-                            console.log('edge already added!'); 
                         }}
                         if(!nodes.get(obj_id)) {{
-                            node = {{
-                                id: obj_id,
-                                label: binding.object.value ? binding.object.value : binding.object.id,
-                                title: binding.object.value ? binding.object.value : binding.object.id,
-                                clickable: true
-                            }}
-                            if(binding.predicate.value.endsWith('type')) {{
-                                node['clickable'] = false;
-                            }}
-                            nodes.add(node);
-                        }} else {{
-                            console.log('object node already added!');
+                            nodes.add([obj_node]);
                         }}
                     }});
                     bindingsStream.on('end', () => {{
                         // The data-listener will not be called anymore once we get here.
-                        console.log('end');
+                        // console.log('end');
                     }});
                     bindingsStream.on('error', (error) => {{
-                        console.error(error);
+                        console.error("error when clicked a node: " + error);
                     }});
                 }}
             );
@@ -305,7 +297,7 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
     }});
     
     var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
-    if(container_configure) {{
+    if(container_configure && container_configure.length > 0) {{
         container_configure = container_configure[0];
         container_configure.style = {{}};
         container_configure.style.height="300px";

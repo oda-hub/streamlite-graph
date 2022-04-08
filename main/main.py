@@ -26,12 +26,12 @@ def stream_graph():
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph.ttl'
 
-    pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
+    # pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
     net = Network(
         height='750px', width='100%',
     )
 
-    # graph_utils.set_graph_options(net)
+    graph_utils.set_graph_options(net)
 
     hidden_nodes_dic = {}
     hidden_edges = []
