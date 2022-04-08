@@ -160,15 +160,8 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
             {{
                 sources: [ store ] 
             }}
-        );
-        // const bindings = await bindingsStreamCall.toArray(); 
+        ); 
         bindingsStreamCall.on('data', (binding) => {{
-        
-        // for (let binding_index in bindings) {{
-            // Obtaining values
-            // let binding = bindings[binding_index];
-            // console.log(binding);
-             
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             // subj_id = subj_id.replaceAll('"', '');
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
