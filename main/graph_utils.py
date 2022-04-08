@@ -118,7 +118,7 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
 def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_dic, graph_ttl_stream=None):
     f_click = f'''
      
-    const parser = new N3.Parser({{ format: 'ttl' }});
+    const parser = new N3.Parser({{ format: 'ttl' }}); 
     let store = new N3.Store();
     let quad_list = [];
     const myEngine = new Comunica.QueryEngine();
@@ -129,12 +129,14 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                 console.error(error);
             }}
             if (triple) {{
+                // console.log(triple);
                 store.addQuad(triple.subject, triple.predicate, triple.object);
             }}
         }}
     );
     
-    myEngine.queryQuads(
+    (async() => {{
+        const bindingsStreamCall = await myEngine.queryQuads(
             `CONSTRUCT {{
                 ?action a <http://schema.org/Action> ;
                     <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
@@ -155,69 +157,82 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                 
                 ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
             }} `,
-        {{
-            sources: [ store ] 
-        }}
-    ).then(
-        function (bindingsStream) {{
-            // Consume results as a stream (best performance)
-            bindingsStream.on('data', (binding) => {{
-                // Obtaining values
-                let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
-                subj_id = subj_id.replaceAll('"', '');
-                let obj_id = binding.object.id ? binding.object.id : binding.object.value;
-                obj_id = obj_id.replaceAll('"', '');
-                let edge_id = subj_id + "_" + obj_id;
-                
-                subj_node = {{
-                    id: subj_id,
-                    label: binding.subject.value ? binding.subject.value : binding.subject.id,
-                    title: binding.subject.value ? binding.subject.value : binding.subject.id,
-                    font: {{
-                          'multi': "html",
-                          'face': "courier"
-                         }}
+            {{
+                sources: [ store ] 
+            }}
+        );
+        // const bindings = await bindingsStreamCall.toArray(); 
+        bindingsStreamCall.on('data', (binding) => {{
+        
+        // for (let binding_index in bindings) {{
+            // Obtaining values
+            // let binding = bindings[binding_index];
+            // console.log(binding);
+             
+            let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
+            // subj_id = subj_id.replaceAll('"', '');
+            let obj_id = binding.object.id ? binding.object.id : binding.object.value;
+            // obj_id = obj_id.replaceAll('"', '');
+            let edge_id = subj_id + "_" + obj_id;
+            
+            subj_node = {{
+                id: subj_id,
+                label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                title: binding.subject.value ? binding.subject.value : binding.subject.id,
+                font: {{
+                      'multi': "html",
+                      'face': "courier"
+                     }}
+            }}
+            obj_node = {{
+                id: obj_id,
+                label: binding.object.value ? binding.object.value : binding.object.id,
+                title: binding.object.value ? binding.object.value : binding.object.id,
+                font: {{
+                      'multi': "html",
+                      'face': "courier"
+                     }}
+            }}
+            if(!nodes.get(subj_id)) {{
+                nodes.add([subj_node]); 
+            }}
+            if(binding.predicate.value.endsWith('#type')) {{
+                subj_node_to_update = nodes.get(subj_id);
+                subj_node_to_update['label'] = '<b>' + subj_node_to_update['label'] + '</b>\\n' + obj_node['label']
+                nodes.update({{ id: subj_id, label: subj_node_to_update['label'] }});
+            }}
+            else if(obj_node.id[0] === '"') {{
+                subj_node_to_update = nodes.get(subj_id);
+                subj_node_to_update['label'] = subj_node_to_update['label'] + '\\n' + obj_node['id']
+                nodes.update({{ id: subj_id, label: subj_node_to_update['label'] }});
+            }}
+            else {{
+                if(!edges.get(edge_id)) {{
+                    edges.add([
+                        {{
+                            id: edge_id,
+                            from: subj_id,
+                            to: obj_id,
+                            title: binding.predicate.value,
+                            hidden: false 
+                        }}
+                    ]);
                 }}
-                obj_node = {{
-                    id: obj_id,
-                    label: binding.object.value ? binding.object.value : binding.object.id,
-                    title: binding.object.value ? binding.object.value : binding.object.id,
-                    font: {{
-                          'multi': "html",
-                          'face': "courier"
-                         }}
+                if(!nodes.get(obj_id)) {{
+                    nodes.add(obj_node);
                 }}
-                if(!nodes.get(subj_id)) {{
-                    nodes.add([subj_node]); 
-                }}
-                if(binding.predicate.value.endsWith('type')) {{
-                    nodes.update({{ id: subj_node['id'], label: '<b>' + subj_node['label'] + '</b>\\n' + obj_node['label'] }})
-                }} else {{
-                    if(!edges.get(edge_id)) {{
-                        edges.add([
-                            {{
-                                id: edge_id,
-                                from: subj_id,
-                                to: obj_id,
-                                title: binding.predicate.value,
-                                hidden: false 
-                            }}
-                        ]);
-                    }}
-                    if(!nodes.get(obj_id)) {{
-                        nodes.add(obj_node);
-                    }}
-                }}
-            }});
-            bindingsStream.on('end', () => {{
-                // The data-listener will not be called anymore once we get here.
-                // console.log('end');
-            }});
-            bindingsStream.on('error', (error) => {{ 
-                console.error(error);
-            }});
-        }}
-    );
+            }}
+        }});
+        
+        bindingsStreamCall.on('end', () => {{
+            // The data-listener will not be called anymore once we get here.
+            // console.log('end\\n');
+            // console.log(nodes.get());
+        }});
+        bindingsStreamCall.on('error', (error) => {{ 
+            console.error(error);
+        }});
+    }})();
     
     var toggle = false;
     network.on("click", function(e) {{
@@ -268,19 +283,23 @@ def add_js_click_functionality(net, output_path, hidden_nodes_dic, hidden_edges_
                         if(!nodes.get(subj_id)) {{
                             nodes.add(subj_node); 
                         }}
-                        if(!edges.get(edge_id)) {{
-                            edges.add([
-                                {{
-                                    id: edge_id,
-                                    from: subj_id,
-                                    to: obj_id,
-                                    title: binding.predicate.value,
-                                    hidden: false 
-                                }}
-                            ]);
-                        }}
-                        if(!nodes.get(obj_id)) {{
-                            nodes.add([obj_node]);
+                        if(binding.predicate.value.endsWith('type')) {{
+                            nodes.update({{ id: subj_node['id'], label: '<b>' + subj_node['label'] + '</b>\\n' + obj_node['label'] }})
+                        }} else {{
+                            if(!edges.get(edge_id)) {{
+                                edges.add([
+                                    {{
+                                        id: edge_id,
+                                        from: subj_id,
+                                        to: obj_id,
+                                        title: binding.predicate.value,
+                                        hidden: false 
+                                    }}
+                                ]);
+                            }}
+                            if(!nodes.get(obj_id)) {{
+                                nodes.add([obj_node]);
+                            }}
                         }}
                     }});
                     bindingsStream.on('end', () => {{
@@ -332,13 +351,8 @@ def update_js_libraries(html_fn):
 
     new_script_query_sparql_library = soup.new_tag("script", type="application/javascript",
                                              src="http://rdf.js.org/comunica-browser/versions/latest"
-                                                 "/engines/query-sparql/comunica-browser.js")
+                                                 "/engines/query-sparql-rdfjs/comunica-browser.js")
     soup.head.append(new_script_query_sparql_library)
-
-    new_script_query_sparql_file_library = soup.new_tag("script", type="application/javascript",
-                                                   src="http://rdf.js.org/comunica-browser/versions/latest"
-                                                       "/engines/query-sparql-file/comunica-browser.js")
-    soup.head.append(new_script_query_sparql_file_library)
 
     # save the file again
     with open(html_fn, "w") as outf:
