@@ -297,7 +297,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
     net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
     if net_html_match is not None:
         net.html = net.html.replace(net_html_match.group(0), f_process_binding)
-    print(net.html)
+
     with open(output_path, "w+") as out:
         out.write(net.html)
 
