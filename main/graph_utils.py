@@ -120,6 +120,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
     f_process_binding = '''
         function process_binding(binding) {
             
+            // let pred_str = binding.object;
+            // console.log(pred_str);
+            
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
@@ -154,10 +157,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 nodes.add([subj_node]); 
             }
             if(binding.predicate.value.endsWith('#type')) {
+                // extract type name
+                n3_literal = new N3.NamedNode(obj_id);
+                type_name = n3_literal.value;
                 subj_node_to_update = nodes.get(subj_id);
                 if(!subj_node_to_update['type']) {
-                    subj_node_to_update['label'] = '<b>' + subj_node_to_update['label'] + '</b>\\n' + obj_node['label']
-                    nodes.update({ id: subj_id, label: subj_node_to_update['label'], type: obj_node['label'] });
+                    subj_node_to_update['label'] = '<b>' + subj_node_to_update['label'] + '</b>\\n' + type_name
+                    nodes.update({ id: subj_id, label: subj_node_to_update['label'], type: type_name });
                 }
             }
             else {
@@ -166,12 +172,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 }
                 if(!nodes.get(obj_id)) {
                     nodes.add(obj_node);
-                    if(obj_node.id[0] === '"') {
+                    if(binding.object.termType === "Literal") {
                         // disable click for any literal node
                         // subj_node_to_update = nodes.get(subj_id);
                         // subj_node_to_update['label'] = subj_node_to_update['label'] + '\\n' + obj_node['id']
                         // nodes.update({ id: subj_id, label: subj_node_to_update['label'] });
-                        nodes.update({ id: obj_id, clickable: false });
+                        n3_literal = new N3.Literal(obj_id);
+                        nodes.update({ id: obj_id, clickable: false, value: n3_literal.value, datatypeString: n3_literal.datatypeString });
                     }
                 }
             }
@@ -182,7 +189,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
 
     f_draw_graph = f'''
      
-        const parser = new N3.Parser({{ format: 'ttl' }}); 
+        const parser = new N3.Parser({{ format: 'ttl' }});
+        // console.log(N3);
+        const n3_utils = N3.Util;
         let store = new N3.Store();
         let quad_list = [];
         const myEngine = new Comunica.QueryEngine();
@@ -194,6 +203,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 }}
                 if (triple) {{
                     // console.log(triple);
+                    /*if(n3_utils.isLiteral(triple._object)) {{
+                        console.log("literal: ");
+                        console.log(triple._object);
+                    }}
+                    if(n3_utils.isNamedNode(triple._object)) {{
+                        console.log("IRI: ");
+                        console.log(triple._object);
+                        console.log(n3_utils.prefixes(triple._object));
+                    }}*/
                     store.addQuad(triple.subject, triple.predicate, triple.object);
                 }}
             }}
@@ -241,7 +259,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
-                console.log(selected_node);
+                // console.log(selected_node);
                 if (selected_node && selected_node['clickable']) {{
                      myEngine.queryQuads(
                         `CONSTRUCT {{
@@ -263,7 +281,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                     function (bindingsStream) {{
                         // Consume results as a stream (best performance), alternative with array exists
                         bindingsStream.on('data', (binding) => {{
-                            console.log(binding);
+                            // console.log(binding);
                             process_binding(binding);
                         }});
                         bindingsStream.on('end', () => {{
