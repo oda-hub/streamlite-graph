@@ -10,48 +10,7 @@ from dateutil import parser
 def set_graph_options(graph):
     graph.set_options(
         """{
-            "physics": {
-                "hierarchicalRepulsion": {
-                    "nodeDistance": 175,
-                    "damping": 0.15
-                },
-                "minVelocity": 0.75,
-                "solver": "hierarchicalRepulsion"
-            },
-            "configure": {
-                "filter": ""
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": true,
-                    "levelSeparation": -150,
-                    "sortMethod": "directed"
-                }
-            },
-            "nodes": {
-                "scaling": {
-                  "min": 10,
-                  "max": 100,
-                  "label": {
-                    "enabled": true
-                  }
-                },
-                "labelHighlightBold": true
-            },
-            "edges": {
-                "arrows": {
-                  "to": {
-                    "enabled": true,
-                    "scaleFactor": 0.45
-                    }
-                },
-                "arrowStrikethrough": true,
-                "color": {
-                    "inherit": true
-                },
-                "physics": false,
-                "smooth": false
-            }
+            
         }"""
     )
 
@@ -191,7 +150,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
     f_draw_graph = f'''
      
         const parser = new N3.Parser({{ format: 'ttl' }});
-        // console.log(N3);
         const n3_utils = N3.Util;
         let prefix_processing;
         let store = new N3.Store();
@@ -269,7 +227,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                     function (bindingsStream) {{
                         // Consume results as a stream (best performance), alternative with array exists
                         bindingsStream.on('data', (binding) => {{
-                            // console.log(binding);
                             process_binding(binding);
                         }});
                         bindingsStream.on('end', () => {{
