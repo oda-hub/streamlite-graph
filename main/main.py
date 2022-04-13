@@ -31,10 +31,10 @@ def stream_graph():
         height='750px', width='100%',
     )
 
-    graph_utils.set_graph_options(net)
-
     # to tweak physics related options
     net.write_html(html_fn)
+
+    graph_utils.set_graph_options(net, html_fn)
 
     fd = open(ttl_fn, 'r')
     graph_ttl_str = fd.read()

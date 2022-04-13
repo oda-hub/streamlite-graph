@@ -7,12 +7,49 @@ from lxml import etree
 from dateutil import parser
 
 
-def set_graph_options(graph):
-    graph.set_options(
-        """{
-            
-        }"""
+def set_graph_options(net, output_path):
+    options_str = (
+        """var options = {
+            "nodes": {
+                "scaling": {
+                    "min": 10,
+                    "max": 30
+                },
+                "font": {
+                    "size": 12,
+                    "face": "Tahoma",
+                },
+            },
+            "edges": {
+                "smooth": {
+                    "type": "continuous"
+                },
+            },
+            "physics": {
+            "forceAtlas2Based": {
+                "gravitationalConstant": -26,
+                "centralGravity": 0.005,
+                "springLength": 230,
+                "springConstant": 0.18,
+                "avoidOverlap": 1.5
+            },
+            "maxVelocity": 146,
+            "solver": 'forceAtlas2Based',
+            "timestep": 0.35,
+            "stabilization": {
+                "enabled": true,
+                "iterations": 1000,
+                "updateInterval": 25
+            }
+        }
+        };"""
     )
+    net_html_match = re.search(r'var options = {.*};', net.html, flags=re.DOTALL)
+    if net_html_match is not None:
+        net.html = net.html.replace(net_html_match.group(0), options_str)
+
+    with open(output_path, "w+") as out:
+        out.write(net.html)
 
 
 def get_node_graphical_info(node: typing.Union[pydotplus.Node],
@@ -202,7 +239,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 console.error(error);
             }});
         }})();
-        
+        network.on("stabilizationIterationsDone", function () {{
+            network.setOptions( {{ "physics": {{ enabled: false }} }} );
+        }});
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
