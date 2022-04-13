@@ -157,9 +157,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 nodes.add([subj_node]); 
             }
             if(binding.predicate.value.endsWith('#type')) {
-                // extract type name
-                n3_literal = new N3.NamedNode(obj_id);
-                type_name = n3_literal.value;
+                
+                idx_slash = obj_id.lastIndexOf("/");
+                substr_q = obj_id.slice(idx_slash + 1); 
+                if (substr_q) {
+                    idx_hash = substr_q.indexOf("#");
+                    if (idx_hash)
+                      type_name = substr_q.slice(idx_hash + 1);  
+                }
                 subj_node_to_update = nodes.get(subj_id);
                 if(!subj_node_to_update['type']) {
                     subj_node_to_update['label'] = '<b>' + subj_node_to_update['label'] + '</b>\\n' + type_name
@@ -174,11 +179,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                     nodes.add(obj_node);
                     if(binding.object.termType === "Literal") {
                         // disable click for any literal node
-                        // subj_node_to_update = nodes.get(subj_id);
-                        // subj_node_to_update['label'] = subj_node_to_update['label'] + '\\n' + obj_node['id']
-                        // nodes.update({ id: subj_id, label: subj_node_to_update['label'] });
-                        n3_literal = new N3.Literal(obj_id);
-                        nodes.update({ id: obj_id, clickable: false, value: n3_literal.value, datatypeString: n3_literal.datatypeString });
+                        nodes.update({ id: obj_id, clickable: false });
                     }
                 }
             }
@@ -192,6 +193,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
         const parser = new N3.Parser({{ format: 'ttl' }});
         // console.log(N3);
         const n3_utils = N3.Util;
+        let prefix_processing;
         let store = new N3.Store();
         let quad_list = [];
         const myEngine = new Comunica.QueryEngine();
@@ -202,16 +204,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                     console.error(error);
                 }}
                 if (triple) {{
-                    // console.log(triple);
-                    /*if(n3_utils.isLiteral(triple._object)) {{
-                        console.log("literal: ");
-                        console.log(triple._object);
-                    }}
-                    if(n3_utils.isNamedNode(triple._object)) {{
-                        console.log("IRI: ");
-                        console.log(triple._object);
-                        console.log(n3_utils.prefixes(triple._object));
-                    }}*/
                     store.addQuad(triple.subject, triple.predicate, triple.object);
                 }}
             }}
@@ -247,9 +239,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 process_binding(binding);
             }});
             bindingsStreamCall.on('end', () => {{
-                // The data-listener will not be called anymore once we get here.
-                // console.log('end\\n');
-                // console.log(nodes.get());
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);
@@ -259,7 +248,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
-                // console.log(selected_node);
                 if (selected_node && selected_node['clickable']) {{
                      myEngine.queryQuads(
                         `CONSTRUCT {{
