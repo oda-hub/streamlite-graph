@@ -24,21 +24,29 @@ def set_graph_options(net, output_path):
                 "smooth": {
                     "type": "continuous"
                 },
+                "arrows": {
+                  "to": {
+                    "enabled": true,
+                    "scaleFactor": 0.45
+                    }
+                }
+            },
+            "layout": {
+                "hierarchical": {
+                    "enabled": true,
+                    "levelSeparation": -150,
+                    "sortMethod": "directed"
+                }
             },
             "physics": {
-                "maxVelocity": 10,
-                "solver": "barnesHut",
-                "timestep": 0.135,
-                "barnesHut": {
-                    "avoidOverlap": 0.5,
-                    "springLength": 55,
-                    "springConstant": 1.5
+                "minVelocity": 0.75,
+                "solver": "hierarchicalRepulsion",
+                "hierarchicalRepulsion": {
+                    "avoidOverlap": 0.7
                 },
+                "timestep": 0.135,
                 "stabilization": {
-                    "enabled": true,
-                    "iterations": 2,
-                    "updateInterval": 5,
-                    "fit": true
+                    "enabled": false
                 }
             }
         };"""
