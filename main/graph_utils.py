@@ -166,7 +166,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 nodes.add([subj_node]); 
             }
             if(binding.predicate.value.endsWith('#type')) {
-                
+                // extract type name
                 idx_slash = obj_id.lastIndexOf("/");
                 substr_q = obj_id.slice(idx_slash + 1); 
                 if (substr_q) {
@@ -188,7 +188,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 }
                 if(!nodes.get(obj_id)) {
                     nodes.add(obj_node);
-                        if(binding.object.termType === "Literal") {
+                    if(binding.object.termType === "Literal") {
                         // disable click for any literal node
                         nodes.update({ id: obj_id, clickable: false });
                     }
@@ -285,7 +285,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                         <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
                     
                     ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-                }} `,
+                }}`,
                 {{
                     sources: [ store ] 
                 }}
@@ -294,6 +294,44 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 process_binding(binding);
             }});
             bindingsStreamCall.on('end', () => {{
+                // test extract_activity_start_time
+                edges_time = (edges.get({{
+                    filter: function (edge) {{
+                        return (edge.title == 'http://www.w3.org/ns/prov#startedAtTime');
+                    }}
+                }}));
+                for ( edge_t_idx in edges_time) {{
+                    edge_time = edges_time[edge_t_idx];
+                    activity_node = nodes.get(edge_time.from);
+                    activity_start_time_node= nodes.get(edge_time.to);
+                    edges_association = (edges.get({{
+                        filter: function (edge) {{
+                            return (edge.title == 'http://www.w3.org/ns/prov#qualifiedAssociation' && edge.from == activity_node.id);
+                        }}
+                    }}));
+                    for ( edge_a_idx in edges_association) {{
+                        edge_association = edges_association[edge_a_idx];
+                        activity_node = nodes.get(edge_association.from);
+                        association_node = nodes.get(edge_association.to);
+                        edges_plan = (edges.get({{
+                            filter: function (edge) {{
+                                return (edge.title == 'http://www.w3.org/ns/prov#hadPlan' && edge.from == association_node.id);
+                            }}
+                        }}));
+                        for ( edge_p_idx in edges_plan) {{
+                            edge_plan = edges_plan[edge_p_idx];
+                            plan_node = nodes.get(edge_plan.to);
+                            new_edge_obj = {{
+                                id: plan_node.id + "_" + activity_start_time_node.id,
+                                from: plan_node.id,
+                                to: activity_start_time_node.id,
+                                title: 'http://www.w3.org/ns/prov#startedAtTime'
+                            }};
+                            edges.add([new_edge_obj]);
+                            edges.remove([edge_time.id]);
+                        }}
+                    }}
+                }}
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);
