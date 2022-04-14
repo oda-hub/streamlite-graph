@@ -42,7 +42,9 @@ def set_graph_options(net, output_path):
                 "minVelocity": 0.75,
                 "solver": "hierarchicalRepulsion",
                 "hierarchicalRepulsion": {
-                    "avoidOverlap": 1
+                    "avoidOverlap": 1,
+                    "nodeDistance": 175,
+                    "damping": 0.15
                 },
                 "timestep": 0.5,
                 "stabilization": {
@@ -122,10 +124,6 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
 def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
     f_process_binding = '''
         function process_binding(binding) {
-            
-            // let pred_str = binding.object;
-            // console.log(pred_str);
-            
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
@@ -156,6 +154,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             }
             if(!nodes.get(subj_id)) {
                 nodes.add([subj_node]); 
+                network.fit();
             }
             if(binding.predicate.value.endsWith('#type')) {
                 
@@ -180,7 +179,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 }
                 if(!nodes.get(obj_id)) {
                     nodes.add(obj_node);
-                    if(binding.object.termType === "Literal") {
+                    network.fit();
+                        if(binding.object.termType === "Literal") {
                         // disable click for any literal node
                         nodes.update({ id: obj_id, clickable: false });
                     }
@@ -212,16 +212,33 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
         );
         
         network.on("stabilized", function (e) {{
-            console.log("stabilized");
-            console.log(e);
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
+            console.log("physics deactivated");
         }});
         
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
-                     myEngine.queryQuads(
+                    
+                    network.setOptions( {{ 
+                        "physics": {{ 
+                            "minVelocity": 0.75,
+                            "solver": "hierarchicalRepulsion",
+                            "hierarchicalRepulsion": {{
+                                "avoidOverlap": 0.9,
+                                "nodeDistance": 175,
+                                "damping": 0.15
+                            }},
+                            "timestep": 0.5,
+                            "stabilization": {{
+                                "enabled": true,
+                            }}
+                        }} 
+                    }} );
+                    console.log("physics reactivated");
+                    
+                    myEngine.queryQuads(
                         `CONSTRUCT {{
                             <` + selected_node.id + `> ?p ?o .
                             ?o a ?o_type . 
