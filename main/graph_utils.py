@@ -42,11 +42,11 @@ def set_graph_options(net, output_path):
                 "minVelocity": 0.75,
                 "solver": "hierarchicalRepulsion",
                 "hierarchicalRepulsion": {
-                    "avoidOverlap": 0.7
+                    "avoidOverlap": 1
                 },
-                "timestep": 0.135,
+                "timestep": 0.5,
                 "stabilization": {
-                    "enabled": false
+                    "enabled": true,
                 }
             }
         };"""
