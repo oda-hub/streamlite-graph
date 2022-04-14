@@ -26,22 +26,21 @@ def set_graph_options(net, output_path):
                 },
             },
             "physics": {
-            "forceAtlas2Based": {
-                "gravitationalConstant": -26,
-                "centralGravity": 0.005,
-                "springLength": 230,
-                "springConstant": 0.18,
-                "avoidOverlap": 1.5
-            },
-            "maxVelocity": 146,
-            "solver": 'forceAtlas2Based',
-            "timestep": 0.35,
-            "stabilization": {
-                "enabled": true,
-                "iterations": 1000,
-                "updateInterval": 25
+                "maxVelocity": 10,
+                "solver": "barnesHut",
+                "timestep": 0.135,
+                "barnesHut": {
+                    "avoidOverlap": 0.5,
+                    "springLength": 55,
+                    "springConstant": 1.5
+                },
+                "stabilization": {
+                    "enabled": true,
+                    "iterations": 2,
+                    "updateInterval": 5,
+                    "fit": true
+                }
             }
-        }
         };"""
     )
     net_html_match = re.search(r'var options = {.*};', net.html, flags=re.DOTALL)
@@ -126,7 +125,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             subj_node = {
                 id: subj_id,
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
-                title: binding.subject.value ? binding.subject.value : binding.subject.id,
                 clickable: true,
                 font: {
                       'multi': "html",
@@ -142,7 +140,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             obj_node = {
                 id: obj_id,
                 label: binding.object.value ? binding.object.value : binding.object.id,
-                title: binding.object.value ? binding.object.value : binding.object.id,
                 clickable: true,
                 font: {
                       'multi': "html",
@@ -159,12 +156,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 if (substr_q) {
                     idx_hash = substr_q.indexOf("#");
                     if (idx_hash)
-                      type_name = substr_q.slice(idx_hash + 1);  
+                      type_name = substr_q.slice(idx_hash + 1); 
                 }
                 subj_node_to_update = nodes.get(subj_id);
                 if(!subj_node_to_update['type']) {
                     subj_node_to_update['label'] = '<b>' + subj_node_to_update['label'] + '</b>\\n' + type_name
-                    nodes.update({ id: subj_id, label: subj_node_to_update['label'], type: type_name });
+                    nodes.update({ id: subj_id, 
+                                    label: subj_node_to_update['label'],
+                                    type: type_name });
                 }
             }
             else {
@@ -204,44 +203,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             }}
         );
         
-        (async() => {{
-            const bindingsStreamCall = await myEngine.queryQuads(
-                `CONSTRUCT {{
-                    ?action a <http://schema.org/Action> ;
-                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
-            
-                    ?activity a ?activityType ;
-                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-        
-                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-                }}
-                WHERE {{ 
-                    ?action a <http://schema.org/Action> ;
-                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
-                         
-                    ?activity a ?activityType ;
-                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-                    
-                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-                }} `,
-                {{
-                    sources: [ store ] 
-                }}
-            ); 
-            bindingsStreamCall.on('data', (binding) => {{
-                process_binding(binding);
-            }});
-            bindingsStreamCall.on('end', () => {{
-            }});
-            bindingsStreamCall.on('error', (error) => {{ 
-                console.error(error);
-            }});
-        }})();
-        network.on("stabilizationIterationsDone", function () {{
+        network.on("stabilized", function (e) {{
+            console.log("stabilized");
+            console.log(e);
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
+        
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
@@ -280,6 +247,42 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             }}
             }}
         }});
+        
+        (async() => {{
+            const bindingsStreamCall = await myEngine.queryQuads(
+                `CONSTRUCT {{
+                    ?action a <http://schema.org/Action> ;
+                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+            
+                    ?activity a ?activityType ;
+                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+        
+                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                }}
+                WHERE {{ 
+                    ?action a <http://schema.org/Action> ;
+                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+                         
+                    ?activity a ?activityType ;
+                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+                    
+                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                }} `,
+                {{
+                    sources: [ store ] 
+                }}
+            ); 
+            bindingsStreamCall.on('data', (binding) => {{
+                process_binding(binding);
+            }});
+            bindingsStreamCall.on('end', () => {{
+            }});
+            bindingsStreamCall.on('error', (error) => {{ 
+                console.error(error);
+            }});
+        }})();
         
         var container_configure = document.getElementsByClassName("vis-configuration-wrapper");
         if(container_configure && container_configure.length > 0) {{
