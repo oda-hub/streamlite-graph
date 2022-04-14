@@ -9,7 +9,9 @@ from dateutil import parser
 
 def set_graph_options(net, output_path):
     options_str = (
-        """var options = {
+        """
+        var options = {
+            "autoResize": true,
             "nodes": {
                 "scaling": {
                     "min": 10,
@@ -51,7 +53,13 @@ def set_graph_options(net, output_path):
                     "enabled": true,
                 }
             }
-        };"""
+        };
+        
+        function applyAnimationsOptions() {
+            network.setOptions( options );
+        }
+        
+        """
     )
     net_html_match = re.search(r'var options = {.*};', net.html, flags=re.DOTALL)
     if net_html_match is not None:
@@ -131,6 +139,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             subj_node = {
                 id: subj_id,
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                title: subj_id,
                 clickable: true,
                 font: {
                       'multi': "html",
@@ -146,6 +155,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             obj_node = {
                 id: obj_id,
                 label: binding.object.value ? binding.object.value : binding.object.id,
+                title: obj_id,
                 clickable: true,
                 font: {
                       'multi': "html",
@@ -154,7 +164,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
             }
             if(!nodes.get(subj_id)) {
                 nodes.add([subj_node]); 
-                network.fit();
             }
             if(binding.predicate.value.endsWith('#type')) {
                 
@@ -167,7 +176,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 }
                 subj_node_to_update = nodes.get(subj_id);
                 if(!subj_node_to_update['type']) {
-                    subj_node_to_update['label'] = '<b>' + subj_node_to_update['label'] + '</b>\\n' + type_name
+                    subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
                     nodes.update({ id: subj_id, 
                                     label: subj_node_to_update['label'],
                                     type: type_name });
@@ -179,7 +188,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                 }
                 if(!nodes.get(obj_id)) {
                     nodes.add(obj_node);
-                    network.fit();
                         if(binding.object.termType === "Literal") {
                         // disable click for any literal node
                         nodes.update({ id: obj_id, clickable: false });
@@ -213,30 +221,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
         
         network.on("stabilized", function (e) {{
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
-            console.log("physics deactivated");
         }});
         
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
-                    
-                    network.setOptions( {{ 
-                        "physics": {{ 
-                            "minVelocity": 0.75,
-                            "solver": "hierarchicalRepulsion",
-                            "hierarchicalRepulsion": {{
-                                "avoidOverlap": 0.9,
-                                "nodeDistance": 175,
-                                "damping": 0.15
-                            }},
-                            "timestep": 0.5,
-                            "stabilization": {{
-                                "enabled": true,
-                            }}
-                        }} 
-                    }} );
-                    console.log("physics reactivated");
+                    applyAnimationsOptions();
                     
                     myEngine.queryQuads(
                         `CONSTRUCT {{
