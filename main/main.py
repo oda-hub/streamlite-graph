@@ -1,3 +1,5 @@
+import json
+
 import pydotplus
 import os
 import yaml
@@ -25,6 +27,7 @@ def stream_graph():
     dot_fn = 'graph_data/graph.dot'
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph.ttl'
+    graph_config_fn = 'graph_data/graph_config.json'
 
     # pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
     net = Network(
@@ -40,7 +43,10 @@ def stream_graph():
     graph_ttl_str = fd.read()
     fd.close()
 
-    graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str)
+    with open(graph_config_fn) as graph_config_fn_f:
+        graph_config_obj = json.dumps(json.load(graph_config_fn_f))
+
+    graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj=graph_config_obj)
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')

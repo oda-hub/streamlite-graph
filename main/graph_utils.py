@@ -129,83 +129,115 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
-    f_process_binding = '''
-        function process_binding(binding) {
+def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_config_obj=None):
+    f_graph_config_obj = f'''
+    
+        // initialize global variables and graph configuration
+        const graph_config_obj = JSON.parse('{graph_config_obj}');
+        console.log(graph_config_obj);
+    '''
+
+    f_process_binding = f'''
+        
+        function process_binding(binding) {{
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
             
-            subj_node = {
+            subj_node = {{
                 id: subj_id,
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
                 clickable: true,
-                font: {
+                font: {{
                       'multi': "html",
                       'face': "courier"
-                     }
-            }
-            edge_obj = {
+                     }}
+            }}
+            edge_obj = {{
                 id: edge_id,
                 from: subj_id,
                 to: obj_id,
                 title: binding.predicate.value
-            }
-            obj_node = {
+            }}
+            obj_node = {{
                 id: obj_id,
                 label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
                 clickable: true,
-                font: {
+                font: {{
                       'multi': "html",
                       'face': "courier"
-                     }
-            }
-            if(!nodes.get(subj_id)) {
+                     }}
+            }}
+            if(!nodes.get(subj_id)) {{
                 nodes.add([subj_node]); 
-            }
-            if(binding.predicate.value.endsWith('#type')) {
+            }}
+            if(binding.predicate.value.endsWith('#type')) {{
                 // extract type name
                 idx_slash = obj_id.lastIndexOf("/");
                 substr_q = obj_id.slice(idx_slash + 1); 
-                if (substr_q) {
+                if (substr_q) {{
                     idx_hash = substr_q.indexOf("#");
                     if (idx_hash)
                       type_name = substr_q.slice(idx_hash + 1); 
-                }
+                }}
                 subj_node_to_update = nodes.get(subj_id);
-                if(!subj_node_to_update['type']) {
+                if(!subj_node_to_update['type']) {{
                     subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
-                    nodes.update({ id: subj_id, 
+                    nodes.update({{ id: subj_id, 
                                     label: subj_node_to_update['label'],
-                                    type: type_name });
-                }
-            }
-            else {
-                if(!edges.get(edge_id)) {
+                                    type: type_name
+                                     }});
+                }}
+            }}
+            else {{
+                if(!edges.get(edge_id)) {{
                     edges.add([edge_obj]);
-                }
-                if(!nodes.get(obj_id)) {
+                }}
+                if(!nodes.get(obj_id)) {{
                     nodes.add(obj_node);
-                    if(binding.object.termType === "Literal") {
+                    if(binding.object.termType === "Literal") {{
                         // disable click for any literal node
-                        nodes.update({ id: obj_id, clickable: false });
-                    }
-                }
-            }
-        }
+                        nodes.update({{ 
+                            id: obj_id, 
+                            clickable: false
+                            }});
+                    }}
+                }}
+            }}
+        }}
         
-        function drawGraph() {
+        fetch('graph_config.json',{{
+          headers : {{
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+           }}
+         }}
+        )
+        .then(response => {{
+            console.log(response);
+            if (response.status != 404) {{
+                response.json();
+            }} else {{
+                console.log("file not found");
+            }}
+        }}
+        )
+        .then(json => {{
+            console.log(json);
+        }}
+       );
+          
+        function drawGraph() {{
+
+        
     '''
 
     f_draw_graph = f'''
      
         const parser = new N3.Parser({{ format: 'ttl' }});
-        const n3_utils = N3.Util;
-        let prefix_processing;
         let store = new N3.Store();
-        let quad_list = [];
         const myEngine = new Comunica.QueryEngine();
         parsed_graph = parser.parse(`{graph_ttl_stream}`,
             function (error, triple, prefixes) {{
@@ -231,16 +263,25 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
                     
                     myEngine.queryQuads(
                         `CONSTRUCT {{
+                            ?s ?p <` + selected_node.id + `> .
+                            ?s a ?s_type .
                             <` + selected_node.id + `> ?p ?o .
                             ?o a ?o_type . 
                         }}
                         WHERE {{
-                             {{ <` + selected_node.id + `> ?p ?o . }}
-                            UNION
-                            {{
-                                <` + selected_node.id + `> ?p ?o .
-                                ?o a ?o_type . 
+                            {{ 
+                                ?s ?p <` + selected_node.id + `> .
+                                 ?s a ?s_type .
                             }}
+                            UNION
+                            {{ ?s ?p <` + selected_node.id + `> . }}
+                            UNION
+                            {{ 
+                                <` + selected_node.id + `> ?p ?o .
+                                 ?o a ?o_type .
+                            }}
+                            UNION
+                            {{ <` + selected_node.id + `> ?p ?o . }}
                         }}`,
                     {{
                         sources: [ store ]
@@ -356,6 +397,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None):
     net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
     if net_html_match is not None:
         net.html = net.html.replace(net_html_match.group(0), f_process_binding)
+
+    net.html = net.html.replace('// initialize global variables.', f_graph_config_obj)
 
     with open(output_path, "w+") as out:
         out.write(net.html)
