@@ -149,6 +149,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
                 clickable: true,
+                color: graph_config_obj['Default']['color'],
+                shape: graph_config_obj['Default']['shape'],
+                style: graph_config_obj['Default']['style'],
                 font: {{
                       'multi': "html",
                       'face': "courier"
@@ -165,6 +168,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
                 clickable: true,
+                color: graph_config_obj['Default']['color'],
+                shape: graph_config_obj['Default']['shape'],
+                style: graph_config_obj['Default']['style'],
                 font: {{
                       'multi': "html",
                       'face': "courier"
@@ -185,9 +191,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 subj_node_to_update = nodes.get(subj_id);
                 if(!subj_node_to_update['type']) {{
                     subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
+                    let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj['Default'];
                     nodes.update({{ id: subj_id, 
                                     label: subj_node_to_update['label'],
-                                    type: type_name
+                                    type: type_name,
+                                    color: node_properties['color'],
+                                    shape: node_properties['shape'],
+                                    style: node_properties['style']
                                      }});
                 }}
             }}
@@ -335,44 +345,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 process_binding(binding);
             }});
             bindingsStreamCall.on('end', () => {{
-                // test extract_activity_start_time
-                edges_time = (edges.get({{
-                    filter: function (edge) {{
-                        return (edge.title == 'http://www.w3.org/ns/prov#startedAtTime');
-                    }}
-                }}));
-                for ( edge_t_idx in edges_time) {{
-                    edge_time = edges_time[edge_t_idx];
-                    activity_node = nodes.get(edge_time.from);
-                    activity_start_time_node= nodes.get(edge_time.to);
-                    edges_association = (edges.get({{
-                        filter: function (edge) {{
-                            return (edge.title == 'http://www.w3.org/ns/prov#qualifiedAssociation' && edge.from == activity_node.id);
-                        }}
-                    }}));
-                    for ( edge_a_idx in edges_association) {{
-                        edge_association = edges_association[edge_a_idx];
-                        activity_node = nodes.get(edge_association.from);
-                        association_node = nodes.get(edge_association.to);
-                        edges_plan = (edges.get({{
-                            filter: function (edge) {{
-                                return (edge.title == 'http://www.w3.org/ns/prov#hadPlan' && edge.from == association_node.id);
-                            }}
-                        }}));
-                        for ( edge_p_idx in edges_plan) {{
-                            edge_plan = edges_plan[edge_p_idx];
-                            plan_node = nodes.get(edge_plan.to);
-                            new_edge_obj = {{
-                                id: plan_node.id + "_" + activity_start_time_node.id,
-                                from: plan_node.id,
-                                to: activity_start_time_node.id,
-                                title: 'http://www.w3.org/ns/prov#startedAtTime'
-                            }};
-                            edges.add([new_edge_obj]);
-                            edges.remove([edge_time.id]);
-                        }}
-                    }}
-                }}
+                // The data-listener will not be called anymore once we get here.
+                // console.log('end\\n');
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);
