@@ -1,9 +1,5 @@
 import json
-
-import pydotplus
 import os
-import yaml
-import threading
 
 from pyvis.network import Network
 
@@ -12,8 +8,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 __this_dir__ = os.path.join(os.path.abspath(os.path.dirname(__file__)))
-graph_configuration = yaml.load(open(os.path.join(__this_dir__, "../graph_data/graph_config.yaml")), Loader=yaml.SafeLoader)
-type_configuration = yaml.load(open(os.path.join(__this_dir__, "../graph_data/type_label_values_dict.yaml")), Loader=yaml.SafeLoader)
 
 # -- Set page config
 apptitle = 'Graph Quickview'
@@ -23,13 +17,10 @@ st.title('Graph Quick-Look')
 
 
 def stream_graph():
-    # dot_fn = 'graph_data/graph_base.dot'
-    dot_fn = 'graph_data/graph.dot'
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph.ttl'
     graph_config_fn = 'graph_data/graph_config.json'
 
-    # pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
     net = Network(
         height='750px', width='100%',
     )

@@ -275,20 +275,21 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         `CONSTRUCT {{
                             ?s ?p <` + selected_node.id + `> .
                             ?s a ?s_type .
+                            
                             <` + selected_node.id + `> ?p ?o .
                             ?o a ?o_type . 
                         }}
                         WHERE {{
-                            {{ 
+                            {{
                                 ?s ?p <` + selected_node.id + `> .
-                                 ?s a ?s_type .
+                                ?s a ?s_type .
                             }}
                             UNION
                             {{ ?s ?p <` + selected_node.id + `> . }}
                             UNION
                             {{ 
                                 <` + selected_node.id + `> ?p ?o .
-                                 ?o a ?o_type .
+                                ?o a ?o_type .
                             }}
                             UNION
                             {{ <` + selected_node.id + `> ?p ?o . }}
