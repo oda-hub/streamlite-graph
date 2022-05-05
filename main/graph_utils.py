@@ -129,22 +129,81 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
+def set_html_content(net, output_path):
+    html_code = '''
+        <button style="margin: 5px" type="button" onclick="reset_graph()">Reset graph!</button>
+        <div id="mynetwork"></div>
+    '''
+
+    net.html = net.html.replace('<div id = "mynetwork"></div>', html_code)
+    with open(output_path, "w+") as out:
+        out.write(net.html)
+
+
 def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_config_obj=None):
-    f_graph_config_obj = f'''
+    f_graph_vars = f'''
     
         // initialize global variables and graph configuration
         const graph_config_obj = JSON.parse('{graph_config_obj}');
-        console.log(graph_config_obj);
+        const parser = new N3.Parser({{ format: 'ttl' }});
+        let store = new N3.Store();
+        const myEngine = new Comunica.QueryEngine();
+        const query_initial_graph = `CONSTRUCT {{
+            ?action a <http://schema.org/Action> ;
+                <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+    
+            ?activity a ?activityType ;
+                <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+
+            ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+        }}
+        WHERE {{ 
+            ?action a <http://schema.org/Action> ;
+                <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+                 
+            ?activity a ?activityType ;
+                <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+            
+            ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+        }}`
     '''
 
-    f_process_binding = f'''
+    f_reset_graph = '''
+        function reset_graph() {
+            nodes.clear();
+            edges.clear();
+            
+            (async() => {
+                const bindingsStreamCall = await myEngine.queryQuads(query_initial_graph,
+                    {
+                        sources: [ store ] 
+                    }
+                ); 
+                bindingsStreamCall.on('data', (binding) => {
+                    process_binding(binding);
+                });
+                bindingsStreamCall.on('end', () => {
+                    // The data-listener will not be called anymore once we get here.
+                    // console.log('end\\n');
+                });
+                bindingsStreamCall.on('error', (error) => {
+                    console.error(error);
+                });
+            })();
+            
+        }
+    '''
+
+    f_process_binding = '''
         
-        function process_binding(binding) {{
+        function process_binding(binding) {
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
             
-            subj_node = {{
+            subj_node = {
                 id: subj_id,
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
@@ -152,18 +211,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 color: graph_config_obj['Default']['color'],
                 shape: graph_config_obj['Default']['shape'],
                 style: graph_config_obj['Default']['style'],
-                font: {{
+                font: {
                       'multi': "html",
                       'face': "courier"
-                     }}
-            }}
-            edge_obj = {{
+                     }
+            }
+            edge_obj = {
                 id: edge_id,
                 from: subj_id,
                 to: obj_id,
                 title: binding.predicate.value
-            }}
-            obj_node = {{
+            }
+            obj_node = {
                 id: obj_id,
                 label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
@@ -171,84 +230,96 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 color: graph_config_obj['Default']['color'],
                 shape: graph_config_obj['Default']['shape'],
                 style: graph_config_obj['Default']['style'],
-                font: {{
+                font: {
                       'multi': "html",
                       'face': "courier"
-                     }}
-            }}
-            if(!nodes.get(subj_id)) {{
+                     }
+            }
+            if(!nodes.get(subj_id)) {
                 nodes.add([subj_node]); 
-            }}
-            if(binding.predicate.value.endsWith('#type')) {{
+            }
+            if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
                 idx_slash = obj_id.lastIndexOf("/");
                 substr_q = obj_id.slice(idx_slash + 1); 
-                if (substr_q) {{
+                if (substr_q) {
                     idx_hash = substr_q.indexOf("#");
                     if (idx_hash)
                       type_name = substr_q.slice(idx_hash + 1); 
-                }}
+                }
                 subj_node_to_update = nodes.get(subj_id);
-                if(!subj_node_to_update['type']) {{
+                if(!subj_node_to_update['type']) {
                     subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
                     let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj['Default'];
-                    nodes.update({{ id: subj_id, 
+                    nodes.update({ id: subj_id, 
                                     label: subj_node_to_update['label'],
                                     type: type_name,
                                     color: node_properties['color'],
                                     shape: node_properties['shape'],
                                     style: node_properties['style']
-                                     }});
-                }}
-            }}
-            else {{
-                if(!edges.get(edge_id)) {{
+                                     });
+                }
+            }
+            else {
+                if(!edges.get(edge_id)) {
                     edges.add([edge_obj]);
-                }}
-                if(!nodes.get(obj_id)) {{
-                    nodes.add(obj_node);
-                    if(binding.object.termType === "Literal") {{
+                }
+                if(!nodes.get(obj_id)) {
+                    if(binding.object.termType === "Literal") {
+                        subj_node_to_update = nodes.get(subj_id);
+                        literal_predicate_index = edge_obj['title'].lastIndexOf("/")
+                        literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
+                        if (literal_predicate) {
+                            idx_hash = literal_predicate.indexOf("#");
+                            if (idx_hash)
+                              literal_predicate = literal_predicate.slice(idx_hash + 1); 
+                        }
+                        literal_label = literal_predicate + ': ' + obj_node['label'] + '\\n'
+                        if(subj_node_to_update['label'].indexOf(literal_label) === -1)
+                            nodes.update({
+                                id: subj_id, 
+                                label: subj_node_to_update['label'] + literal_label,
+                                });
+                    }
+                    /*nodes.add(obj_node);
+                    if(binding.object.termType === "Literal") {
                         // disable click for any literal node
-                        nodes.update({{ 
+                        nodes.update({
                             id: obj_id, 
                             clickable: false
-                            }});
-                    }}
-                }}
-            }}
-        }}
+                            });
+                    }*/
+                }
+            }
+        }
         
-        fetch('graph_config.json',{{
-          headers : {{
+        fetch('graph_config.json',{
+          headers : {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
-           }}
-         }}
+           }
+         }
         )
-        .then(response => {{
+        .then(response => {
             console.log(response);
-            if (response.status != 404) {{
+            if (response.status != 404) {
                 response.json();
-            }} else {{
+            } else {
                 console.log("file not found");
-            }}
-        }}
+            }
+        }
         )
-        .then(json => {{
+        .then(json => {
             console.log(json);
-        }}
+        }
        );
           
-        function drawGraph() {{
+        function drawGraph() {
 
         
     '''
 
     f_draw_graph = f'''
-     
-        const parser = new N3.Parser({{ format: 'ttl' }});
-        let store = new N3.Store();
-        const myEngine = new Comunica.QueryEngine();
         parsed_graph = parser.parse(`{graph_ttl_stream}`,
             function (error, triple, prefixes) {{
                 // Always log errors
@@ -317,27 +388,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }});
         
         (async() => {{
-            const bindingsStreamCall = await myEngine.queryQuads(
-                `CONSTRUCT {{
-                    ?action a <http://schema.org/Action> ;
-                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
-            
-                    ?activity a ?activityType ;
-                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-        
-                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-                }}
-                WHERE {{ 
-                    ?action a <http://schema.org/Action> ;
-                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
-                         
-                    ?activity a ?activityType ;
-                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                        <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-                    
-                    ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-                }}`,
+            const bindingsStreamCall = await myEngine.queryQuads(query_initial_graph,
                 {{
                     sources: [ store ] 
                 }}
@@ -371,9 +422,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
     if net_html_match is not None:
-        net.html = net.html.replace(net_html_match.group(0), f_process_binding)
+        net.html = net.html.replace(net_html_match.group(0), f_reset_graph + f_process_binding)
 
-    net.html = net.html.replace('// initialize global variables.', f_graph_config_obj)
+    net.html = net.html.replace('// initialize global variables.', f_graph_vars)
 
     with open(output_path, "w+") as out:
         out.write(net.html)
