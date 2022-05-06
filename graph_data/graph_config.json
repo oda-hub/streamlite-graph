@@ -1,13 +1,4 @@
 {
-   "Default": {
-      "shape": "box",
-      "color": "#FFFFFF",
-      "style": "filled",
-      "border": 0,
-      "cellborder": 0,
-      "value": 20,
-      "level": 0
-   },
    "AstroqueryModule": {
       "shape": "ellipse",
       "color": "#00CC00",

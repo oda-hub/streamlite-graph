@@ -41,6 +41,7 @@ def set_graph_options(net, output_path):
                 }
             },
             "physics": {
+                "enabled": true,
                 "minVelocity": 0.75,
                 "solver": "hierarchicalRepulsion",
                 "hierarchicalRepulsion": {
@@ -54,10 +55,6 @@ def set_graph_options(net, output_path):
                 }
             }
         };
-        
-        function applyAnimationsOptions() {
-            network.setOptions( options );
-        }
         
         """
     )
@@ -129,17 +126,17 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def set_html_content(net, output_path, graph_config_obj_dict=None):
+def set_html_content(net, output_path, graph_config_names_list=None):
     html_code = '''
         <button style="margin: 5px" type="button" onclick="reset_graph()">Reset graph!</button><br/>
         '''
-    if graph_config_obj_dict is not None and graph_config_obj_dict:
+    if graph_config_names_list is not None:
         html_code += '<b style="margin: 5px">Enable/disable graphical configurations for the graph</b>'
-        for graph_config_obj in graph_config_obj_dict:
+        for graph_config_name in graph_config_names_list:
             html_code += f'''
                 <div style="margin: 5px">
-                    <input type="checkbox" id="" name="{graph_config_obj}" value="{graph_config_obj}" onchange="toggle_graph_config(this)" checked>
-                    <label for="vehicle1">{graph_config_obj}</label><br>
+                    <input type="checkbox" id="" name="{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
+                    <label for="vehicle1">{graph_config_name}</label><br>
                  </div>
             '''
 
@@ -152,11 +149,23 @@ def set_html_content(net, output_path, graph_config_obj_dict=None):
         out.write(net.html)
 
 
-def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_config_obj=None):
+def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_config_obj_dict=None):
     f_graph_vars = f'''
     
         // initialize global variables and graph configuration
-        const graph_config_obj = JSON.parse('{graph_config_obj}');
+        const graph_config_obj_default = {{ "Default": {{
+            "shape": "box",
+            "color": "#FFFFFF",
+            "style": "filled",
+            "border": 0,
+            "cellborder": 0,
+            "value": 20,
+            "level": 0,
+            "config_file": null,
+           }}
+        }}
+        var graph_config_obj = JSON.parse('{graph_config_obj_dict}');
+        
         const parser = new N3.Parser({{ format: 'ttl' }});
         let store = new N3.Store();
         const myEngine = new Comunica.QueryEngine();
@@ -182,9 +191,20 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }}`
     '''
 
+    f_apply_animations_graph = '''
+        function applyAnimationsOptions() {
+            network.setOptions( options );
+        }
+    '''
+
     f_toggle_graph_config = '''
         function toggle_graph_config(check_box_element) {
-            console.log(check_box_element.name + ', checked: ' + check_box_element.checked);
+            let checked_config_name = check_box_element.name;
+            if(check_box_element.checked) {
+                
+            } else {
+                
+            }
         }
     '''
 
@@ -192,6 +212,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         function reset_graph() {
             nodes.clear();
             edges.clear();
+            
+            // reset options for the graph
+            applyAnimationsOptions();
             
             (async() => {
                 const bindingsStreamCall = await myEngine.queryQuads(query_initial_graph,
@@ -226,10 +249,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
                 clickable: true,
-                color: graph_config_obj['Default']['color'],
-                shape: graph_config_obj['Default']['shape'],
-                style: graph_config_obj['Default']['style'],
-                level: graph_config_obj['Default']['level'],
+                color: graph_config_obj_default['Default']['color'],
+                shape: graph_config_obj_default['Default']['shape'],
+                style: graph_config_obj_default['Default']['style'],
+                level: graph_config_obj_default['Default']['level'],
+                border: graph_config_obj_default['Default']['border'],
+                cellborder: graph_config_obj_default['Default']['cellborder'],
+                value: graph_config_obj_default['Default']['value'],
+                level: graph_config_obj_default['Default']['level'],
+                config_file: graph_config_obj_default['Default']['config_file'],
                 font: {
                       'multi': "html",
                       'face': "courier"
@@ -246,10 +274,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
                 clickable: true,
-                color: graph_config_obj['Default']['color'],
-                shape: graph_config_obj['Default']['shape'],
-                style: graph_config_obj['Default']['style'],
-                level: graph_config_obj['Default']['level'],
+                color: graph_config_obj_default['Default']['color'],
+                shape: graph_config_obj_default['Default']['shape'],
+                style: graph_config_obj_default['Default']['style'],
+                level: graph_config_obj_default['Default']['level'],
+                border: graph_config_obj_default['Default']['border'],
+                cellborder: graph_config_obj_default['Default']['cellborder'],
+                value: graph_config_obj_default['Default']['value'],
+                config_file: graph_config_obj_default['Default']['config_file'],
                 font: {
                       'multi': "html",
                       'face': "courier"
@@ -270,14 +302,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 subj_node_to_update = nodes.get(subj_id);
                 if(!subj_node_to_update['type']) {
                     subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
-                    let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj['Default'];
-                    nodes.update({ id: subj_id, 
+                    let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'];
+                    nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
                                     type: type_name,
                                     color: node_properties['color'],
+                                    border: node_properties['color'],
+                                    cellborder: node_properties['color'],
                                     shape: node_properties['shape'],
                                     style: node_properties['style'],
                                     level: node_properties['level'],
+                                    value: node_properties['value'],
+                                    config_file: node_properties['config_file'],
                                      });
                 }
             }
@@ -443,7 +479,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
     if net_html_match is not None:
-        net.html = net.html.replace(net_html_match.group(0), f_toggle_graph_config + f_reset_graph + f_process_binding)
+        net.html = net.html.replace(net_html_match.group(0), f_apply_animations_graph + f_toggle_graph_config + f_reset_graph + f_process_binding)
 
     net.html = net.html.replace('// initialize global variables.', f_graph_vars)
 
