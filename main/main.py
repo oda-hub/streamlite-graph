@@ -45,14 +45,19 @@ def stream_graph():
        }
     }
 
+    graph_config_obj_dict=None
     for graph_config_fn in graph_config_fn_list:
         with open(graph_config_fn) as graph_config_fn_f:
-            graph_config_obj.update(json.load(graph_config_fn_f))
+            graph_config_obj_loaded = json.load(graph_config_fn_f)
+            graph_config_obj.update(graph_config_obj_loaded)
+            if graph_config_obj_dict is None:
+                graph_config_obj_dict = {}
+            graph_config_obj_dict[str(graph_config_fn)] = graph_config_obj_loaded
 
     graph_config_obj_str = json.dumps(graph_config_obj)
 
     graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj=graph_config_obj_str)
-    graph_utils.set_html_content(net, html_fn)
+    graph_utils.set_html_content(net, html_fn, graph_config_obj_dict=graph_config_obj_dict)
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')

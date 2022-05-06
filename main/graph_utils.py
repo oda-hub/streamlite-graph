@@ -129,10 +129,22 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def set_html_content(net, output_path):
+def set_html_content(net, output_path, graph_config_obj_dict=None):
     html_code = '''
-        <button style="margin: 5px" type="button" onclick="reset_graph()">Reset graph!</button>
-        <div id="mynetwork"></div>
+        <button style="margin: 5px" type="button" onclick="reset_graph()">Reset graph!</button><br/>
+        '''
+    if graph_config_obj_dict is not None and graph_config_obj_dict:
+        html_code += '<b style="margin: 5px">Enable/disable graphical configurations for the graph</b>'
+        for graph_config_obj in graph_config_obj_dict:
+            html_code += f'''
+                <div style="margin: 5px">
+                    <input type="checkbox" id="" name="{graph_config_obj}" value="{graph_config_obj}" onchange="toggle_graph_config(this)" checked>
+                    <label for="vehicle1">{graph_config_obj}</label><br>
+                 </div>
+            '''
+
+    html_code += '''
+            <div id="mynetwork"></div>
     '''
 
     net.html = net.html.replace('<div id = "mynetwork"></div>', html_code)
@@ -168,6 +180,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             
             ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
         }}`
+    '''
+
+    f_toggle_graph_config = '''
+        function toggle_graph_config(check_box_element) {
+            console.log(check_box_element.name + ', checked: ' + check_box_element.checked);
+        }
     '''
 
     f_reset_graph = '''
@@ -211,6 +229,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 color: graph_config_obj['Default']['color'],
                 shape: graph_config_obj['Default']['shape'],
                 style: graph_config_obj['Default']['style'],
+                level: graph_config_obj['Default']['level'],
                 font: {
                       'multi': "html",
                       'face': "courier"
@@ -230,6 +249,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 color: graph_config_obj['Default']['color'],
                 shape: graph_config_obj['Default']['shape'],
                 style: graph_config_obj['Default']['style'],
+                level: graph_config_obj['Default']['level'],
                 font: {
                       'multi': "html",
                       'face': "courier"
@@ -256,7 +276,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     type: type_name,
                                     color: node_properties['color'],
                                     shape: node_properties['shape'],
-                                    style: node_properties['style']
+                                    style: node_properties['style'],
+                                    level: node_properties['level'],
                                      });
                 }
             }
@@ -422,7 +443,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
     if net_html_match is not None:
-        net.html = net.html.replace(net_html_match.group(0), f_reset_graph + f_process_binding)
+        net.html = net.html.replace(net_html_match.group(0), f_toggle_graph_config + f_reset_graph + f_process_binding)
 
     net.html = net.html.replace('// initialize global variables.', f_graph_vars)
 
