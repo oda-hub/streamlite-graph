@@ -198,12 +198,46 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     '''
 
     f_toggle_graph_config = '''
+    
+        function update_nodes(nodes_to_update, node_properties) {
+            for (let i in nodes_to_update) {
+                node_to_update_id = nodes_to_update[i]['id'];
+                nodes.update({ 
+                    id: node_to_update_id,
+                    color: node_properties['color'],
+                    border: node_properties['color'],
+                    cellborder: node_properties['color'],
+                    shape: node_properties['shape'],
+                    style: node_properties['style'],
+                    level: node_properties['level'],
+                    value: node_properties['value'],
+                    config_file: node_properties['config_file'],
+                });
+            }
+        }
+    
+    
         function toggle_graph_config(check_box_element) {
             let checked_config_name = check_box_element.name;
             if(check_box_element.checked) {
-                
+                let graph_config_obj_asArray = Object.entries(graph_config_obj);
+                let config_subset =  graph_config_obj_asArray.filter(config => config[1].config_file === checked_config_name);
+                for (let config_idx in config_subset) {
+                    let node_properties = config_subset[config_idx][1];
+                    let nodes_to_update = nodes.get({
+                        filter: function (node) {
+                            return (node.type_name === config_subset[config_idx][0]);
+                        }
+                    });
+                    update_nodes(nodes_to_update, node_properties);
+                }
             } else {
-                
+                let nodes_to_update = nodes.get({
+                    filter: function (node) {
+                        return (node.config_file === checked_config_name);
+                    }
+                });
+                update_nodes(nodes_to_update, graph_config_obj_default['Default']);
             }
         }
     '''
@@ -305,7 +339,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'];
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
-                                    type: type_name,
+                                    type_name: type_name,
                                     color: node_properties['color'],
                                     border: node_properties['color'],
                                     cellborder: node_properties['color'],
@@ -350,7 +384,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             }
         }
         
-        fetch('graph_config.json',{
+        /*fetch('graph_config.json',{
           headers : {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -369,7 +403,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         .then(json => {
             console.log(json);
         }
-       );
+       );*/
           
         function drawGraph() {
 

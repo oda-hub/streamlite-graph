@@ -38,9 +38,14 @@ def stream_graph():
     graph_config_names_list = []
     for graph_config_fn in graph_config_fn_list:
         with open(graph_config_fn) as graph_config_fn_f:
-            graph_config_obj.update({**json.load(graph_config_fn_f), 'config_file': graph_config_fn})
+            graph_config_loaded = json.load(graph_config_fn_f)
+        if graph_config_loaded is not None:
+            for config_type in graph_config_loaded:
+                print(config_type)
+                graph_config_loaded[config_type]['config_file'] = graph_config_fn
+            graph_config_obj.update(graph_config_loaded)
             graph_config_names_list.append(graph_config_fn)
-
+    # for compatibility with Javascript
     graph_config_obj_str = json.dumps(graph_config_obj)
 
     graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj_dict=graph_config_obj_str)
