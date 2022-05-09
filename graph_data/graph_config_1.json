@@ -1,0 +1,16 @@
+{
+   "Run": {
+      "shape": "ellipse",
+      "color": "#00DC10",
+      "style": "filled",
+      "value": 35,
+      "level": 0
+   },
+   "Activity": {
+      "shape": " ellipse",
+      "color": "#00FC10",
+      "style": "filled",
+      "value": 35,
+      "level": 0
+   }
+}
