@@ -41,7 +41,6 @@ def stream_graph():
             graph_config_loaded = json.load(graph_config_fn_f)
         if graph_config_loaded is not None:
             for config_type in graph_config_loaded:
-                print(config_type)
                 graph_config_loaded[config_type]['config_file'] = graph_config_fn
             graph_config_obj.update(graph_config_loaded)
             graph_config_names_list.append(graph_config_fn)
