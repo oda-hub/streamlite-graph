@@ -160,7 +160,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             "border": 0,
             "cellborder": 0,
             "value": 20,
-            "level": 0,
             "config_file": null,
            }}
         }}
@@ -209,7 +208,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     cellborder: node_properties['color'],
                     shape: node_properties['shape'],
                     style: node_properties['style'],
-                    level: node_properties['level'],
                     value: node_properties['value'],
                     config_file: node_properties['config_file'],
                 });
@@ -286,7 +284,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 color: graph_config_obj_default['Default']['color'],
                 shape: graph_config_obj_default['Default']['shape'],
                 style: graph_config_obj_default['Default']['style'],
-                level: graph_config_obj_default['Default']['level'],
                 border: graph_config_obj_default['Default']['border'],
                 cellborder: graph_config_obj_default['Default']['cellborder'],
                 value: graph_config_obj_default['Default']['value'],
@@ -311,7 +308,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 color: graph_config_obj_default['Default']['color'],
                 shape: graph_config_obj_default['Default']['shape'],
                 style: graph_config_obj_default['Default']['style'],
-                level: graph_config_obj_default['Default']['level'],
                 border: graph_config_obj_default['Default']['border'],
                 cellborder: graph_config_obj_default['Default']['cellborder'],
                 value: graph_config_obj_default['Default']['value'],
@@ -350,7 +346,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     cellborder: node_properties['color'],
                                     shape: node_properties['shape'],
                                     style: node_properties['style'],
-                                    level: node_properties['level'],
                                     value: node_properties['value'],
                                     config_file: node_properties['config_file'],
                                      });
