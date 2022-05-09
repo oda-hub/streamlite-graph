@@ -329,7 +329,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                       type_name = substr_q.slice(idx_hash + 1); 
                 }
                 subj_node_to_update = nodes.get(subj_id);
-                if(!subj_node_to_update['type']) {
+                // check type_name property of the node ahs already been defined previously
+                if(!('type_name' in subj_node_to_update)) {
+                
                     subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
                     let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'];
                     let config_value = node_properties['config_file'];
