@@ -134,7 +134,7 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         for graph_config_name in graph_config_names_list:
             html_code += f'''
                 <div style="margin: 5px">
-                    <input type="checkbox" id="{graph_config_name}" name="{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
+                    <input type="checkbox" id="config_{graph_config_name}" name="{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
                     <label>{graph_config_name}</label><br>
                  </div>
             '''
@@ -333,7 +333,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
                     let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'];
                     let config_value = node_properties['config_file'];
-                    let checkbox_config = document.getElementById(config_value);
+                    let checkbox_config = document.getElementById('config_' + config_value);
                     if(checkbox_config && !checkbox_config.checked)
                         node_properties = graph_config_obj_default['Default'];
                     
