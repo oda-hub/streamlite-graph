@@ -520,7 +520,7 @@ def update_js_libraries(html_fn):
     soup.head.append(new_script_rdflib_library)
 
     new_script_query_sparql_library = soup.new_tag("script", type="application/javascript",
-                                             src="http://rdf.js.org/comunica-browser/versions/latest"
+                                             src="https://rdf.js.org/comunica-browser/versions/latest"
                                                  "/engines/query-sparql-rdfjs/comunica-browser.js")
     soup.head.append(new_script_query_sparql_library)
 
