@@ -37,7 +37,8 @@ def set_graph_options(net, output_path):
                 "hierarchical": {
                     "enabled": true,
                     "levelSeparation": -150,
-                    "sortMethod": "directed"
+                    "sortMethod": "directed",
+                    "nodeSpacing": 150
                 }
             },
             "physics": {
@@ -45,9 +46,7 @@ def set_graph_options(net, output_path):
                 "minVelocity": 0.75,
                 "solver": "hierarchicalRepulsion",
                 "hierarchicalRepulsion": {
-                    "avoidOverlap": 1,
                     "nodeDistance": 175,
-                    "damping": 0.15
                 },
                 "timestep": 0.5,
                 "stabilization": {
