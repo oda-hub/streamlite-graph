@@ -415,6 +415,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 ?s ?p <` + selected_node.id + `> .
                                 ?s a ?s_type .
                                 ?s ?p_literal ?s_literal .
+                                FILTER isLiteral(?s_literal)
                             }}
                             UNION
                             {{ ?s ?p <` + selected_node.id + `> . }}
@@ -423,6 +424,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 <` + selected_node.id + `> ?p ?o .
                                 ?o a ?o_type .
                                 ?o ?p_literal ?o_literal .
+                                FILTER isLiteral(?o_literal)
                             }}
                             UNION
                             {{ <` + selected_node.id + `> ?p ?o . }}
