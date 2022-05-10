@@ -38,8 +38,7 @@ def set_graph_options(net, output_path):
                 "minVelocity": 0.5,
                 "solver": "repulsion",
                 "stabilization": {
-                    "iterations": 1,
-                    "fit": true
+                    "enabled": true,
                 },
                 "repulsion": {
                     "nodeDistance": 200 // Put more distance between the nodes.
@@ -247,10 +246,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     process_binding(binding);
                 });
                 bindingsStreamCall.on('end', () => {
-                    // The data-listener will not be called anymore once we get here.
-                    // console.log('end\\n');
-                    // reset options for the graph
-                    // applyAnimationsOptions();
                     network.setOptions( { "physics": { enabled: true } } );
                 });
                 bindingsStreamCall.on('error', (error) => {
@@ -366,14 +361,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 label: subj_node_to_update['label'] + literal_label,
                                 });
                     }
-                    /*nodes.add(obj_node);
-                    if(binding.object.termType === "Literal") {
-                        // disable click for any literal node
-                        nodes.update({
-                            id: obj_id, 
-                            clickable: false
-                            });
-                    }*/
                 }
             }
         }
@@ -439,11 +426,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             process_binding(binding);
                         }});
                         bindingsStream.on('end', () => {{
-                            // The data-listener will not be called anymore once we get here.
-                            // console.log('end\\n');
-                            // applyAnimationsOptions();
                             network.setOptions( {{ "physics": {{ enabled: true }} }} );
-                            // network.stabilize();
                         }});
                         bindingsStream.on('error', (error) => {{
                             console.error("error when clicked a node: " + error);
@@ -464,9 +447,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 process_binding(binding);
             }});
             bindingsStreamCall.on('end', () => {{
-                // The data-listener will not be called anymore once we get here.
-                // console.log('end\\n');
-                // network.stabilize();
+                network.setOptions( {{ "physics": {{ enabled: true }} }} );
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);
