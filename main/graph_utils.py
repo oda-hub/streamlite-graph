@@ -144,19 +144,20 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     f_graph_vars = f'''
     
         // initialize global variables and graph configuration
-        const graph_config_obj_default = {{ "Default": {{
-            "shape": "box",
-            "color": "#FFFFFF",
-            "style": "filled",
-            "border": 0,
-            "cellborder": 0,
-            "value": 20,
-            "config_file": null,
-            "font": {{
-                "bold": {{
-                    "size": 18
+        const graph_config_obj_default = {{ 
+            "Default": {{
+                "shape": "box",
+                "color": "#FFFFFF",
+                "style": "filled",
+                "border": 0,
+                "cellborder": 0,
+                "value": 20,
+                "config_file": null,
+                "font": {{
+                    "bold": {{
+                        "size": 20
+                    }}
                 }}
-            }}
            }}
         }}
         var graph_config_obj = JSON.parse('{graph_config_obj_dict}');
@@ -403,14 +404,17 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         `CONSTRUCT {{
                             ?s ?p <` + selected_node.id + `> .
                             ?s a ?s_type .
+                            ?s ?p_literal ?s_literal .
                             
                             <` + selected_node.id + `> ?p ?o .
                             ?o a ?o_type . 
+                            ?o ?p_literal ?o_literal .
                         }}
                         WHERE {{
                             {{
                                 ?s ?p <` + selected_node.id + `> .
                                 ?s a ?s_type .
+                                ?s ?p_literal ?s_literal .
                             }}
                             UNION
                             {{ ?s ?p <` + selected_node.id + `> . }}
@@ -418,6 +422,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             {{ 
                                 <` + selected_node.id + `> ?p ?o .
                                 ?o a ?o_type .
+                                ?o ?p_literal ?o_literal .
                             }}
                             UNION
                             {{ <` + selected_node.id + `> ?p ?o . }}
