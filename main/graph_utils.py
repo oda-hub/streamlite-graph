@@ -39,6 +39,7 @@ def set_graph_options(net, output_path):
                 "solver": "repulsion",
                 "stabilization": {
                     "enabled": true,
+                    "iterations": 130, // maximum number of iteration to stabilize
                 },
                 "repulsion": {
                     "nodeDistance": 200 // Put more distance between the nodes.
