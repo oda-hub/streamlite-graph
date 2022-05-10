@@ -152,6 +152,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             "cellborder": 0,
             "value": 20,
             "config_file": null,
+            "font": {{
+                "bold": {{
+                    "size": 18
+                }}
+            }}
            }}
         }}
         var graph_config_obj = JSON.parse('{graph_config_obj_dict}');
@@ -322,12 +327,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 if(!('type_name' in subj_node_to_update)) {
                 
                     subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
-                    let node_properties =  graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'];
+                    let node_properties =  { ... graph_config_obj_default['Default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'])};
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
                     if(checkbox_config && !checkbox_config.checked)
                         node_properties = graph_config_obj_default['Default'];
-                    
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
                                     type_name: type_name,
@@ -338,12 +342,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     style: node_properties['style'],
                                     value: node_properties['value'],
                                     config_file: node_properties['config_file'],
-                                    font: {
-                                        bold: {
-                                            'size': 18
-                                        }
-                                    }
-                                     });
+                                    font: node_properties['font']
+                                    });
                 }
             }
             else {
