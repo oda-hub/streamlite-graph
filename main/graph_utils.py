@@ -29,29 +29,21 @@ def set_graph_options(net, output_path):
                 "arrows": {
                   "to": {
                     "enabled": true,
-                    "scaleFactor": 0.45
+                    "scaleFactor": 0.55
                     }
-                }
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": true,
-                    "levelSeparation": -150,
-                    "sortMethod": "directed",
-                    "nodeSpacing": 150
                 }
             },
             "physics": {
                 "enabled": true,
-                "minVelocity": 0.75,
-                "solver": "hierarchicalRepulsion",
-                "hierarchicalRepulsion": {
-                    "nodeDistance": 175,
-                },
-                "timestep": 0.5,
+                "minVelocity": 0.5,
+                "solver": "repulsion",
                 "stabilization": {
-                    "enabled": true,
-                }
+                    "iterations": 1,
+                    "fit": true
+                },
+                "repulsion": {
+                    "nodeDistance": 200 // Put more distance between the nodes.
+                },
             }
         };
         
@@ -244,9 +236,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             nodes.clear();
             edges.clear();
             
-            // reset options for the graph
-            applyAnimationsOptions();
-            
+
             (async() => {
                 const bindingsStreamCall = await myEngine.queryQuads(query_initial_graph,
                     {
@@ -259,6 +249,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 bindingsStreamCall.on('end', () => {
                     // The data-listener will not be called anymore once we get here.
                     // console.log('end\\n');
+                    // reset options for the graph
+                    // applyAnimationsOptions();
+                    network.setOptions( { "physics": { enabled: true } } );
                 });
                 bindingsStreamCall.on('error', (error) => {
                     console.error(error);
@@ -411,7 +404,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
-                    applyAnimationsOptions();
+                    network.setOptions( {{ "physics": {{ enabled: true }} }} );
                     
                     myEngine.queryQuads(
                         `CONSTRUCT {{
@@ -448,6 +441,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         bindingsStream.on('end', () => {{
                             // The data-listener will not be called anymore once we get here.
                             // console.log('end\\n');
+                            // applyAnimationsOptions();
+                            network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                            // network.stabilize();
                         }});
                         bindingsStream.on('error', (error) => {{
                             console.error("error when clicked a node: " + error);
@@ -470,6 +466,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             bindingsStreamCall.on('end', () => {{
                 // The data-listener will not be called anymore once we get here.
                 // console.log('end\\n');
+                // network.stabilize();
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);
