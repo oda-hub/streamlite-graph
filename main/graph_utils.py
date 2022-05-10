@@ -279,7 +279,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 config_file: graph_config_obj_default['Default']['config_file'],
                 font: {
                       'multi': "html",
-                      'face': "courier"
+                      'face': "courier",
                      }
             }
             edge_obj = {
@@ -302,7 +302,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 config_file: graph_config_obj_default['Default']['config_file'],
                 font: {
                       'multi': "html",
-                      'face': "courier"
+                      'face': "courier",
                      }
             }
             if(!nodes.get(subj_id)) {
@@ -338,6 +338,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     style: node_properties['style'],
                                     value: node_properties['value'],
                                     config_file: node_properties['config_file'],
+                                    font: {
+                                        bold: {
+                                            'size': 18
+                                        }
+                                    }
                                      });
                 }
             }
