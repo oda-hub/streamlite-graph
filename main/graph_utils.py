@@ -119,15 +119,23 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
 
 def set_html_content(net, output_path, graph_config_names_list=None):
     html_code = '''
-        <button style="margin: 5px" type="button" onclick="reset_graph()">Reset graph!</button><br/>
+        <div style="margin: 5px 0px 15px 5px"><button type="button" onclick="reset_graph()">Reset graph!</button></div>
+        
+        <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
+        
+        <div style="margin: 5px">
+            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda" onchange="enable_filter(this)" checked>
+            <label>astroquery-related nodes</label>
+        </div>
+        
         '''
     if graph_config_names_list is not None:
-        html_code += '<b style="margin: 5px">Enable/disable graphical configurations for the graph</b>'
+        html_code += ('<div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable graphical configurations for the graph</div>')
         for graph_config_name in graph_config_names_list:
             html_code += f'''
                 <div style="margin: 5px">
                     <input type="checkbox" id="config_{graph_config_name}" name="{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
-                    <label>{graph_config_name}</label><br>
+                    <label>{graph_config_name}</label>
                  </div>
             '''
 
@@ -163,7 +171,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         var graph_config_obj = JSON.parse('{graph_config_obj_dict}');
         
         const parser = new N3.Parser({{ format: 'ttl' }});
-        let store = new N3.Store();
+        let prefixes_graph = {{}};
+        const store = new N3.Store();
         const myEngine = new Comunica.QueryEngine();
         const query_initial_graph = `CONSTRUCT {{
             ?action a <http://schema.org/Action> ;
@@ -174,22 +183,30 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
 
             ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-        }}
-        WHERE {{ 
-            ?action a <http://schema.org/Action> ;
-                <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
-                 
-            ?activity a ?activityType ;
-                <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-            
-            ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
-        }}`
+            }}
+            WHERE {{ 
+                ?action a <http://schema.org/Action> ;
+                    <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+                     
+                ?activity a ?activityType ;
+                    <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                    <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
+                
+                ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+            }}`
     '''
 
     f_apply_animations_graph = '''
         function applyAnimationsOptions() {
             network.setOptions( options );
+        }
+    '''
+
+    f_enable_filter = '''
+        function enable_filter(check_box_element) {
+            if(check_box_element.checked) {
+                
+            }
         }
     '''
 
@@ -210,7 +227,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 });
             }
         }
-    
     
         function toggle_graph_config(check_box_element) {
             let checked_config_name = check_box_element.name;
@@ -242,7 +258,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             nodes.clear();
             edges.clear();
             
-
             (async() => {
                 const bindingsStreamCall = await myEngine.queryQuads(query_initial_graph,
                     {
@@ -262,6 +277,56 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             
         }
     '''
+
+    f_query_clicked_node_formatting = '''
+
+            function format_query_clicked_node(clicked_node_id) {
+            
+                return `CONSTRUCT {
+                    ?s ?p <${clicked_node_id}> .
+                    ?s a ?s_type .
+                    ?s ?p_literal ?s_literal .
+                    
+                    <` + clicked_node_id + `> ?p ?o .
+                    ?o a ?o_type . 
+                    ?o ?p_literal ?o_literal .
+                }
+                WHERE {
+                    {
+                        ?s ?p <${clicked_node_id}> .
+                        ?s a ?s_type .
+                        ?s ?p_literal ?s_literal .
+                        FILTER isLiteral(?s_literal) .
+                    }
+                    UNION
+                    {
+                        ?s ?p <${clicked_node_id}> .
+                    }
+                    UNION
+                    {
+                        <${clicked_node_id}> ?p ?o .
+                        ?o a ?o_type .
+                        ?o ?p_literal ?o_literal .
+                        FILTER isLiteral(?o_literal)
+                    }
+                    UNION
+                    {
+                        <${clicked_node_id}> ?p ?o .
+                    } ` +
+                    for (let prefix_idx in prefixes_graph) {
+                        let prefix = prefixes_graph[prefix_idx];
+                        if()
+                    }
+                        FILTER (
+                            ! STRSTARTS(?s, "${prefixes_graph["oda"]}") &&
+                            ! STRSTARTS(?p, "${prefixes_graph["oda"]}") &&
+                            ! STRSTARTS(?o, "${prefixes_graph["oda"]}") &&
+                            ! STRSTARTS(?p_literal, "${prefixes_graph["oda"]}")
+                        ) .
+                    ` +
+                }`
+            }
+            '''
 
     f_process_binding = '''
         
@@ -374,7 +439,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
           
         function drawGraph() {
 
-        
     '''
 
     f_draw_graph = f'''
@@ -386,7 +450,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 }}
                 if (triple) {{
                     store.addQuad(triple.subject, triple.predicate, triple.object);
+                }} else {{
+                    prefixes_graph = prefixes;
                 }}
+                
             }}
         );
         
@@ -399,54 +466,35 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
                     network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                    // selected_node['expanded'] = true;
                     
                     myEngine.queryQuads(
-                        `CONSTRUCT {{
-                            ?s ?p <` + selected_node.id + `> .
-                            ?s a ?s_type .
-                            ?s ?p_literal ?s_literal .
-                            
-                            <` + selected_node.id + `> ?p ?o .
-                            ?o a ?o_type . 
-                            ?o ?p_literal ?o_literal .
-                        }}
-                        WHERE {{
-                            {{
-                                ?s ?p <` + selected_node.id + `> .
-                                ?s a ?s_type .
-                                ?s ?p_literal ?s_literal .
-                                FILTER isLiteral(?s_literal)
-                            }}
-                            UNION
-                            {{ ?s ?p <` + selected_node.id + `> . }}
-                            UNION
-                            {{ 
-                                <` + selected_node.id + `> ?p ?o .
-                                ?o a ?o_type .
-                                ?o ?p_literal ?o_literal .
-                                FILTER isLiteral(?o_literal)
-                            }}
-                            UNION
-                            {{ <` + selected_node.id + `> ?p ?o . }}
-                        }}`,
+                        format_query_clicked_node(selected_node.id),
                     {{
                         sources: [ store ]
                     }}
-                ).then(
-                    function (bindingsStream) {{
-                        // Consume results as a stream (best performance), alternative with array exists
-                        bindingsStream.on('data', (binding) => {{
-                            process_binding(binding);
-                        }});
-                        bindingsStream.on('end', () => {{
-                            network.setOptions( {{ "physics": {{ enabled: true }} }} );
-                        }});
-                        bindingsStream.on('error', (error) => {{
-                            console.error("error when clicked a node: " + error);
-                        }});
-                    }}
-                );
-            }}
+                    ).then(
+                        function (bindingsStream) {{
+                            // Consume results as a stream (best performance), alternative with array exists
+                            bindingsStream.on('data', (binding) => {{
+                                process_binding(binding);
+                            }});
+                            bindingsStream.on('end', () => {{
+                                network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                            }});
+                            bindingsStream.on('error', (error) => {{
+                                console.error("error when clicked a node: " + error);
+                            }});
+                        }}
+                    );
+                }}
+                // TODO to be well defined the behavior  
+                /* else if(selected_node && selected_node['clickable'] && selected_node['expanded'] ) {{
+                    console.log("removal of the clicked node");
+                    // do not really need to set to not-expanded since the node will be removed
+                    selected_node['expanded'] = false;
+                    nodes.remove(selected_node);
+                }} */
             }}
         }});
         
@@ -484,7 +532,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
     if net_html_match is not None:
-        net.html = net.html.replace(net_html_match.group(0), f_apply_animations_graph + f_toggle_graph_config + f_reset_graph + f_process_binding)
+        net.html = net.html.replace(net_html_match.group(0),
+                                    f_apply_animations_graph +
+                                    f_enable_filter +
+                                    f_toggle_graph_config +
+                                    f_reset_graph +
+                                    f_query_clicked_node_formatting +
+                                    f_process_binding)
 
     net.html = net.html.replace('// initialize global variables.', f_graph_vars)
 
