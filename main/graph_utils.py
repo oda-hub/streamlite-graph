@@ -124,8 +124,12 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
         
         <div style="margin: 5px">
-            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda" onchange="enable_filter(this)" checked>
-            <label>astroquery-related nodes</label>
+            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda" onchange="enable_filter(this)" unchecked>
+            <label>oda astroquery-related nodes</label>
+        </div>
+        <div style="margin: 5px">
+            <input type="checkbox" id="odas_filter" name="odsa_filter" value="odas" onchange="enable_filter(this)" unchecked>
+            <label>odas astroquery-related nodes</label>
         </div>
         
         '''
@@ -281,8 +285,25 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     f_query_clicked_node_formatting = '''
 
             function format_query_clicked_node(clicked_node_id) {
-
             
+                let filter_s = '';
+                let filter_s_type = '';
+                let filter_o = '';
+                let filter_o_type = '';
+                let filter_p = '';
+                let filter_p_literal = '';
+                for (let prefix_idx in prefixes_graph) {
+                        let checkbox_config = document.getElementById(prefix_idx + '_filter');
+                        if (checkbox_config !== null && !checkbox_config.checked) {
+                            filter_s = `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[prefix_idx]}") ).`;
+                            filter_o = `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[prefix_idx]}") ).`;
+                            filter_p = `FILTER ( ! STRSTARTS(STR(?p), "${prefixes_graph[prefix_idx]}") ).`;
+                            filter_s_type = `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[prefix_idx]}") ).`;
+                            filter_o_type = `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[prefix_idx]}") ).`;
+                            filter_p_literal = `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[prefix_idx]}") ).`;
+                        }
+                    }
+
                 let query = `CONSTRUCT {
                     ?s ?p <${clicked_node_id}> .
                     ?s a ?s_type .
@@ -298,43 +319,31 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         ?s a ?s_type .
                         ?s ?p_literal ?s_literal .
                         FILTER isLiteral(?s_literal) .
+                        ${filter_s_type}
+                        ${filter_p_literal}
                     }
                     UNION
                     {
                         ?s ?p <${clicked_node_id}> .
+                        ${filter_s}
                     }
                     UNION
                     {
                         <${clicked_node_id}> ?p ?o .
                         ?o a ?o_type .
                         ?o ?p_literal ?o_literal .
-                        FILTER isLiteral(?o_literal)
+                        FILTER isLiteral(?o_literal) .
+                        ${filter_o_type}
+                        ${filter_p_literal}
                     }
                     UNION
                     {
                         <${clicked_node_id}> ?p ?o .
+                        ${filter_o}
                     }
-                    `;
-                    
-                for (let prefix_idx in prefixes_graph) {
-                        let prefix = prefixes_graph[prefix_idx];
-                        let checkbox_config = document.getElementById(prefix_idx + '_filter');
-                        console.log(prefix_idx + '_filter');
-                        if (checkbox_config && !checkbox_config.checked) {
-                            query += `
-                                FILTER (
-                                    ! STRSTARTS(?s, "${prefixes_graph["${prefix}"]}") &&
-                                    ! STRSTARTS(?p, "${prefixes_graph["${prefix}"]}") &&
-                                    ! STRSTARTS(?o, "${prefixes_graph["${prefix}"]}") &&
-                                    ! STRSTARTS(?p_literal, "${prefixes_graph["${prefix}"]}")
-                                ) . 
-                            `
-                        }
-                    }          
-            
-                query += `        
-                    }
-                `
+                }`;
+                
+                console.log(query);
                 return query
             }
             '''
@@ -488,6 +497,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         function (bindingsStream) {{
                             // Consume results as a stream (best performance), alternative with array exists
                             bindingsStream.on('data', (binding) => {{
+                                console.log(binding);
                                 process_binding(binding);
                             }});
                             bindingsStream.on('end', () => {{
