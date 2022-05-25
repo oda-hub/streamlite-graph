@@ -295,12 +295,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 for (let prefix_idx in prefixes_graph) {
                         let checkbox_config = document.getElementById(prefix_idx + '_filter');
                         if (checkbox_config !== null && !checkbox_config.checked) {
-                            filter_s = `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[prefix_idx]}") ).`;
-                            filter_o = `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[prefix_idx]}") ).`;
-                            filter_p = `FILTER ( ! STRSTARTS(STR(?p), "${prefixes_graph[prefix_idx]}") ).`;
-                            filter_s_type = `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[prefix_idx]}") ).`;
-                            filter_o_type = `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[prefix_idx]}") ).`;
-                            filter_p_literal = `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[prefix_idx]}") ).`;
+                            filter_s += `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[prefix_idx]}") ). `;
+                            filter_o += `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[prefix_idx]}") ). `;
+                            filter_p += `FILTER ( ! STRSTARTS(STR(?p), "${prefixes_graph[prefix_idx]}") ). `;
+                            filter_s_type += `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[prefix_idx]}") ). `;
+                            filter_o_type += `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[prefix_idx]}") ). `;
+                            filter_p_literal += `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[prefix_idx]}") ). `;
                         }
                     }
 
@@ -343,7 +343,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }
                 }`;
                 
-                console.log(query);
                 return query
             }
             '''
