@@ -204,9 +204,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     f_enable_filter = '''
         function enable_filter(check_box_element) {
-            if(check_box_element.checked) {
+            /* if(check_box_element.checked) {
                 
-            }
+            } */
         }
     '''
 
@@ -281,8 +281,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     f_query_clicked_node_formatting = '''
 
             function format_query_clicked_node(clicked_node_id) {
+
             
-                return `CONSTRUCT {
+                let query = `CONSTRUCT {
                     ?s ?p <${clicked_node_id}> .
                     ?s a ?s_type .
                     ?s ?p_literal ?s_literal .
@@ -312,19 +313,29 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     UNION
                     {
                         <${clicked_node_id}> ?p ?o .
-                    } ` +
-                    for (let prefix_idx in prefixes_graph) {
-                        let prefix = prefixes_graph[prefix_idx];
-                        if()
                     }
-                        FILTER (
-                            ! STRSTARTS(?s, "${prefixes_graph["oda"]}") &&
-                            ! STRSTARTS(?p, "${prefixes_graph["oda"]}") &&
-                            ! STRSTARTS(?o, "${prefixes_graph["oda"]}") &&
-                            ! STRSTARTS(?p_literal, "${prefixes_graph["oda"]}")
-                        ) .
-                    ` +
-                }`
+                    `;
+                    
+                for (let prefix_idx in prefixes_graph) {
+                        let prefix = prefixes_graph[prefix_idx];
+                        let checkbox_config = document.getElementById(prefix_idx + '_filter');
+                        console.log(prefix_idx + '_filter');
+                        if (checkbox_config && !checkbox_config.checked) {
+                            query += `
+                                FILTER (
+                                    ! STRSTARTS(?s, "${prefixes_graph["${prefix}"]}") &&
+                                    ! STRSTARTS(?p, "${prefixes_graph["${prefix}"]}") &&
+                                    ! STRSTARTS(?o, "${prefixes_graph["${prefix}"]}") &&
+                                    ! STRSTARTS(?p_literal, "${prefixes_graph["${prefix}"]}")
+                                ) . 
+                            `
+                        }
+                    }          
+            
+                query += `        
+                    }
+                `
+                return query
             }
             '''
 
@@ -470,9 +481,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     
                     myEngine.queryQuads(
                         format_query_clicked_node(selected_node.id),
-                    {{
-                        sources: [ store ]
-                    }}
+                        {{
+                            sources: [ store ]
+                        }}
                     ).then(
                         function (bindingsStream) {{
                             // Consume results as a stream (best performance), alternative with array exists
