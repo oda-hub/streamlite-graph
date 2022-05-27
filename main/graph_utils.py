@@ -124,7 +124,7 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
         
         <div style="margin: 5px">
-            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
+            <input type="checkbox" id="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
             <label>oda astroquery-related nodes</label>
         </div>
         
@@ -134,7 +134,7 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         for graph_config_name in graph_config_names_list:
             html_code += f'''
                 <div style="margin: 5px">
-                    <input type="checkbox" id="config_{graph_config_name}" name="{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
+                    <input type="checkbox" id="config_{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
                     <label>{graph_config_name}</label>
                  </div>
             '''
@@ -229,10 +229,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }
     
         function toggle_graph_config(check_box_element) {
-            let checked_config_name = check_box_element.name;
+            let checked_config_id = check_box_element.id;
             if(check_box_element.checked) {
                 let graph_config_obj_asArray = Object.entries(graph_config_obj);
-                let config_subset =  graph_config_obj_asArray.filter(config => config[1].config_file === checked_config_name);
+                let config_subset =  graph_config_obj_asArray.filter(config => 'config_' + config[1].config_file === checked_config_id);
                 for (let config_idx in config_subset) {
                     let node_properties = config_subset[config_idx][1];
                     let nodes_to_update = nodes.get({
@@ -245,7 +245,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             } else {
                 let nodes_to_update = nodes.get({
                     filter: function (node) {
-                        return (node.config_file === checked_config_name);
+                        return ('config_' + node.config_file === checked_config_id);
                     }
                 });
                 update_nodes(nodes_to_update, graph_config_obj_default['Default']);
