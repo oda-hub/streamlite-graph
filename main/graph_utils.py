@@ -125,8 +125,8 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
         
         <div style="margin: 5px">
-            <input type="checkbox" id="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
-            <label>oda astroquery-related nodes</label>
+            <label><input type="checkbox" id="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
+            oda astroquery-related nodes</label>
         </div>
         
         '''
@@ -135,8 +135,8 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         for graph_config_name in graph_config_names_list:
             html_code += f'''
                 <div style="margin: 5px">
-                    <input type="checkbox" id="config_{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
-                    <label>{graph_config_name}</label>
+                    <label><input type="checkbox" id="config_{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
+                    {graph_config_name}</label>
                  </div>
             '''
 
