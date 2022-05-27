@@ -124,11 +124,11 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
         
         <div style="margin: 5px">
-            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda" onchange="enable_filter(this)" unchecked>
+            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda" onchange="enable_filter(this)" checked>
             <label>oda astroquery-related nodes</label>
         </div>
         <div style="margin: 5px">
-            <input type="checkbox" id="odas_filter" name="odsa_filter" value="odas" onchange="enable_filter(this)" unchecked>
+            <input type="checkbox" id="odas_filter" name="odsa_filter" value="odas" onchange="enable_filter(this)" checked>
             <label>odas astroquery-related nodes</label>
         </div>
         
@@ -305,9 +305,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }
 
                 let query = `CONSTRUCT {
-                    ?s ?p <${clicked_node_id}> .
-                    ?s a ?s_type .
-                    ?s ?p_literal ?s_literal .
+                    ?s ?p <${clicked_node_id}> ;
+                        a ?s_type ;
+                        ?p_literal ?s_literal .
                     
                     <` + clicked_node_id + `> ?p ?o .
                     ?o a ?o_type . 
@@ -322,11 +322,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         ${filter_s_type}
                         ${filter_p_literal}
                     }
-                    UNION
-                    {
-                        ?s ?p <${clicked_node_id}> .
-                        ${filter_s}
-                    }
+                    # UNION
+                    # {
+                    #     ?s ?p <${clicked_node_id}> .
+                    #     ${filter_s}
+                    # }
                     UNION
                     {
                         <${clicked_node_id}> ?p ?o .
@@ -336,11 +336,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         ${filter_o_type}
                         ${filter_p_literal}
                     }
-                    UNION
-                    {
-                        <${clicked_node_id}> ?p ?o .
-                        ${filter_o}
-                    }
+                    # UNION
+                    # {
+                    #     <${clicked_node_id}> ?p ?o .
+                    #     ${filter_o}
+                    # }
                 }`;
                 
                 return query
