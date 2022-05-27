@@ -35,11 +35,12 @@ def set_graph_options(net, output_path):
             },
             "physics": {
                 "enabled": true,
-                "minVelocity": 0.5,
+                "minVelocity": 1,
+                "maxVelocity": 15,
                 "solver": "repulsion",
                 "stabilization": {
                     "enabled": true,
-                    "iterations": 130, // maximum number of iteration to stabilize
+                    "iterations": 10, // maximum number of iteration to stabilize
                 },
                 "repulsion": {
                     "nodeDistance": 200 // Put more distance between the nodes.
