@@ -124,12 +124,8 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
         
         <div style="margin: 5px">
-            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda" onchange="enable_filter(this)" checked>
+            <input type="checkbox" id="oda_filter" name="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
             <label>oda astroquery-related nodes</label>
-        </div>
-        <div style="margin: 5px">
-            <input type="checkbox" id="odas_filter" name="odsa_filter" value="odas" onchange="enable_filter(this)" checked>
-            <label>odas astroquery-related nodes</label>
         </div>
         
         '''
@@ -295,12 +291,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 for (let prefix_idx in prefixes_graph) {
                         let checkbox_config = document.getElementById(prefix_idx + '_filter');
                         if (checkbox_config !== null && !checkbox_config.checked) {
-                            filter_s += `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[prefix_idx]}") ). `;
-                            filter_o += `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[prefix_idx]}") ). `;
-                            filter_p += `FILTER ( ! STRSTARTS(STR(?p), "${prefixes_graph[prefix_idx]}") ). `;
-                            filter_s_type += `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[prefix_idx]}") ). `;
-                            filter_o_type += `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[prefix_idx]}") ). `;
-                            filter_p_literal += `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[prefix_idx]}") ). `;
+                            let values_input = checkbox_config.value.split(",");
+                            for (let value_input_idx in values_input) {
+                                filter_s += `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                                filter_o += `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                                filter_p += `FILTER ( ! STRSTARTS(STR(?p), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                                filter_s_type += `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                                filter_o_type += `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                                filter_p_literal += `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                            }
                         }
                     }
 
@@ -496,7 +495,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         function (bindingsStream) {{
                             // Consume results as a stream (best performance), alternative with array exists
                             bindingsStream.on('data', (binding) => {{
-                                console.log(binding);
                                 process_binding(binding);
                             }});
                             bindingsStream.on('end', () => {{
