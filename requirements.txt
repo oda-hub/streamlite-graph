@@ -7,3 +7,4 @@ lxml
 bs4
 click==8.0.4
 typing
+typing_extensions
