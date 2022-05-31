@@ -33,11 +33,22 @@ def set_graph_options(net, output_path):
                     }
                 }
             },
+            "layout": {
+                "hierarchical": {
+                    "enabled": false,
+                    "levelSeparation": -150,
+                    "sortMethod": "directed",
+                    "nodeSpacing": 150
+                }
+            },
             "physics": {
                 "enabled": true,
                 "minVelocity": 1,
                 "maxVelocity": 15,
                 "solver": "repulsion",
+                "hierarchicalRepulsion": {
+                    "nodeDistance": 175,
+                },
                 "stabilization": {
                     "enabled": true,
                     "iterations": 10
@@ -121,6 +132,17 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
 def set_html_content(net, output_path, graph_config_names_list=None):
     html_code = '''
         <div style="margin: 5px 0px 15px 5px"><button type="button" onclick="reset_graph()">Reset graph!</button></div>
+        
+        <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Change graph layout</div>
+        
+        <div style="margin: 5px">
+            <label><input type="radio" id="repulsion_layout" name="graph_layout" value="repulsion" onchange="apply_layout(this)" checked>
+            Random</label>
+        </div>
+        <div style="margin: 5px">
+            <label><input type="radio" id="hierarchical_layout" name="graph_layout" value="hierarchicalRepulsion" onchange="apply_layout(this)" unchecked>
+            Hierarchical</label>
+        </div>
         
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
         
@@ -208,6 +230,26 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             /* if(check_box_element.checked) {
                 
             } */
+        }
+    '''
+
+    f_apply_layout = '''
+        function apply_layout(radio_box_element) {
+            let layout_id = radio_box_element.id;
+            let layout_name = layout_id.split("_")[0];
+            switch (layout_name) {
+                case "hierarchical": 
+                    network.setOptions( { "physics": { "solver": "hierarchicalRepulsion" } } );
+                    break;
+                
+                case "repulsion": 
+                    network.setOptions( { "physics": { "solver": "repulsion" } } );
+                    break;
+               
+                default: 
+                    network.setOptions( { "physics": { "solver": "repulsion" } } );
+            }
+            console.log(layout_name);
         }
     '''
 
@@ -554,6 +596,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         net.html = net.html.replace(net_html_match.group(0),
                                     f_apply_animations_graph +
                                     f_enable_filter +
+                                    f_apply_layout +
                                     f_toggle_graph_config +
                                     f_reset_graph +
                                     f_query_clicked_node_formatting +
