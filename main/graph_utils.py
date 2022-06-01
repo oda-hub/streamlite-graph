@@ -10,7 +10,92 @@ from dateutil import parser
 def set_graph_options(net, output_path):
     options_str = (
         """
-        var options = {
+        options_repulsion = {
+            "autoResize": true,
+            "nodes": {
+                "scaling": {
+                    "min": 10,
+                    "max": 30
+                },
+                "font": {
+                    "size": 12,
+                    "face": "Tahoma",
+                },
+            },
+            "edges": {
+                "smooth": {
+                    "type": "continuous"
+                },
+                "arrows": {
+                  "to": {
+                    "enabled": true,
+                    "scaleFactor": 0.55
+                    }
+                }
+            },
+            "physics": {
+                "enabled": true,
+                "minVelocity": 1,
+                "maxVelocity": 15,
+                "solver": "repulsion",
+                "repulsion": {
+                    "nodeDistance": 200
+                },
+                "stabilization": {
+                    "enabled": true,
+                    "iterations": 10
+                },
+            }
+        };
+        
+        options_hierarchical = {
+            "autoResize": true,
+            "nodes": {
+                "scaling": {
+                    "min": 10,
+                    "max": 30
+                },
+                "font": {
+                    "size": 12,
+                    "face": "Tahoma",
+                },
+            },
+            "edges": {
+                "smooth": {
+                    "type": "continuous"
+                },
+                "arrows": {
+                  "to": {
+                    "enabled": true,
+                    "scaleFactor": 0.55
+                    }
+                }
+            },
+            "layout": {
+                "hierarchical": {
+                    "enabled": false,
+                    "levelSeparation": -150,
+                    "sortMethod": "directed",
+                    "nodeSpacing": 150
+                }
+            },
+            "physics": {
+                "enabled": true,
+                "minVelocity": 1,
+                "maxVelocity": 15,
+                "solver": "hierarchicalRepulsion",
+                "hierarchicalRepulsion": {
+                    "nodeDistance": 175,
+                    "damping": 0.15
+                },
+                "stabilization": {
+                    "enabled": true,
+                    "iterations": 10
+                },
+            }
+        };
+        
+        options_default = {
             "autoResize": true,
             "nodes": {
                 "scaling": {
@@ -46,9 +131,6 @@ def set_graph_options(net, output_path):
                 "minVelocity": 1,
                 "maxVelocity": 15,
                 "solver": "repulsion",
-                "hierarchicalRepulsion": {
-                    "nodeDistance": 175,
-                },
                 "stabilization": {
                     "enabled": true,
                     "iterations": 10
@@ -196,6 +278,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         const parser = new N3.Parser({{ format: 'ttl' }});
         let prefixes_graph = {{}};
         const store = new N3.Store();
+        var options_default, options_repulsion, options_hierarchical;
         const myEngine = new Comunica.QueryEngine();
         const query_initial_graph = `CONSTRUCT {{
             ?action a <http://schema.org/Action> ;
@@ -221,7 +304,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     f_apply_animations_graph = '''
         function applyAnimationsOptions() {
-            network.setOptions( options );
+            network.setOptions( options_default );
         }
     '''
 
@@ -238,16 +321,17 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             let layout_id = radio_box_element.id;
             let layout_name = layout_id.split("_")[0];
             switch (layout_name) {
-                case "hierarchical": 
-                    network.setOptions( { "physics": { "solver": "hierarchicalRepulsion" } } );
+                case "hierarchical":
+                    network.setOptions( options_hierarchical );
+                    console.log(options_hierarchical);
                     break;
                 
                 case "repulsion": 
-                    network.setOptions( { "physics": { "solver": "repulsion" } } );
+                    network.setOptions( options_repulsion );
                     break;
                
                 default: 
-                    network.setOptions( { "physics": { "solver": "repulsion" } } );
+                    network.setOptions( options_default );
             }
             console.log(layout_name);
         }
