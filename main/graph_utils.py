@@ -226,10 +226,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         function apply_layout(radio_box_element) {
             let layout_id = radio_box_element.id;
             let layout_name = layout_id.split("_")[0];
-            console.log(layout_name);
             switch (layout_name) {
                 case "hierarchical":
-                    // network.setOptions( options_hierarchical );
                     network.setOptions(
                         {
                             "layout": {
@@ -259,7 +257,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     break;
                 
                 case "repulsion": 
-                    // network.setOptions( options_repulsion );
                     network.setOptions(
                         {
                             "layout": {
@@ -548,31 +545,43 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
-                    (async() => {{
-                        const bindingsStreamCall = await myEngine.queryQuads(
-                            format_query_clicked_node(selected_node.id),
-                            {{
-                                sources: [ store ]
-                            }}
-                        );
-                        bindingsStreamCall.on('data', (binding) => {{
-                            process_binding(binding);
-                        }});
-                        bindingsStreamCall.on('end', () => {{
-                            network.setOptions( {{ "physics": {{ enabled: true }} }} );
-                        }});
-                        bindingsStreamCall.on('error', (error) => {{ 
-                            console.error(error);
-                        }});
-                    }})();
+                    let connected_to_nodes = network.getConnectedNodes(selected_node.id, 'to');
+                    let remove_node_and_child_nodes = true;
+                    if (connected_to_nodes.length > 0) {{
+                        for (let i in connected_to_nodes) {{
+                            let connected_to_node = connected_to_nodes[i];
+                            connected_to_connected_to_node = network.getConnectedNodes(connected_to_node, 'to');
+                            if (connected_to_connected_to_node.length > 0)
+                                remove_node_and_child_nodes = false;
+                        }}
+                    }} 
+                    else 
+                        remove_node_and_child_nodes = false;
+                    console.log(remove_node_and_child_nodes);
+                    if (!remove_node_and_child_nodes) {{
+                        (async() => {{
+                            const bindingsStreamCall = await myEngine.queryQuads(
+                                format_query_clicked_node(selected_node.id),
+                                {{
+                                    sources: [ store ]
+                                }}
+                            );
+                            bindingsStreamCall.on('data', (binding) => {{
+                                process_binding(binding);
+                            }});
+                            bindingsStreamCall.on('end', () => {{
+                                network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                            }});
+                            bindingsStreamCall.on('error', (error) => {{ 
+                                console.error(error);
+                            }});
+                        }})();
+                    }}
+                    else {{
+                        nodes.remove(selected_node);
+                        nodes.remove(connected_to_nodes);
+                    }}
                 }}
-                // TODO to be well defined the behavior  
-                /* else if(selected_node && selected_node['clickable'] && selected_node['expanded'] ) {{
-                    console.log("removal of the clicked node");
-                    // do not really need to set to not-expanded since the node will be removed
-                    selected_node['expanded'] = false;
-                    nodes.remove(selected_node);
-                }} */
             }}
         }});
         
