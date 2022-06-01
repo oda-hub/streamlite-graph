@@ -363,20 +363,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
             function format_query_clicked_node(clicked_node_id) {
             
-                let filter_s = '';
                 let filter_s_type = '';
-                let filter_o = '';
                 let filter_o_type = '';
-                let filter_p = '';
                 let filter_p_literal = '';
                 for (let prefix_idx in prefixes_graph) {
                         let checkbox_config = document.getElementById(prefix_idx + '_filter');
                         if (checkbox_config !== null && !checkbox_config.checked) {
                             let values_input = checkbox_config.value.split(",");
                             for (let value_input_idx in values_input) {
-                                filter_s += `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
-                                filter_o += `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
-                                filter_p += `FILTER ( ! STRSTARTS(STR(?p), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
                                 filter_s_type += `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
                                 filter_o_type += `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
                                 filter_p_literal += `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
@@ -402,11 +396,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         ${filter_s_type}
                         ${filter_p_literal}
                     }
-                    # UNION
-                    # {
-                    #     ?s ?p <${clicked_node_id}> .
-                    #     ${filter_s}
-                    # }
                     UNION
                     {
                         <${clicked_node_id}> ?p ?o .
@@ -416,11 +405,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         ${filter_o_type}
                         ${filter_p_literal}
                     }
-                    # UNION
-                    # {
-                    #     <${clicked_node_id}> ?p ?o .
-                    #     ${filter_o}
-                    # }
                 }`;
                 
                 return query
@@ -564,8 +548,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
-                    network.setOptions( {{ "physics": {{ enabled: true }} }} );
-                    // selected_node['expanded'] = true;
                     
                     myEngine.queryQuads(
                         format_query_clicked_node(selected_node.id),
