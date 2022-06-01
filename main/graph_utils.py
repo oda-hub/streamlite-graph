@@ -548,26 +548,23 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
-                    
-                    myEngine.queryQuads(
-                        format_query_clicked_node(selected_node.id),
-                        {{
-                            sources: [ store ]
-                        }}
-                    ).then(
-                        function (bindingsStream) {{
-                            // Consume results as a stream (best performance), alternative with array exists
-                            bindingsStream.on('data', (binding) => {{
-                                process_binding(binding);
-                            }});
-                            bindingsStream.on('end', () => {{
-                                network.setOptions( {{ "physics": {{ enabled: true }} }} );
-                            }});
-                            bindingsStream.on('error', (error) => {{
-                                console.error("error when clicked a node: " + error);
-                            }});
-                        }}
-                    );
+                    (async() => {{
+                        const bindingsStreamCall = await myEngine.queryQuads(
+                            format_query_clicked_node(selected_node.id),
+                            {{
+                                sources: [ store ]
+                            }}
+                        );
+                        bindingsStreamCall.on('data', (binding) => {{
+                            process_binding(binding);
+                        }});
+                        bindingsStreamCall.on('end', () => {{
+                            network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                        }});
+                        bindingsStreamCall.on('error', (error) => {{ 
+                            console.error(error);
+                        }});
+                    }})();
                 }}
                 // TODO to be well defined the behavior  
                 /* else if(selected_node && selected_node['clickable'] && selected_node['expanded'] ) {{
