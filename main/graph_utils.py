@@ -73,7 +73,7 @@ def set_graph_options(net, output_path):
             },
             "layout": {
                 "hierarchical": {
-                    "enabled": false,
+                    "enabled": true,
                     "levelSeparation": -150,
                     "sortMethod": "directed",
                     "nodeSpacing": 150
@@ -95,7 +95,7 @@ def set_graph_options(net, output_path):
             }
         };
         
-        options_default = {
+        var options = {
             "autoResize": true,
             "nodes": {
                 "scaling": {
@@ -116,14 +116,6 @@ def set_graph_options(net, output_path):
                     "enabled": true,
                     "scaleFactor": 0.55
                     }
-                }
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": false,
-                    "levelSeparation": -150,
-                    "sortMethod": "directed",
-                    "nodeSpacing": 150
                 }
             },
             "physics": {
@@ -278,7 +270,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         const parser = new N3.Parser({{ format: 'ttl' }});
         let prefixes_graph = {{}};
         const store = new N3.Store();
-        var options_default, options_repulsion, options_hierarchical;
+        var options_repulsion, options_hierarchical;
         const myEngine = new Comunica.QueryEngine();
         const query_initial_graph = `CONSTRUCT {{
             ?action a <http://schema.org/Action> ;
@@ -302,12 +294,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             }}`
     '''
 
-    f_apply_animations_graph = '''
-        function applyAnimationsOptions() {
-            network.setOptions( options_default );
-        }
-    '''
-
     f_enable_filter = '''
         function enable_filter(check_box_element) {
             /* if(check_box_element.checked) {
@@ -323,7 +309,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             switch (layout_name) {
                 case "hierarchical":
                     network.setOptions( options_hierarchical );
-                    console.log(options_hierarchical);
                     break;
                 
                 case "repulsion": 
@@ -331,7 +316,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     break;
                
                 default: 
-                    network.setOptions( options_default );
+                    network.setOptions( options );
             }
             console.log(layout_name);
         }
@@ -678,7 +663,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     net_html_match = re.search(r'function drawGraph\(\) {', net.html, flags=re.DOTALL)
     if net_html_match is not None:
         net.html = net.html.replace(net_html_match.group(0),
-                                    f_apply_animations_graph +
                                     f_enable_filter +
                                     f_apply_layout +
                                     f_toggle_graph_config +
