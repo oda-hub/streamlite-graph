@@ -33,6 +33,11 @@ def set_graph_options(net, output_path):
                     }
                 }
             },
+            "layout": {
+                "hierarchical": {
+                    "enabled": false
+                }
+            },
             "physics": {
                 "enabled": true,
                 "minVelocity": 1,
@@ -116,6 +121,11 @@ def set_graph_options(net, output_path):
                     "enabled": true,
                     "scaleFactor": 0.55
                     }
+                }
+            },
+            "layout": {
+                "hierarchical": {
+                    "enabled": false
                 }
             },
             "physics": {
@@ -318,7 +328,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 default: 
                     network.setOptions( options );
             }
-            console.log(layout_name);
         }
     '''
 
@@ -380,7 +389,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     process_binding(binding);
                 });
                 bindingsStreamCall.on('end', () => {
-                    network.setOptions( { "physics": { enabled: true } } );
+                    let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                    apply_layout(checked_radiobox);
                 });
                 bindingsStreamCall.on('error', (error) => {
                     console.error(error);
