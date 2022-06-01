@@ -316,13 +316,62 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         function apply_layout(radio_box_element) {
             let layout_id = radio_box_element.id;
             let layout_name = layout_id.split("_")[0];
+            console.log(layout_name);
             switch (layout_name) {
                 case "hierarchical":
-                    network.setOptions( options_hierarchical );
+                    // network.setOptions( options_hierarchical );
+                    network.setOptions(
+                        {
+                            "layout": {
+                                "hierarchical": {
+                                    "enabled": true,
+                                    "levelSeparation": -150,
+                                    "sortMethod": "directed",
+                                    "nodeSpacing": 150
+                                }
+                            },
+                            "physics": {
+                                "enabled": true,
+                                "minVelocity": 1,
+                                "maxVelocity": 15,
+                                "solver": "hierarchicalRepulsion",
+                                "hierarchicalRepulsion": {
+                                    "nodeDistance": 175,
+                                    "damping": 0.15
+                                },
+                                "stabilization": {
+                                    "enabled": true,
+                                    "iterations": 10
+                                },
+                            }
+                        }
+                    );
                     break;
                 
                 case "repulsion": 
-                    network.setOptions( options_repulsion );
+                    // network.setOptions( options_repulsion );
+                    network.setOptions(
+                        {
+                            "layout": {
+                                "hierarchical": {
+                                    "enabled": false
+                                }
+                            },
+                            "physics": {
+                                "enabled": true,
+                                "minVelocity": 1,
+                                "maxVelocity": 15,
+                                "solver": "repulsion",
+                                "repulsion": {
+                                    "nodeDistance": 200
+                                },
+                                "stabilization": {
+                                    "enabled": true,
+                                    "iterations": 10
+                                },
+                            }
+                        }
+                    );
                     break;
                
                 default: 
