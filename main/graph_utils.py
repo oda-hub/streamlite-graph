@@ -10,95 +10,6 @@ from dateutil import parser
 def set_graph_options(net, output_path):
     options_str = (
         """
-        options_repulsion = {
-            "autoResize": true,
-            "nodes": {
-                "scaling": {
-                    "min": 10,
-                    "max": 30
-                },
-                "font": {
-                    "size": 12,
-                    "face": "Tahoma",
-                },
-            },
-            "edges": {
-                "smooth": {
-                    "type": "continuous"
-                },
-                "arrows": {
-                  "to": {
-                    "enabled": true,
-                    "scaleFactor": 0.55
-                    }
-                }
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": false
-                }
-            },
-            "physics": {
-                "enabled": true,
-                "minVelocity": 1,
-                "maxVelocity": 15,
-                "solver": "repulsion",
-                "repulsion": {
-                    "nodeDistance": 200
-                },
-                "stabilization": {
-                    "enabled": true,
-                    "iterations": 10
-                },
-            }
-        };
-        
-        options_hierarchical = {
-            "autoResize": true,
-            "nodes": {
-                "scaling": {
-                    "min": 10,
-                    "max": 30
-                },
-                "font": {
-                    "size": 12,
-                    "face": "Tahoma",
-                },
-            },
-            "edges": {
-                "smooth": {
-                    "type": "continuous"
-                },
-                "arrows": {
-                  "to": {
-                    "enabled": true,
-                    "scaleFactor": 0.55
-                    }
-                }
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": true,
-                    "levelSeparation": -150,
-                    "sortMethod": "directed",
-                    "nodeSpacing": 150
-                }
-            },
-            "physics": {
-                "enabled": true,
-                "minVelocity": 1,
-                "maxVelocity": 15,
-                "solver": "hierarchicalRepulsion",
-                "hierarchicalRepulsion": {
-                    "nodeDistance": 175,
-                    "damping": 0.15
-                },
-                "stabilization": {
-                    "enabled": true,
-                    "iterations": 10
-                },
-            }
-        };
         
         var options = {
             "autoResize": true,
@@ -280,7 +191,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         const parser = new N3.Parser({{ format: 'ttl' }});
         let prefixes_graph = {{}};
         const store = new N3.Store();
-        var options_repulsion, options_hierarchical;
         const myEngine = new Comunica.QueryEngine();
         const query_initial_graph = `CONSTRUCT {{
             ?action a <http://schema.org/Action> ;
