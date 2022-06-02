@@ -361,7 +361,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             function format_query_clicked_node(clicked_node_id) {
             
                 let filter_s_type = '';
+                let filter_s = '';
                 let filter_o_type = '';
+                let filter_o = '';
                 let filter_p_literal = '';
                 for (let prefix_idx in prefixes_graph) {
                         let checkbox_config = document.getElementById(prefix_idx + '_filter');
@@ -369,7 +371,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             let values_input = checkbox_config.value.split(",");
                             for (let value_input_idx in values_input) {
                                 filter_s_type += `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                                filter_s += `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
                                 filter_o_type += `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                                filter_o += `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
                                 filter_p_literal += `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
                             }
                         }
@@ -397,6 +401,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     {
                          ?s ?p <${clicked_node_id}> .
                          ?s a ?s_type .
+                         ${filter_s_type}
+                    }
+                    UNION
+                    {
+                         ?s ?p <${clicked_node_id}> .
+                         ${filter_s}
                     }
                     UNION
                     {
@@ -411,6 +421,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     {
                          <${clicked_node_id}> ?p ?o .
                          ?o a ?o_type
+                         ${filter_o_type}
+                    }
+                    UNION
+                    {
+                         <${clicked_node_id}> ?p ?o .
+                         ${filter_o}
                     }
                 }`;
                 
@@ -523,6 +539,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 label: subj_node_to_update['label'] + literal_label,
                                 });
                     }
+                    else
+                        nodes.add([obj_node]);
                 }
             }
         }
@@ -556,6 +574,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
                     let connected_to_nodes = network.getConnectedNodes(selected_node.id, 'to');
+                    let edges_to_remove = [];
                     let remove_node_and_child_nodes = true;
                     if (connected_to_nodes.length > 0) {{
                         for (let i in connected_to_nodes) {{
@@ -563,6 +582,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             connected_to_connected_to_node = network.getConnectedNodes(connected_to_node, 'to');
                             if (connected_to_connected_to_node.length > 0)
                                 remove_node_and_child_nodes = false;
+                            else {{
+                                edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
+                            }}
                         }}
                     }} 
                     else 
@@ -589,7 +611,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }}
                     else {{
                         // nodes.remove(selected_node);
+                        // console.log(edges.getDataSet().length);
+                        // console.log(edges_to_remove);
+                        edges.remove(edges_to_remove);
                         nodes.remove(connected_to_nodes);
+                        // console.log(edges.getDataSet().length);
                     }}
                 }}
             }}
