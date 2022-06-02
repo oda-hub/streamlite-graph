@@ -180,8 +180,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 "value": 20,
                 "config_file": null,
                 "font": {{
+                    "size": 22,
                     "bold": {{
-                        "size": 20
+                        "size": 36
                     }}
                 }}
            }}

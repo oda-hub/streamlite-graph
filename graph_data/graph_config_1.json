@@ -7,7 +7,7 @@
       "level": 0
    },
    "Activity": {
-      "shape": " ellipse",
+      "shape": "ellipse",
       "color": "#00FC10",
       "style": "filled",
       "value": 35,
