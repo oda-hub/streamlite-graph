@@ -395,12 +395,22 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }
                     UNION
                     {
+                         ?s ?p <${clicked_node_id}> .
+                         ?s a ?s_type .
+                    }
+                    UNION
+                    {
                         <${clicked_node_id}> ?p ?o .
                         ?o a ?o_type .
                         ?o ?p_literal ?o_literal .
                         FILTER isLiteral(?o_literal) .
                         ${filter_o_type}
                         ${filter_p_literal}
+                    }
+                    UNION
+                    {
+                         <${clicked_node_id}> ?p ?o .
+                         ?o a ?o_type
                     }
                 }`;
                 
