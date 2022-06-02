@@ -41,8 +41,8 @@ def set_graph_options(net, output_path):
             },
             "physics": {
                 "enabled": true,
-                "minVelocity": 1,
-                "maxVelocity": 15,
+                "minVelocity": 2.5,
+                "maxVelocity": 150,
                 "solver": "repulsion",
                 "stabilization": {
                     "enabled": true,
