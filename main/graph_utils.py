@@ -588,7 +588,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         }})();
                     }}
                     else {{
-                        nodes.remove(selected_node);
+                        // nodes.remove(selected_node);
                         nodes.remove(connected_to_nodes);
                     }}
                 }}
