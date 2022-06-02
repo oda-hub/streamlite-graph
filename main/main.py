@@ -18,7 +18,7 @@ st.title('Graph Quick-Look')
 
 def stream_graph():
     html_fn = 'graph_data/graph.html'
-    ttl_fn = 'graph_data/graph.ttl'
+    ttl_fn = 'graph_data/graph_two_commands.ttl'
     graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
 
     net = Network(
