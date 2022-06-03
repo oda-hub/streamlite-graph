@@ -576,6 +576,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
         
+        network.on("dragStart", function (e) {{
+            network.setOptions( {{ "physics": {{ enabled: false }} }} );
+        }});
+        
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
