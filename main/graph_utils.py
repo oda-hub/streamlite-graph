@@ -11,6 +11,24 @@ def set_graph_options(net, output_path):
     options_str = (
         """
         
+        var physics_options = {
+            "physics": {
+                "enabled": true,
+                "minVelocity": 2.5,
+                "maxVelocity": 150,
+                "stabilization": {
+                    "enabled": true,
+                    "iterations": 10
+                },
+                "solver": "repulsion",
+                "repulsion": {
+                    "nodeDistance": 450,
+                    "springLength": 250, 
+                    springConstant: 0.1, 
+                },
+            }
+        };
+        
         var options = {
             "autoResize": true,
             "nodes": {
@@ -39,20 +57,10 @@ def set_graph_options(net, output_path):
                     "enabled": false
                 }
             },
-            "physics": {
-                "enabled": true,
-                "minVelocity": 2.5,
-                "maxVelocity": 150,
-                "solver": "repulsion",
-                "stabilization": {
-                    "enabled": true,
-                    "iterations": 10
-                },
-                "repulsion": {
-                    "nodeDistance": 200
-                },
-            }
+            ...physics_options
         };
+        
+        console.log(options);
         
         """
     )
@@ -271,11 +279,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 "maxVelocity": 15,
                                 "solver": "repulsion",
                                 "repulsion": {
-                                    "nodeDistance": 200
+                                    "nodeDistance": 200,
+                                    "damping": 1
                                 },
                                 "stabilization": {
-                                    "enabled": true,
-                                    "iterations": 10
+                                    "enabled": true
                                 },
                             }
                         }
@@ -603,7 +611,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 process_binding(binding);
                             }});
                             bindingsStreamCall.on('end', () => {{
-                                network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                                network.setOptions(physics_options);
                             }});
                             bindingsStreamCall.on('error', (error) => {{ 
                                 console.error(error);
