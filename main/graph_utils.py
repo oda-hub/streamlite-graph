@@ -12,10 +12,10 @@ def set_graph_options(net, output_path):
         """
         
         var physics_options = {
-            "physics": {
+            physics: {
                 "enabled": true,
                 "minVelocity": 2.5,
-                "maxVelocity": 150,
+                "maxVelocity": 1500,
                 "stabilization": {
                     "enabled": true,
                     "iterations": 10
@@ -24,7 +24,7 @@ def set_graph_options(net, output_path):
                 "repulsion": {
                     "nodeDistance": 450,
                     "springLength": 250, 
-                    springConstant: 0.1, 
+                    springConstant: 0.01, 
                 },
             }
         };
@@ -59,8 +59,6 @@ def set_graph_options(net, output_path):
             },
             ...physics_options
         };
-        
-        console.log(options);
         
         """
     )
