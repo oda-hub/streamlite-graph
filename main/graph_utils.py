@@ -221,7 +221,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             "layout": {
                                 "hierarchical": {
                                     "enabled": true,
-                                    "levelSeparation": -150,
+                                    "levelSeparation": 150,
                                     "sortMethod": "directed",
                                     "nodeSpacing": 150
                                 }
@@ -236,7 +236,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 },
                                 "stabilization": {
                                     "enabled": true,
-                                    "iterations": 10
+                                    "iterations": 1,
+                                    updateInterval: 1
                                 },
                             }
                         }
@@ -252,15 +253,26 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 }
                             },
                             "physics": {
-                                "enabled": true,
-                                "minVelocity": 1,
-                                "maxVelocity": 1500,
-                                "solver": "repulsion",
-                                "repulsion": {
-                                    "nodeDistance": 300,
+                                enabled: true,
+                                minVelocity: 1,
+                                maxVelocity: 146,
+                                timestep: 0.35,
+                                solver: "forceAtlas2Based",
+                                barnesHut: {
+                                    "avoidOverlap": 0.9,
+                                    centralGravity: 0.1,
+                                    damping: 0.1,
                                 },
-                                "stabilization": {
-                                    "enabled": true
+                                forceAtlas2Based: {
+                                    gravitationalConstant: -10000,
+                                    centralGravity: 0.1,
+                                },
+                                repulsion: {
+                                    nodeDistance: 300,
+                                    centralGravity: 0
+                                },
+                                stabilization: {
+                                    "enabled": true,
                                 },
                             }
                         }
@@ -552,6 +564,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         );
         
         network.on("stabilized", function (e) {{
+            network.setOptions( {{ "physics": {{ enabled: false }} }} );
+        }});
+        
+        
+        network.on("stabilizationIterationsDone", function () {{
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
         
