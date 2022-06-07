@@ -220,23 +220,23 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         {
                             "layout": {
                                 "hierarchical": {
-                                    "enabled": true,
-                                    "levelSeparation": 150,
-                                    "sortMethod": "directed",
-                                    "nodeSpacing": 150
+                                    enabled: true,
+                                    levelSeparation: 150,
+                                    sortMethod: "directed",
+                                    nodeSpacing: 150
                                 }
                             },
                             "physics": {
-                                "enabled": true,
-                                "minVelocity": 0.9,
-                                "maxVelocity": 1500,
-                                "solver": "hierarchicalRepulsion",
-                                "hierarchicalRepulsion": {
-                                    "nodeDistance": 200,
+                                enabled: true,
+                                minVelocity: 0.9,
+                                maxVelocity: 1500,
+                                solver: "hierarchicalRepulsion",
+                                hierarchicalRepulsion: {
+                                    nodeDistance: 200,
                                 },
-                                "stabilization": {
-                                    "enabled": true,
-                                    "iterations": 1,
+                                stabilization: {
+                                    enabled: true,
+                                    iterations: 1,
                                     updateInterval: 1
                                 },
                             }
@@ -259,7 +259,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 timestep: 0.35,
                                 solver: "forceAtlas2Based",
                                 barnesHut: {
-                                    "avoidOverlap": 0.9,
+                                    avoidOverlap: 0.9,
                                     centralGravity: 0.1,
                                     damping: 0.1,
                                 },
