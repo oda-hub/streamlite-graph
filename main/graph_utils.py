@@ -592,7 +592,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 process_binding(binding);
                             }});
                             bindingsStreamCall.on('end', () => {{
-                                
+                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                                apply_layout(checked_radiobox);
                             }});
                             bindingsStreamCall.on('error', (error) => {{ 
                                 console.error(error);
