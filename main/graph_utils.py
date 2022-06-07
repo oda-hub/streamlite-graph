@@ -248,11 +248,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             "physics": {
                                 "enabled": true,
                                 "minVelocity": 1,
-                                "maxVelocity": 15,
+                                "maxVelocity": 150,
                                 "solver": "hierarchicalRepulsion",
                                 "hierarchicalRepulsion": {
-                                    "nodeDistance": 175,
-                                    "damping": 0.15
+                                    "nodeDistance": 200,
                                 },
                                 "stabilization": {
                                     "enabled": true,
@@ -274,11 +273,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             "physics": {
                                 "enabled": true,
                                 "minVelocity": 1,
-                                "maxVelocity": 15,
+                                "maxVelocity": 1500,
                                 "solver": "repulsion",
                                 "repulsion": {
                                     "nodeDistance": 200,
-                                    "damping": 1
                                 },
                                 "stabilization": {
                                     "enabled": true
@@ -354,7 +352,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 bindingsStreamCall.on('end', () => {
                     let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
                     apply_layout(checked_radiobox);
-                    network.setOptions(physics_options);
                 });
                 bindingsStreamCall.on('error', (error) => {
                     console.error(error);
@@ -614,7 +611,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 process_binding(binding);
                             }});
                             bindingsStreamCall.on('end', () => {{
-                                network.setOptions(physics_options);
+                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                                apply_layout(checked_radiobox);
                             }});
                             bindingsStreamCall.on('error', (error) => {{ 
                                 console.error(error);
@@ -622,12 +620,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         }})();
                     }}
                     else {{
-                        // nodes.remove(selected_node);
-                        // console.log(edges.getDataSet().length);
-                        // console.log(edges_to_remove);
                         edges.remove(edges_to_remove);
                         nodes.remove(connected_to_nodes);
-                        // console.log(edges.getDataSet().length);
                     }}
                 }}
             }}
@@ -643,8 +637,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 process_binding(binding);
             }});
             bindingsStreamCall.on('end', () => {{
-                // network.setOptions( {{ "physics": {{ enabled: true }} }} );
-                network.setOptions(physics_options);
+                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                apply_layout(checked_radiobox);
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);
