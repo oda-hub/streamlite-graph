@@ -259,7 +259,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 forceAtlas2Based: {
                                     gravitationalConstant: -10000,
                                     centralGravity: 0.1,
+                                    springLength: 200,
+                                    springConstant: 0.1
                                 },
+                                timestep: 0.35,
                                 stabilization: {
                                     enabled: true,
                                     fit: true
