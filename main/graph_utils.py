@@ -228,8 +228,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             },
                             "physics": {
                                 enabled: true,
-                                minVelocity: 0.9,
-                                maxVelocity: 1500,
+                                minVelocity: 1,
+                                maxVelocity: 100,
                                 solver: "hierarchicalRepulsion",
                                 hierarchicalRepulsion: {
                                     nodeDistance: 250,
@@ -254,7 +254,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             "physics": {
                                 enabled: true,
                                 minVelocity: 1,
-                                maxVelocity: 146,
+                                maxVelocity: 100,
                                 timestep: 0.35,
                                 solver: "forceAtlas2Based",
                                 forceAtlas2Based: {
