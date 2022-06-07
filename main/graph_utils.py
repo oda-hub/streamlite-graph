@@ -255,7 +255,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 enabled: true,
                                 minVelocity: 1,
                                 maxVelocity: 100,
-                                timestep: 0.35,
                                 solver: "forceAtlas2Based",
                                 forceAtlas2Based: {
                                     gravitationalConstant: -10000,
