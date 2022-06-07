@@ -516,7 +516,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 if(!nodes.get(obj_id)) {
                     if(binding.object.termType === "Literal") {
                         subj_node_to_update = nodes.get(subj_id);
-                        literal_predicate_index = edge_obj['title'].lastIndexOf("/")
+                        
+                        literal_predicate_index = edge_obj['title'].lastIndexOf("/");
                         literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
                         if (literal_predicate) {
                             idx_hash = literal_predicate.indexOf("#");
@@ -524,11 +525,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                               literal_predicate = literal_predicate.slice(idx_hash + 1); 
                         }
                         literal_label = literal_predicate + ': ' + obj_node['label'] + '\\n'
-                        if(subj_node_to_update['label'].indexOf(literal_label) === -1)
+                        if(subj_node_to_update['label'].indexOf(literal_label) === -1) {
+                            if (!subj_node_to_update['label'].endsWith('\\n'))
+                                literal_label = "\\n" + literal_label;
                             nodes.update({
                                 id: subj_id, 
                                 label: subj_node_to_update['label'] + literal_label,
-                                });
+                            });
+                        }
                     }
                     else
                         nodes.add([obj_node]);
