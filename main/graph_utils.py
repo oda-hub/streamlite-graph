@@ -14,7 +14,7 @@ def set_graph_options(net, output_path):
         var physics_options = {
             physics: {
                 "enabled": true,
-                "minVelocity": 2.5,
+                "minVelocity": 0.9,
                 "maxVelocity": 1500,
                 "stabilization": {
                     "enabled": true,
@@ -354,6 +354,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 bindingsStreamCall.on('end', () => {
                     let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
                     apply_layout(checked_radiobox);
+                    network.setOptions(physics_options);
                 });
                 bindingsStreamCall.on('error', (error) => {
                     console.error(error);
@@ -642,7 +643,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 process_binding(binding);
             }});
             bindingsStreamCall.on('end', () => {{
-                network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                // network.setOptions( {{ "physics": {{ enabled: true }} }} );
+                network.setOptions(physics_options);
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);

@@ -14,12 +14,24 @@ apptitle = 'Graph Quickview'
 
 st.set_page_config(page_title=apptitle, page_icon=":eyeglasses:", layout="wide")
 st.title('Graph Quick-Look')
+graph_selected = None
 
 
 def stream_graph():
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph_two_commands.ttl'
     graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
+
+    graph_exports_dict = {
+        # 'oda-sdss': '',
+        'renku-aqs-test-case one execution': 'graph_data/graph.ttl',
+        'renku-aqs-test-case two executions': 'graph_data/graph_two_commands.ttl',
+    }
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        graph_selected = st.selectbox('Which graph example would you like to explore?',
+                                      graph_exports_dict.keys())
 
     net = Network(
         height='750px', width='100%',
@@ -30,7 +42,8 @@ def stream_graph():
 
     graph_utils.set_graph_options(net, html_fn)
 
-    fd = open(ttl_fn, 'r')
+    graph_selected_fn = graph_exports_dict.get(graph_selected, ttl_fn)
+    fd = open(graph_selected_fn, 'r')
     graph_ttl_str = fd.read()
     fd.close()
     graph_config_obj = {}
