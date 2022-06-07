@@ -221,7 +221,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             "layout": {
                                 "hierarchical": {
                                     enabled: true,
-                                    levelSeparation: 150,
+                                    levelSeparation: 300,
                                     sortMethod: "directed",
                                     nodeSpacing: 150
                                 }
@@ -232,12 +232,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 maxVelocity: 1500,
                                 solver: "hierarchicalRepulsion",
                                 hierarchicalRepulsion: {
-                                    nodeDistance: 200,
+                                    nodeDistance: 250,
                                 },
                                 stabilization: {
                                     enabled: true,
-                                    iterations: 1,
-                                    updateInterval: 1
+                                    fit: true
                                 },
                             }
                         }
@@ -258,21 +257,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 maxVelocity: 146,
                                 timestep: 0.35,
                                 solver: "forceAtlas2Based",
-                                barnesHut: {
-                                    avoidOverlap: 0.9,
-                                    centralGravity: 0.1,
-                                    damping: 0.1,
-                                },
                                 forceAtlas2Based: {
                                     gravitationalConstant: -10000,
                                     centralGravity: 0.1,
                                 },
-                                repulsion: {
-                                    nodeDistance: 300,
-                                    centralGravity: 0
-                                },
                                 stabilization: {
-                                    "enabled": true,
+                                    enabled: true,
+                                    fit: true
                                 },
                             }
                         }
