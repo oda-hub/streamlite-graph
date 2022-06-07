@@ -11,24 +11,6 @@ def set_graph_options(net, output_path):
     options_str = (
         """
         
-        var physics_options = {
-            physics: {
-                "enabled": true,
-                "minVelocity": 0.9,
-                "maxVelocity": 1500,
-                "stabilization": {
-                    "enabled": true,
-                    "iterations": 10
-                },
-                "solver": "repulsion",
-                "repulsion": {
-                    "nodeDistance": 450,
-                    "springLength": 250, 
-                    springConstant: 0.01, 
-                },
-            }
-        };
-        
         var options = {
             "autoResize": true,
             "nodes": {
@@ -57,7 +39,6 @@ def set_graph_options(net, output_path):
                     "enabled": false
                 }
             },
-            ...physics_options
         };
         
         """
@@ -247,8 +228,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             },
                             "physics": {
                                 "enabled": true,
-                                "minVelocity": 1,
-                                "maxVelocity": 150,
+                                "minVelocity": 0.9,
+                                "maxVelocity": 1500,
                                 "solver": "hierarchicalRepulsion",
                                 "hierarchicalRepulsion": {
                                     "nodeDistance": 200,
