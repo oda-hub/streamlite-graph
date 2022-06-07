@@ -19,7 +19,7 @@ def set_graph_options(net, output_path):
                     "max": 30
                 },
                 "font": {
-                    "size": 12,
+                    "size": 14,
                     "face": "Tahoma",
                 },
             },
@@ -167,7 +167,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 "value": 20,
                 "config_file": null,
                 "font": {{
-                    "size": 22,
+                    "size": 24,
                     "bold": {{
                         "size": 36
                     }}
@@ -257,7 +257,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 "maxVelocity": 1500,
                                 "solver": "repulsion",
                                 "repulsion": {
-                                    "nodeDistance": 200,
+                                    "nodeDistance": 300,
                                 },
                                 "stabilization": {
                                     "enabled": true
@@ -592,8 +592,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 process_binding(binding);
                             }});
                             bindingsStreamCall.on('end', () => {{
-                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                                apply_layout(checked_radiobox);
+                                
                             }});
                             bindingsStreamCall.on('error', (error) => {{ 
                                 console.error(error);
