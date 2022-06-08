@@ -1,6 +1,6 @@
 {
    "AstroqueryModule": {
-      "shape": "ellipse",
+      "shape": "box",
       "color": "#00CC00",
       "style": "filled",
       "value": 35,
@@ -21,7 +21,7 @@
       "level": 1
    },
    "AstrophysicalImage": {
-      "shape": "ellipse",
+      "shape": "box",
       "color": "#027F45",
       "style": "filled",
       "value": 35,
