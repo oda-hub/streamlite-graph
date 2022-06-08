@@ -1,7 +1,9 @@
+import glob
 import json
 import os
 
 from pyvis.network import Network
+from requests import JSONDecodeError
 
 import graph_utils as graph_utils
 import streamlit as st
@@ -19,7 +21,7 @@ st.title('Graph Quick-Look')
 def stream_graph():
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph_two_commands.ttl'
-    graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
+    graph_config_fn_list = glob.glob('graph_data/graph_config/*.json')
 
     graph_exports_dict = {
         # 'oda-sdss': '',
@@ -50,12 +52,19 @@ def stream_graph():
     graph_config_names_list = []
     for graph_config_fn in graph_config_fn_list:
         with open(graph_config_fn) as graph_config_fn_f:
-            graph_config_loaded = json.load(graph_config_fn_f)
+            try:
+                graph_config_loaded = json.load(graph_config_fn_f)
+            except Exception as e:
+                st.markdown(f'warning: problem loading {graph_config_fn}: {e}')
+                continue
+
         if graph_config_loaded is not None:
             for config_type in graph_config_loaded:
                 graph_config_loaded[config_type]['config_file'] = graph_config_fn
+
             graph_config_obj.update(graph_config_loaded)
             graph_config_names_list.append(graph_config_fn)
+
     # for compatibility with Javascript
     graph_config_obj_str = json.dumps(graph_config_obj)
 

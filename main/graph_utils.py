@@ -309,7 +309,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     let node_properties = config_subset[config_idx][1];
                     let nodes_to_update = nodes.get({
                         filter: function (node) {
-                            return (node.type_name === config_subset[config_idx][0]);
+                            console.log('matching', JSON.stringify(node, null, 4), config_subset[config_idx][0])
+                            return node.label.match(config_subset[config_idx][0]);
                         }
                     });
                     update_nodes(nodes_to_update, node_properties);

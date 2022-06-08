@@ -1,0 +1,9 @@
+{
+   ".*association.*": {
+      "shape": "box",
+      "color": "#FF0000",
+      "style": "filled",
+      "value": 35,
+      "level": 0
+   }
+}
