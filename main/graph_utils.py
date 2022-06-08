@@ -12,33 +12,36 @@ def set_graph_options(net, output_path):
         """
         
         var options = {
-            "autoResize": true,
-            "nodes": {
-                "scaling": {
-                    "min": 10,
-                    "max": 30
+            autoResize: true,
+            nodes: {
+                scaling: {
+                    min: 10,
+                    max: 30
                 },
-                "font": {
-                    "size": 14,
-                    "face": "Tahoma",
+                font: {
+                    size: 14,
+                    face: "Tahoma",
                 },
             },
-            "edges": {
-                "smooth": {
-                    "type": "continuous"
+            edges: {
+                smooth: {
+                    type: "continuous"
                 },
-                "arrows": {
-                  "to": {
-                    "enabled": true,
-                    "scaleFactor": 0.55
+                arrows: {
+                  to: {
+                    enabled: true,
+                    scaleFactor: 0.55
                     }
                 }
             },
-            "layout": {
-                "hierarchical": {
-                    "enabled": false
+            layout: {
+                hierarchical: {
+                    enabled: false
                 }
             },
+            interaction: {
+                
+            }
         };
         
         """
@@ -489,7 +492,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 // check type_name property of the node ahs already been defined previously
                 if(!('type_name' in subj_node_to_update)) {
                 
-                    subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
+                    // subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
+                    subj_node_to_update['label'] = '';
                     let node_properties =  { ... graph_config_obj_default['Default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'])};
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
@@ -497,6 +501,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         node_properties = graph_config_obj_default['Default'];
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
+                                    title: type_name,
                                     type_name: type_name,
                                     color: node_properties['color'],
                                     border: node_properties['color'],
@@ -524,13 +529,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             if (idx_hash)
                               literal_predicate = literal_predicate.slice(idx_hash + 1); 
                         }
-                        literal_label = literal_predicate + ': ' + obj_node['label'] + '\\n'
+                        literal_label = literal_predicate + ': ' + obj_node['label'];
                         if(subj_node_to_update['label'].indexOf(literal_label) === -1) {
-                            if (!subj_node_to_update['label'].endsWith('\\n'))
+                            if (subj_node_to_update['label']) {
                                 literal_label = "\\n" + literal_label;
+                            }
                             nodes.update({
                                 id: subj_id, 
-                                label: subj_node_to_update['label'] + literal_label,
+                                label:  subj_node_to_update['label'] + literal_label,
                             });
                         }
                     }
@@ -568,28 +574,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
         
+        network.on('selectNode', function (e) {{
+            if(e.nodes[0].startsWith("legend_")) {{
+                
+            }}
+        }});
+        
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 selected_node = nodes.get(e.nodes[0]);
                 if (selected_node && selected_node['clickable']) {{
-                    let connected_to_nodes = network.getConnectedNodes(selected_node.id, 'to');
-                    let edges_to_remove = [];
-                    let remove_node_and_child_nodes = true;
-                    if (connected_to_nodes.length > 0) {{
-                        for (let i in connected_to_nodes) {{
-                            let connected_to_node = connected_to_nodes[i];
-                            connected_to_connected_to_node = network.getConnectedNodes(connected_to_node, 'to');
-                            if (connected_to_connected_to_node.length > 0)
-                                remove_node_and_child_nodes = false;
-                            else {{
-                                edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
-                            }}
-                        }}
-                    }} 
-                    else 
-                        remove_node_and_child_nodes = false;
-                    console.log(remove_node_and_child_nodes);
-                    if (!remove_node_and_child_nodes) {{
+                    if (!('expanded' in selected_node) || !selected_node['expanded']) {{
+                        selected_node['expanded'] = true;
                         (async() => {{
                             const bindingsStreamCall = await myEngine.queryQuads(
                                 format_query_clicked_node(selected_node.id),
@@ -610,8 +606,23 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         }})();
                     }}
                     else {{
+                        let connected_to_nodes = network.getConnectedNodes(selected_node.id);
+                        let edges_to_remove = network.getConnectedEdges(selected_node.id);
+                        if (connected_to_nodes.length > 0) {{
+                            for (let i in connected_to_nodes) {{
+                                let connected_to_node = connected_to_nodes[i];
+                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node,);
+                                if (connected_to_connected_to_node.length > 1) {{
+                                    connected_to_nodes.splice(i, 1);
+                                    edges_to_remove.splice(i, 1);
+                                }}
+                            }}
+                        }}
+                        
                         edges.remove(edges_to_remove);
                         nodes.remove(connected_to_nodes);
+                        
+                        selected_node['expanded'] = false;
                     }}
                 }}
             }}
@@ -642,6 +653,56 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             container_configure.style.height="300px";
             container_configure.style.overflow="scroll";
         }}
+        
+        // legend
+        var mynetwork = document.getElementById("mynetwork");
+        var x = -mynetwork.clientWidth / 2 + 50;
+        var y = -mynetwork.clientHeight / 2 + 50;
+        var step = 70;
+        nodes.add([{{
+            id: "legend_activity",
+            x: x,
+            y: y,
+            label: "Activity",
+            shape: "dot",
+            color: graph_config_obj['Activity']['color'],
+            value: 1,
+            fixed: true,
+            physics: false,
+        }},
+        {{
+            id: "legend_action",
+            x: x,
+            y: y + step,
+            label: "Action",
+            shape: "dot",
+            color: graph_config_obj['Action']['color'],
+            value: 1,
+            fixed: true,
+            physics: false,
+        }},
+        {{
+            id: "legend_command_input",
+            x: x,
+            y: y + 2*step,
+            label: "CommandInput",
+            shape: "dot",
+            color: graph_config_obj['CommandInput']['color'],
+            value: 1,
+            fixed: true,
+            physics: false,
+        }},
+        {{
+            id: "legend_command_output",
+            x: x,
+            y: y + 3*step,
+            label: "CommandOutput",
+            shape: "dot",
+            color: graph_config_obj['CommandOutput']['color'],
+            value: 1,
+            fixed: true,
+            physics: false,
+        }},]);
         
         return network;
     }}

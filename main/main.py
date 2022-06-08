@@ -14,7 +14,6 @@ apptitle = 'Graph Quickview'
 
 st.set_page_config(page_title=apptitle, page_icon=":eyeglasses:", layout="wide")
 st.title('Graph Quick-Look')
-graph_selected = None
 
 
 def stream_graph():

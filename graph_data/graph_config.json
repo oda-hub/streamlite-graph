@@ -80,7 +80,7 @@
       "level": 3
    },
    "Action": {
-      "shape": "ellipse",
+      "shape": "box",
       "color": "#D5C15D",
       "style": "filled",
       "value": 35,
