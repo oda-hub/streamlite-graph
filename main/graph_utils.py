@@ -473,6 +473,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 cellborder: graph_config_obj_default['Default']['cellborder'],
                 value: graph_config_obj_default['Default']['value'],
                 config_file: graph_config_obj_default['Default']['config_file'],
+                margin: graph_config_obj_default['Default']['margin'],
                 font: {
                       'multi': "html",
                       'face': "courier",
