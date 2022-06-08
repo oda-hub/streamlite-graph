@@ -606,20 +606,21 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }}
                     else {{
                         let connected_to_nodes = network.getConnectedNodes(selected_node.id);
-                        let edges_to_remove = network.getConnectedEdges(selected_node.id);
+                        let nodes_to_remove = [];
+                        let edges_to_remove = [];
                         if (connected_to_nodes.length > 0) {{
                             for (let i in connected_to_nodes) {{
                                 let connected_to_node = connected_to_nodes[i];
-                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node,);
-                                if (connected_to_connected_to_node.length > 1) {{
-                                    connected_to_nodes.splice(i, 1);
-                                    edges_to_remove.splice(i, 1);
+                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
+                                if (connected_to_connected_to_node.length == 1) {{
+                                    nodes_to_remove.push(connected_to_node);
+                                    edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
                                 }}
                             }}
                         }}
                         
                         edges.remove(edges_to_remove);
-                        nodes.remove(connected_to_nodes);
+                        nodes.remove(nodes_to_remove);
                         
                         selected_node['expanded'] = false;
                     }}
