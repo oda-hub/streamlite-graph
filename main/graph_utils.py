@@ -190,9 +190,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     
             ?activity a ?activityType ;
                 <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-
-            ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                <http://www.w3.org/ns/prov#hadPlan> ?action .
             }}
             WHERE {{ 
                 ?action a <http://schema.org/Action> ;
@@ -200,9 +198,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                      
                 ?activity a ?activityType ;
                     <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                    <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-                
-                ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                    <http://www.w3.org/ns/prov#qualifiedAssociation>/<http://www.w3.org/ns/prov#hadPlan> ?action .
             }}`
     '''
 
