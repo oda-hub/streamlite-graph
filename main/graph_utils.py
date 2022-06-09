@@ -41,7 +41,7 @@ def set_graph_options(net, output_path):
             },
             interaction: {
                 
-            }
+            },
         };
         
         """
@@ -236,7 +236,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 },
                                 stabilization: {
                                     enabled: true,
-                                    fit: true
+                                    fit: true,
+                                    updateInterval: 10,
+                                    iterations: 10
                                 },
                             }
                         }
@@ -257,15 +259,16 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 maxVelocity: 100,
                                 solver: "forceAtlas2Based",
                                 forceAtlas2Based: {
-                                    gravitationalConstant: -10000,
-                                    centralGravity: 0.1,
-                                    springLength: 200,
-                                    springConstant: 0.1
+                                    gravitationalConstant: -3500,
+                                    centralGravity: 0.15,
+                                    springLength: 250,
+                                    springConstant: 0.01
                                 },
-                                timestep: 0.35,
                                 stabilization: {
                                     enabled: true,
-                                    fit: true
+                                    fit: true,
+                                    updateInterval: 10,
+                                    iterations: 10
                                 },
                             }
                         }
@@ -460,7 +463,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             '''
 
     f_process_binding = '''
-        
         function process_binding(binding) {
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
@@ -601,6 +603,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         
         network.on("stabilized", function (e) {{
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
+        }});
+        
+        network.on("stabilizationProgress", function (e) {{
+            console.log("stabilizationProgress " + e);
         }});
         
         network.on("dragStart", function (e) {{

@@ -7,14 +7,14 @@
       "level": 0
    },
    "AstrophysicalObject": {
-      "shape": "ellipse",
+      "shape": "box",
       "color": "#6262be",
       "style": "filled",
       "value": 35,
       "level": 1
    },
    "AstrophysicalRegion": {
-      "shape": "ellipse",
+      "shape": "box",
       "color": "#6262bf",
       "style": "filled",
       "value": 35,
