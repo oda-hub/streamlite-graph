@@ -3,3 +3,4 @@ graph_data/graph.html
 graph_data/graph.dot
 graph_data/graph_base.dot
 graph_data/graph_complete.dot
+__pycache__

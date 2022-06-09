@@ -41,7 +41,7 @@ def set_graph_options(net, output_path):
             },
             interaction: {
                 
-            }
+            },
         };
         
         """
@@ -190,9 +190,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     
             ?activity a ?activityType ;
                 <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-
-            ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                <http://www.w3.org/ns/prov#hadPlan> ?action .
             }}
             WHERE {{ 
                 ?action a <http://schema.org/Action> ;
@@ -200,9 +198,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                      
                 ?activity a ?activityType ;
                     <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
-                    <http://www.w3.org/ns/prov#qualifiedAssociation> ?activity_qualified_association .
-                
-                ?activity_qualified_association <http://www.w3.org/ns/prov#hadPlan> ?action .
+                    <http://www.w3.org/ns/prov#qualifiedAssociation>/<http://www.w3.org/ns/prov#hadPlan> ?action .
             }}`
     '''
 
@@ -240,7 +236,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 },
                                 stabilization: {
                                     enabled: true,
-                                    fit: true
+                                    fit: true,
+                                    updateInterval: 10,
+                                    iterations: 10
                                 },
                             }
                         }
@@ -261,15 +259,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 maxVelocity: 100,
                                 solver: "forceAtlas2Based",
                                 forceAtlas2Based: {
-                                    gravitationalConstant: -10000,
-                                    centralGravity: 0.1,
-                                    springLength: 200,
-                                    springConstant: 0.1
+                                    gravitationalConstant: -3500,
+                                    centralGravity: 0.15,
+                                    springLength: 250,
+                                    springConstant: 0.01
                                 },
-                                timestep: 0.35,
                                 stabilization: {
                                     enabled: true,
-                                    fit: true
+                                    fit: true,
                                 },
                             }
                         }
@@ -383,6 +380,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     <` + clicked_node_id + `> ?p ?o .
                     ?o a ?o_type . 
                     ?o ?p_literal ?o_literal .
+                
+                    ?action a <http://schema.org/Action> ;
+                        <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+            
+                    ?activity a ?activityType ;
+                        <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                        <http://www.w3.org/ns/prov#hadPlan> ?action .
                 }
                 WHERE {
                     {
@@ -392,17 +396,26 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         FILTER isLiteral(?s_literal) .
                         ${filter_s_type}
                         ${filter_p_literal}
+                        
+                        FILTER (?p != <http://www.w3.org/ns/prov#qualifiedAssociation> && 
+                                ?p != <http://www.w3.org/ns/prov#hadPlan> ) .
                     }
                     UNION
                     {
-                         ?s ?p <${clicked_node_id}> .
-                         ?s a ?s_type .
-                         ${filter_s_type}
+                        ?s ?p <${clicked_node_id}> .
+                        ?s a ?s_type .
+                        ${filter_s_type}
+                        
+                        FILTER (?p != <http://www.w3.org/ns/prov#qualifiedAssociation> && 
+                                ?p != <http://www.w3.org/ns/prov#hadPlan> ) .
                     }
                     UNION
                     {
-                         ?s ?p <${clicked_node_id}> .
-                         ${filter_s}
+                        ?s ?p <${clicked_node_id}> .
+                        ${filter_s}
+                        
+                        FILTER (?p != <http://www.w3.org/ns/prov#qualifiedAssociation> && 
+                                ?p != <http://www.w3.org/ns/prov#hadPlan> ) .
                     }
                     UNION
                     {
@@ -412,17 +425,35 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         FILTER isLiteral(?o_literal) .
                         ${filter_o_type}
                         ${filter_p_literal}
+                    
+                        FILTER (?p != <http://www.w3.org/ns/prov#qualifiedAssociation> && 
+                                ?p != <http://www.w3.org/ns/prov#hadPlan> ) .                    
                     }
                     UNION
                     {
-                         <${clicked_node_id}> ?p ?o .
-                         ?o a ?o_type
-                         ${filter_o_type}
+                        <${clicked_node_id}> ?p ?o .
+                        ?o a ?o_type
+                        ${filter_o_type}
+
+                        FILTER (?p != <http://www.w3.org/ns/prov#qualifiedAssociation> && 
+                                ?p != <http://www.w3.org/ns/prov#hadPlan> ) .
                     }
                     UNION
                     {
-                         <${clicked_node_id}> ?p ?o .
-                         ${filter_o}
+                        <${clicked_node_id}> ?p ?o .
+                        ${filter_o}
+                        
+                        FILTER (?p != <http://www.w3.org/ns/prov#qualifiedAssociation> && 
+                                ?p != <http://www.w3.org/ns/prov#hadPlan> ) .
+                    }
+                    UNION
+                    {
+                        ?action a <http://schema.org/Action> ;
+                            <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
+                             
+                        ?activity a ?activityType ;
+                            <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
+                            <http://www.w3.org/ns/prov#qualifiedAssociation>/<http://www.w3.org/ns/prov#hadPlan> ?action .
                     }
                 }`;
                 
@@ -431,7 +462,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             '''
 
     f_process_binding = '''
-        
         function process_binding(binding) {
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
@@ -474,6 +504,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 cellborder: graph_config_obj_default['Default']['cellborder'],
                 value: graph_config_obj_default['Default']['value'],
                 config_file: graph_config_obj_default['Default']['config_file'],
+                margin: graph_config_obj_default['Default']['margin'],
                 font: {
                       'multi': "html",
                       'face': "courier",
@@ -573,6 +604,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
         
+        network.on("stabilizationProgress", function (e) {{
+            console.log("stabilizationProgress " + e);
+        }});
+        
         network.on("dragStart", function (e) {{
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
@@ -610,20 +645,21 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }}
                     else {{
                         let connected_to_nodes = network.getConnectedNodes(selected_node.id);
-                        let edges_to_remove = network.getConnectedEdges(selected_node.id);
+                        let nodes_to_remove = [];
+                        let edges_to_remove = [];
                         if (connected_to_nodes.length > 0) {{
                             for (let i in connected_to_nodes) {{
                                 let connected_to_node = connected_to_nodes[i];
-                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node,);
-                                if (connected_to_connected_to_node.length > 1) {{
-                                    connected_to_nodes.splice(i, 1);
-                                    edges_to_remove.splice(i, 1);
+                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
+                                if (connected_to_connected_to_node.length == 1) {{
+                                    nodes_to_remove.push(connected_to_node);
+                                    edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
                                 }}
                             }}
                         }}
                         
                         edges.remove(edges_to_remove);
-                        nodes.remove(connected_to_nodes);
+                        nodes.remove(nodes_to_remove);
                         
                         selected_node['expanded'] = false;
                     }}
