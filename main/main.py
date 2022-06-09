@@ -17,9 +17,7 @@ st.set_page_config(page_title=apptitle, page_icon=":eyeglasses:", layout="wide")
 st.title('Graph Quick-Look')
 
 
-def stream_graph():
-
-    cmd_line_args = sys.argv[1:]
+def stream_graph(cmd_line_args):
 
     graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
     if cmd_line_args:
@@ -77,4 +75,6 @@ def stream_graph():
 
 
 if __name__ == '__main__':
-    stream_graph()
+    cmd_line_args = sys.argv[1:]
+
+    stream_graph(cmd_line_args)
