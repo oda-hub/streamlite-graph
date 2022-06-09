@@ -267,8 +267,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 stabilization: {
                                     enabled: true,
                                     fit: true,
-                                    updateInterval: 10,
-                                    iterations: 10
                                 },
                             }
                         }
