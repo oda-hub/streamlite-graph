@@ -74,7 +74,7 @@ def stream_graph(cmd_line_args):
     graph_config_obj_str = json.dumps(graph_config_obj)
 
     graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj_dict=graph_config_obj_str)
-    graph_utils.set_html_content(net, html_fn, graph_config_names_list=graph_config_names_list)
+    graph_utils.set_html_content(net, html_fn, graph_config_names_list=graph_config_names_list, graph_config_obj_dict=graph_config_obj)
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')

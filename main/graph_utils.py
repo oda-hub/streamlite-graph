@@ -30,9 +30,11 @@ def set_graph_options(net, output_path):
                 arrows: {
                   to: {
                     enabled: true,
-                    scaleFactor: 0.55
+                    scaleFactor: 1
                     }
-                }
+                },
+                width: 4
+                
             },
             layout: {
                 hierarchical: {
@@ -114,7 +116,7 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def set_html_content(net, output_path, graph_config_names_list=None):
+def set_html_content(net, output_path, graph_config_names_list=None, graph_config_obj_dict=None):
     html_code = '''
         <div style="margin: 5px 0px 15px 5px"><button type="button" onclick="reset_graph()">Reset graph!</button></div>
         
@@ -137,18 +139,29 @@ def set_html_content(net, output_path, graph_config_names_list=None):
         </div>
         
         '''
+    checkboxes_config_added = []
     if graph_config_names_list is not None:
         html_code += ('<div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable graphical configurations for the graph</div>')
-        for graph_config_name in graph_config_names_list:
-            html_code += f'''
-                <div style="margin: 5px">
-                    <label><input type="checkbox" id="config_{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
-                    {graph_config_name}</label>
-                 </div>
-            '''
-
+        for config_node_type in graph_config_obj_dict:
+            if 'config_file' in graph_config_obj_dict[config_node_type]:
+                graph_config_name = graph_config_obj_dict[config_node_type]['config_file']
+                if graph_config_name not in checkboxes_config_added:
+                    # for graph_config_name in graph_config_names_list:
+                    html_code += f'''
+                        <div style="margin: 5px">
+                            <label><input type="checkbox" id="config_{graph_config_name}" value="{graph_config_name}" onchange="toggle_graph_config(this)" checked>
+                            {graph_config_name}</label>
+                        </div>
+                    '''
+                    checkboxes_config_added.append(graph_config_name)
     html_code += '''
-            <div id="mynetwork"></div>
+            <div style="display: flex;">
+                <div style="margin:10px;">
+                    <div style="margin: 0px 0px 5px 5px; font-weight: bold; ">Legend</div>
+                    <ul id="legend_container" style="overflow: scroll; padding-right:15px; overflow-x:hidden; background-color: #F7F7F7"></ul>
+                </div>
+                <div id="mynetwork"></div>
+            </div>
     '''
 
     net.html = net.html.replace('<div id = "mynetwork"></div>', html_code)
@@ -298,6 +311,36 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }
         
         function reset_legend() {
+            let span_config_list = document.querySelectorAll('[id^="span_"]');
+            console.log(span_config_list);
+            for (i = 0; i < span_config_list.length; i++) {
+                span_config_list[i].remove();
+            }
+            
+            let legend_container = document.getElementById('legend_container');
+            for (let config in graph_config_obj) {
+                let check_box_config = document.getElementById('config_' + graph_config_obj[config]['config_file']);
+                if(check_box_config && check_box_config.checked) {
+                
+                    let outer_li = document.createElement("li");
+                    outer_li.setAttribute("id", `span_${config}`);
+                    outer_li.setAttribute("style", "position: relative; margin: 5px; font-size: small;");
+                    
+                    let color_span = document.createElement("span");
+                    let color = graph_config_obj[config]['color'];
+                    color_span.setAttribute("style", `border-style: solid; border-width: 1px; width: 14px; height: 14px; display: inline-block; position: absolute; background-color: ${color};`);
+                    
+                    let name_span = document.createElement("span");
+                    name_span.setAttribute("style", "margin-left: 20px;");
+                    name_span.innerText = config;
+                    
+                    outer_li.appendChild(color_span);
+                    outer_li.appendChild(name_span);
+                    
+                    legend_container.append(outer_li);
+                }
+            }
+            /*
             // retrieve all nodes that are not part of the legend
             let nodes_to_remove = nodes.get({
               filter: function (item) {
@@ -326,7 +369,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 group: "legend_config_" + graph_config_obj_default['default']['config_file']
             }]);
             for (let config in graph_config_obj) {
-                console.log(graph_config_obj[config]);
                 check_box_config = document.getElementById('config_' + graph_config_obj[config]['config_file']);
                 if(check_box_config && check_box_config.checked) {
                     nodes.add([{
@@ -343,6 +385,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }]);
                 }
             }
+            */
         }
     
         function toggle_graph_config(check_box_element) {
@@ -582,8 +625,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 // check type_name property of the node ahs already been defined previously
                 if(!('type_name' in subj_node_to_update)) {
                 
-                    // subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
-                    subj_node_to_update['label'] = '';
+                    subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
+                    // subj_node_to_update['label'] = '';
                     let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
@@ -606,6 +649,17 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             }
             else {
                 if(!edges.get(edge_id)) {
+                    literal_predicate_index = edge_obj['title'].lastIndexOf("/");
+                    literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
+                    if (literal_predicate) {
+                        idx_hash = literal_predicate.indexOf("#");
+                        if (idx_hash)
+                          literal_predicate = literal_predicate.slice(idx_hash + 1); 
+                    }
+                    if(literal_predicate) {
+                        edge_obj['title'] = literal_predicate;
+                    }
+                    edge_obj['label'] = literal_predicate;
                     edges.add([edge_obj]);
                 }
                 if(!nodes.get(obj_id)) {
