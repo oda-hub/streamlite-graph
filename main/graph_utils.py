@@ -161,7 +161,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     
         // initialize global variables and graph configuration
         const graph_config_obj_default = {{ 
-            "Default": {{
+            "default": {{
                 "shape": "box",
                 "color": "#FFFFFF",
                 "style": "filled",
@@ -312,6 +312,19 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             var y = -mynetwork.clientHeight / 2 + 50;
             var step = 70;
             var m = 0;
+            // default node legend
+            nodes.add([{
+                id: "legend_config_default",
+                x: x,
+                y: y + m++ * step,
+                label: "default",
+                shape: "dot",
+                color: graph_config_obj_default['default']['color'],
+                value: 15,
+                fixed: true,
+                physics: false,
+                group: "legend_config_" + graph_config_obj_default['default']['config_file']
+            }]);
             for (let config in graph_config_obj) {
                 console.log(graph_config_obj[config]);
                 check_box_config = document.getElementById('config_' + graph_config_obj[config]['config_file']);
@@ -352,7 +365,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         return ('config_' + node.config_file === checked_config_id);
                     }
                 });
-                update_nodes(nodes_to_update, graph_config_obj_default['Default']);
+                update_nodes(nodes_to_update, graph_config_obj_default['default']);
             }
             reset_legend();
         }
@@ -514,15 +527,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
                 clickable: true,
-                color: graph_config_obj_default['Default']['color'],
-                shape: graph_config_obj_default['Default']['shape'],
-                style: graph_config_obj_default['Default']['style'],
-                border: graph_config_obj_default['Default']['border'],
-                cellborder: graph_config_obj_default['Default']['cellborder'],
-                value: graph_config_obj_default['Default']['value'],
-                level: graph_config_obj_default['Default']['level'],
-                config_file: graph_config_obj_default['Default']['config_file'],
-                margin: graph_config_obj_default['Default']['margin'],
+                color: graph_config_obj_default['default']['color'],
+                shape: graph_config_obj_default['default']['shape'],
+                style: graph_config_obj_default['default']['style'],
+                border: graph_config_obj_default['default']['border'],
+                cellborder: graph_config_obj_default['default']['cellborder'],
+                value: graph_config_obj_default['default']['value'],
+                level: graph_config_obj_default['default']['level'],
+                config_file: graph_config_obj_default['default']['config_file'],
+                margin: graph_config_obj_default['default']['margin'],
                 font: {
                       'multi': "html",
                       'face': "courier",
@@ -539,14 +552,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
                 clickable: true,
-                color: graph_config_obj_default['Default']['color'],
-                shape: graph_config_obj_default['Default']['shape'],
-                style: graph_config_obj_default['Default']['style'],
-                border: graph_config_obj_default['Default']['border'],
-                cellborder: graph_config_obj_default['Default']['cellborder'],
-                value: graph_config_obj_default['Default']['value'],
-                config_file: graph_config_obj_default['Default']['config_file'],
-                margin: graph_config_obj_default['Default']['margin'],
+                color: graph_config_obj_default['default']['color'],
+                shape: graph_config_obj_default['default']['shape'],
+                style: graph_config_obj_default['default']['style'],
+                border: graph_config_obj_default['default']['border'],
+                cellborder: graph_config_obj_default['default']['cellborder'],
+                value: graph_config_obj_default['default']['value'],
+                config_file: graph_config_obj_default['default']['config_file'],
+                level: graph_config_obj_default['default']['level'],
+                margin: graph_config_obj_default['default']['margin'],
                 font: {
                       'multi': "html",
                       'face': "courier",
@@ -570,11 +584,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 
                     // subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
                     subj_node_to_update['label'] = '';
-                    let node_properties =  { ... graph_config_obj_default['Default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['Default'])};
+                    let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
                     if(checkbox_config && !checkbox_config.checked)
-                        node_properties = graph_config_obj_default['Default'];
+                        node_properties = graph_config_obj_default['default'];
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
                                     title: type_name,
