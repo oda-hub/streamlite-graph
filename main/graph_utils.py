@@ -296,6 +296,41 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 });
             }
         }
+        
+        function reset_legend() {
+            // retrieve all nodes that are not part of the legend
+            let nodes_to_remove = nodes.get({
+              filter: function (item) {
+                return (item.hasOwnProperty("group" ) && item.group.startsWith("legend_config_"));
+              }
+            });
+            
+            nodes.remove(nodes_to_remove);
+            
+            var mynetwork = document.getElementById("mynetwork");
+            var x = -mynetwork.clientWidth / 2 + 50;
+            var y = -mynetwork.clientHeight / 2 + 50;
+            var step = 70;
+            var m = 0;
+            for (let config in graph_config_obj) {
+                console.log(graph_config_obj[config]);
+                check_box_config = document.getElementById('config_' + graph_config_obj[config]['config_file']);
+                if(check_box_config && check_box_config.checked) {
+                    nodes.add([{
+                        id: "legend_config_" + config,
+                        x: x,
+                        y: y + m++ * step,
+                        label: config,
+                        shape: "dot",
+                        color: graph_config_obj[config]['color'],
+                        value: 15,
+                        fixed: true,
+                        physics: false,
+                        group: "legend_config_" + graph_config_obj[config]['config_file']
+                    }]);
+                }
+            }
+        }
     
         function toggle_graph_config(check_box_element) {
             let checked_config_id = check_box_element.id;
@@ -319,12 +354,20 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 });
                 update_nodes(nodes_to_update, graph_config_obj_default['Default']);
             }
+            reset_legend();
         }
     '''
 
     f_reset_graph = '''
         function reset_graph() {
-            nodes.clear();
+            // retrieve all nodes that are not part of the legend
+            let nodes_to_remove = nodes.get({
+              filter: function (item) {
+                return (!item.hasOwnProperty("group" ) || ! (item.group.startsWith("legend_")));
+              }
+            });
+        
+            nodes.remove(nodes_to_remove);
             edges.clear();
             
             (async() => {
@@ -611,56 +654,55 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
         
-        network.on('selectNode', function (e) {{
-            if(e.nodes[0].startsWith("legend_")) {{
-                
-            }}
-        }});
-        
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
-                selected_node = nodes.get(e.nodes[0]);
-                if (selected_node && selected_node['clickable']) {{
-                    if (!('expanded' in selected_node) || !selected_node['expanded']) {{
-                        selected_node['expanded'] = true;
-                        (async() => {{
-                            const bindingsStreamCall = await myEngine.queryQuads(
-                                format_query_clicked_node(selected_node.id),
-                                {{
-                                    sources: [ store ]
-                                }}
-                            );
-                            bindingsStreamCall.on('data', (binding) => {{
-                                process_binding(binding);
-                            }});
-                            bindingsStreamCall.on('end', () => {{
-                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                                apply_layout(checked_radiobox);
-                            }});
-                            bindingsStreamCall.on('error', (error) => {{ 
-                                console.error(error);
-                            }});
-                        }})();
-                    }}
-                    else {{
-                        let connected_to_nodes = network.getConnectedNodes(selected_node.id);
-                        let nodes_to_remove = [];
-                        let edges_to_remove = [];
-                        if (connected_to_nodes.length > 0) {{
-                            for (let i in connected_to_nodes) {{
-                                let connected_to_node = connected_to_nodes[i];
-                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
-                                if (connected_to_connected_to_node.length == 1) {{
-                                    nodes_to_remove.push(connected_to_node);
-                                    edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
+                let clicked_node = nodes.get(e.nodes[0]);
+                if(clicked_node.hasOwnProperty("group") && clicked_node["group"].startsWith("legend_config_")) {{
+                    
+                }}
+                else {{
+                    if (clicked_node['clickable']) {{
+                        if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
+                            clicked_node['expanded'] = true;
+                            (async() => {{
+                                const bindingsStreamCall = await myEngine.queryQuads(
+                                    format_query_clicked_node(clicked_node.id),
+                                    {{
+                                        sources: [ store ]
+                                    }}
+                                );
+                                bindingsStreamCall.on('data', (binding) => {{
+                                    process_binding(binding);
+                                }});
+                                bindingsStreamCall.on('end', () => {{
+                                    let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                                    apply_layout(checked_radiobox);
+                                }});
+                                bindingsStreamCall.on('error', (error) => {{ 
+                                    console.error(error);
+                                }});
+                            }})();
+                        }}
+                        else {{
+                            let connected_to_nodes = network.getConnectedNodes(clicked_node.id);
+                            let nodes_to_remove = [];
+                            let edges_to_remove = [];
+                            if (connected_to_nodes.length > 0) {{
+                                for (let i in connected_to_nodes) {{
+                                    let connected_to_node = connected_to_nodes[i];
+                                    connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
+                                    if (connected_to_connected_to_node.length == 1) {{
+                                        nodes_to_remove.push(connected_to_node);
+                                        edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
+                                    }}
                                 }}
                             }}
+                            
+                            edges.remove(edges_to_remove);
+                            nodes.remove(nodes_to_remove);
+                            
+                            clicked_node['expanded'] = false;
                         }}
-                        
-                        edges.remove(edges_to_remove);
-                        nodes.remove(nodes_to_remove);
-                        
-                        selected_node['expanded'] = false;
                     }}
                 }}
             }}
@@ -693,54 +735,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }}
         
         // legend
-        var mynetwork = document.getElementById("mynetwork");
-        var x = -mynetwork.clientWidth / 2 + 50;
-        var y = -mynetwork.clientHeight / 2 + 50;
-        var step = 70;
-        nodes.add([{{
-            id: "legend_activity",
-            x: x,
-            y: y,
-            label: "Activity",
-            shape: "dot",
-            color: graph_config_obj['Activity']['color'],
-            value: 1,
-            fixed: true,
-            physics: false,
-        }},
-        {{
-            id: "legend_action",
-            x: x,
-            y: y + step,
-            label: "Action",
-            shape: "dot",
-            color: graph_config_obj['Action']['color'],
-            value: 1,
-            fixed: true,
-            physics: false,
-        }},
-        {{
-            id: "legend_command_input",
-            x: x,
-            y: y + 2*step,
-            label: "CommandInput",
-            shape: "dot",
-            color: graph_config_obj['CommandInput']['color'],
-            value: 1,
-            fixed: true,
-            physics: false,
-        }},
-        {{
-            id: "legend_command_output",
-            x: x,
-            y: y + 3*step,
-            label: "CommandOutput",
-            shape: "dot",
-            color: graph_config_obj['CommandOutput']['color'],
-            value: 1,
-            fixed: true,
-            physics: false,
-        }},]);
+        reset_legend();
         
         return network;
     }}
