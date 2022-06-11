@@ -312,7 +312,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         
         function reset_legend() {
             let span_config_list = document.querySelectorAll('[id^="span_"]');
-            console.log(span_config_list);
             for (i = 0; i < span_config_list.length; i++) {
                 span_config_list[i].remove();
             }
@@ -619,22 +618,28 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 if (substr_q) {
                     idx_hash = substr_q.indexOf("#");
                     if (idx_hash)
-                      type_name = substr_q.slice(idx_hash + 1); 
+                        type_name = substr_q.slice(idx_hash + 1); 
                 }
                 subj_node_to_update = nodes.get(subj_id);
                 // check type_name property of the node ahs already been defined previously
                 if(!('type_name' in subj_node_to_update)) {
-                
-                    subj_node_to_update['label'] = '<b>' + type_name + '</b>\\n';
                     // subj_node_to_update['label'] = '';
                     let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
+                    if('displayed_type_name' in node_properties) {
+                        subj_node_to_update['label'] = `<b>${node_properties['displayed_type_name']}</b>\\n`;
+                        subj_node_to_update['title'] = node_properties['displayed_type_name'];
+                    }
+                    else {
+                        subj_node_to_update['label'] = subj_node_to_update['title'] = `<b>${type_name}</b>\\n`;
+                        subj_node_to_update['title']= type_name;
+                    }
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
                     if(checkbox_config && !checkbox_config.checked)
                         node_properties = graph_config_obj_default['default'];
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
-                                    title: type_name,
+                                    title: subj_node_to_update['title'],
                                     type_name: type_name,
                                     color: node_properties['color'],
                                     border: node_properties['color'],
@@ -712,10 +717,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         
         network.on("stabilized", function (e) {{
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
-        }});
-        
-        network.on("stabilizationProgress", function (e) {{
-            console.log("stabilizationProgress " + e);
         }});
         
         network.on("dragStart", function (e) {{
