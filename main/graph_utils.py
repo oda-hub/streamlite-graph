@@ -623,15 +623,37 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 subj_node_to_update = nodes.get(subj_id);
                 // check type_name property of the node ahs already been defined previously
                 if(!('type_name' in subj_node_to_update)) {
-                    // subj_node_to_update['label'] = '';
                     let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
-                    if('displayed_type_name' in node_properties) {
-                        subj_node_to_update['label'] = `<b>${node_properties['displayed_type_name']}</b>\\n`;
-                        subj_node_to_update['title'] = node_properties['displayed_type_name'];
-                    }
-                    else {
-                        subj_node_to_update['label'] = subj_node_to_update['title'] = `<b>${type_name}</b>\\n`;
-                        subj_node_to_update['title']= type_name;
+                    // displayed_literals_format:defaultValue:yes/defaultValue:no
+                    // displayed_information:title/literals/both
+                    if('displayed_information' in node_properties) {
+                        switch (node_properties['displayed_information']) {
+                        
+                            case 'title': 
+                            case 'both':
+                                if('displayed_type_name' in node_properties)
+                                    subj_node_to_update['label'] = `<b>${node_properties['displayed_type_name']}</b>\\n`;
+                                else
+                                    subj_node_to_update['title']= type_name;
+                                break;
+                            case 'literals':
+                                subj_node_to_update['label'] = '';
+                                break;
+                        }
+                        
+                        if('displayed_type_name' in node_properties)
+                            subj_node_to_update['title'] = node_properties['displayed_type_name'];
+                        else
+                            subj_node_to_update['title']= type_name;
+                    } else {
+                        if('displayed_type_name' in node_properties) {
+                            subj_node_to_update['label'] = `<b>${node_properties['displayed_type_name']}</b>\\n`;
+                            subj_node_to_update['title'] = node_properties['displayed_type_name'];
+                        }
+                        else {
+                            subj_node_to_update['label'] = subj_node_to_update['title'] = `<b>${type_name}</b>\\n`;
+                            subj_node_to_update['title']= type_name;
+                        }
                     }
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
@@ -670,7 +692,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 if(!nodes.get(obj_id)) {
                     if(binding.object.termType === "Literal") {
                         subj_node_to_update = nodes.get(subj_id);
-                        
                         literal_predicate_index = edge_obj['title'].lastIndexOf("/");
                         literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
                         if (literal_predicate) {
@@ -678,11 +699,46 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             if (idx_hash)
                               literal_predicate = literal_predicate.slice(idx_hash + 1); 
                         }
-                        literal_label = literal_predicate + ': ' + obj_node['label'];
-                        if(subj_node_to_update['label'].indexOf(literal_label) === -1) {
+                        
+                        let literal_label = '';
+                        
+                        if('type_name' in subj_node_to_update) {
+                            let type_name = subj_node_to_update['type_name']
+                            let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
+                            // displayed_literals_format:defaultValue:yes / defaultValue:no
+                            // displayed_information:title / literals / both
+                            if('displayed_information' in node_properties && node_properties['displayed_information'] !== "title" && 
+                                'displayed_literals_format' in node_properties) {
+                                if(node_properties['displayed_literals_format'].indexOf(`${literal_predicate}:`) > -1) {
+                                    let literals_display_config = node_properties['displayed_literals_format'].split(",");
+                                    for(let i in literals_display_config) {
+                                        let literal_config = literals_display_config[i].split(":");
+                                        if(literal_config[0] === literal_predicate) {
+                                            switch(literal_config[1]) {
+                                                case "yes":
+                                                    literal_label = literal_predicate + ': ' + obj_node['label'];
+                                                    break;
+                                                case "no":
+                                                    literal_label = obj_node['label'];
+                                                    break;
+                                                default:
+                                                    literal_label = literal_predicate + ': ' + obj_node['label'];
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if(! ('displayed_information' in node_properties)) {
+                                literal_label = literal_predicate + ': ' + obj_node['label'];
+                            }
+                        } else {
+                            literal_label = literal_predicate + ': ' + obj_node['label'];
+                        }
+                        if(literal_label !== '' && subj_node_to_update['label'].indexOf(literal_label) === -1) {
                             if (subj_node_to_update['label']) {
                                 literal_label = "\\n" + literal_label;
                             }
+                             
                             nodes.update({
                                 id: subj_id, 
                                 label:  subj_node_to_update['label'] + literal_label,

@@ -40,7 +40,9 @@
       "style": "filled",
       "value": 25,
       "level": 5,
-      "displayed_type_name": "Output"
+      "displayed_type_name": "Output",
+      "displayed_information": "literals",
+      "displayed_literals_format": "defaultValue:no"
    },
    "CommandOutputNotebook": {
       "shape": "box",
@@ -83,14 +85,19 @@
       "style": "filled",
       "value": 20,
       "level": 3,
-      "displayed_type_name": "Input"
+      "displayed_type_name": "Input",
+      "displayed_information": "literals",
+      "displayed_literals_format": "defaultValue:no"
    },
    "Action": {
       "shape": "box",
       "color": "#D5C15D",
       "style": "filled",
       "value": 35,
-      "level": 4
+      "level": 4,
+      "displayed_type_name": "Command",
+      "displayed_information": "title",
+      "displayed_literals_format": "command:no"
    },
    "Angle": {
       "shape": "box",
