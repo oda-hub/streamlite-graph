@@ -707,6 +707,23 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
                             // displayed_literals_format:defaultValue:yes / defaultValue:no
                             // displayed_information:title / literals / both
+                            if('literals_keyword_to_substitute' in node_properties) {
+                                let literals_keyword_to_substitute = node_properties['literals_keyword_to_substitute'].split(";");
+                                for(let i in literals_keyword_to_substitute) {
+                                    let literal_for_substitution = literals_keyword_to_substitute[i].split(":");
+                                    if (literal_for_substitution[0] === literal_predicate) {
+                                        let keywords_substitution_list = literal_for_substitution[1].split(",");
+                                        for(let j in keywords_substitution_list) {
+                                            let keyword = keywords_substitution_list[j];
+                                            if (obj_node['label'].indexOf(keyword) > -1) {
+                                                obj_node['label'] = keyword;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
                             if('displayed_information' in node_properties && node_properties['displayed_information'] !== "title" && 
                                 'displayed_literals_format' in node_properties) {
                                 if(node_properties['displayed_literals_format'].indexOf(`${literal_predicate}:`) > -1) {
