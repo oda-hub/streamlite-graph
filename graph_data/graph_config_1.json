@@ -4,7 +4,10 @@
       "color": "#adb6ce",
       "style": "filled",
       "value": 35,
-      "level": 0
+      "level": 0,
+      "displayed_type_name": "Query",
+      "displayed_information": "both",
+      "displayed_literals_format": "title:no"
    },
    "Activity": {
       "shape": "box",
