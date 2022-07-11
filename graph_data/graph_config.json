@@ -4,21 +4,27 @@
       "color": "#00CC00",
       "style": "filled",
       "value": 35,
-      "level": 0
+      "level": 0,
+      "displayed_information": "literals",
+      "displayed_literals_format": "AQModule:no"
    },
    "AstrophysicalObject": {
       "shape": "box",
       "color": "#6262be",
       "style": "filled",
       "value": 35,
-      "level": 1
+      "level": 1,
+      "displayed_information": "literals",
+      "displayed_literals_format": "AstroObject:no"
    },
    "AstrophysicalRegion": {
       "shape": "box",
       "color": "#6262bf",
       "style": "filled",
       "value": 35,
-      "level": 1
+      "level": 1,
+      "displayed_information": "literals",
+      "displayed_literals_format": "title:no"
    },
    "AstrophysicalImage": {
       "shape": "box",
