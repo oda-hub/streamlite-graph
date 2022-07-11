@@ -755,7 +755,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             if (subj_node_to_update['label']) {
                                 literal_label = "\\n" + literal_label;
                             }
-                             
                             nodes.update({
                                 id: subj_id, 
                                 label:  subj_node_to_update['label'] + literal_label,

@@ -5,6 +5,10 @@
       "style": "filled",
       "value": 35,
       "level": 0,
+      "font": {
+           "size": 24,
+           "face": "courier"
+       },
       "displayed_type_name": "Query",
       "displayed_information": "literals",
       "displayed_literals_format": "title:no",
