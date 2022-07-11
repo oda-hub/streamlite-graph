@@ -634,7 +634,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 if('displayed_type_name' in node_properties)
                                     subj_node_to_update['label'] = `<b>${node_properties['displayed_type_name']}</b>\\n`;
                                 else
-                                    subj_node_to_update['title']= type_name;
+                                    subj_node_to_update['label'] = `<b>${type_name}</b>\\n`;
                                 break;
                             case 'literals':
                                 subj_node_to_update['label'] = '';

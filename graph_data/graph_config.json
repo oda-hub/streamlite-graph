@@ -25,7 +25,8 @@
       "color": "#027F45",
       "style": "filled",
       "value": 35,
-      "level": 1
+      "level": 1,
+      "displayed_information": "title"
    },
    "CommandParameter": {
       "shape": "box",
@@ -118,20 +119,26 @@
       "color": "#1B81FB",
       "style": "filled",
       "value": 35,
-      "level": 2
+      "level": 2,
+      "displayed_information": "both",
+      "displayed_literals_format": "title:no"
    },
    "Position": {
       "shape": "box",
       "color": "#1B81FB",
       "style": "filled",
       "value": 35,
-      "level": 2
+      "level": 2,
+      "displayed_information": "both",
+      "displayed_literals_format": "title:no"
    },
    "Pixels": {
       "shape": "box",
       "color": "#1B81FB",
       "style": "filled",
       "value": 35,
-      "level": 2
+      "level": 2,
+      "displayed_information": "both",
+      "displayed_literals_format": "title:no"
    }
 }
