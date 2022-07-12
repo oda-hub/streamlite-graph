@@ -30,7 +30,7 @@ def set_graph_options(net, output_path):
                 arrows: {
                   to: {
                     enabled: true,
-                    scaleFactor: 1
+                    scaleFactor: 1.2
                     }
                 },
                 width: 4
@@ -596,7 +596,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 id: edge_id,
                 from: subj_id,
                 to: obj_id,
-                title: binding.predicate.value
+                title: binding.predicate.value,
+                font: {
+                      'multi': "html",
+                      'face': "courier",
+                      'size': 24
+                     }
             }
             obj_node = {
                 id: obj_id,
