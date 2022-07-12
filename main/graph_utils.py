@@ -561,10 +561,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         function fix_release_nodes(fix) {
             if (fix === undefined)
                 fix = true;
-            let current_nodes_ids = nodes.getIds();
-            for(let i in current_nodes_ids) {
-                nodes.update({ id: current_nodes_ids[i], fixed: fix });
-            }
+            nodes.forEach(node => {
+                nodes.update({id: node.id, fixed: fix});
+            });
         }
     '''
     f_process_binding = '''
@@ -817,6 +816,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }});
         
         network.on("dragStart", function (e) {{
+            fix_release_nodes(false);
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
         
@@ -832,6 +832,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                             clicked_node['expanded'] = true;
                             // fix all the current nodes
+                            
                             fix_release_nodes();
                             (async() => {{
                                 const bindingsStreamCall = await myEngine.queryQuads(
