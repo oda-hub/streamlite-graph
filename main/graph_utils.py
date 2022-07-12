@@ -557,9 +557,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 return query
             }
             '''
-
+    f_fix_release_nodes = '''
+        function fix_release_nodes(fix) {
+            if (fix === undefined)
+                fix = true;
+            let current_nodes_ids = nodes.getIds();
+            for(let i in current_nodes_ids) {
+                nodes.update({ id: current_nodes_ids[i], fixed: fix });
+            }
+        }
+    '''
     f_process_binding = '''
-        function process_binding(binding) {
+        function process_binding(binding, clicked_node_position) {
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
@@ -608,6 +617,16 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                       'face': "courier",
                      }
             }
+            
+            if (clicked_node_position) {
+                // subj_node['fixed'] = true;
+                // obj_node['fixed'] = true;
+                // subj_node['x'] = clicked_node_position.x + 2;
+                // subj_node['y'] = clicked_node_position.y + 2;
+                // obj_node['x'] = clicked_node_position.x + 2;
+                // obj_node['y'] = clicked_node_position.y + 2;    
+            }
+            
             if(!nodes.get(subj_id)) {
                 nodes.add([subj_node]); 
             }
@@ -788,6 +807,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         );
         
         network.on("stabilized", function (e) {{
+            fix_release_nodes(false);
             network.setOptions( {{ "physics": {{ enabled: false }} }} );
         }});
         
@@ -798,6 +818,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         network.on("click", function(e) {{
             if(e.nodes[0]) {{
                 let clicked_node = nodes.get(e.nodes[0]);
+                let node_position = network.getPositions([e.nodes[0]])[e.nodes[0]]; 
                 if(clicked_node.hasOwnProperty("group") && clicked_node["group"].startsWith("legend_config_")) {{
                     
                 }}
@@ -805,6 +826,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     if (clicked_node['clickable']) {{
                         if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                             clicked_node['expanded'] = true;
+                            // fix all the current nodes
+                            fix_release_nodes();
                             (async() => {{
                                 const bindingsStreamCall = await myEngine.queryQuads(
                                     format_query_clicked_node(clicked_node.id),
@@ -813,7 +836,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     }}
                                 );
                                 bindingsStreamCall.on('data', (binding) => {{
-                                    process_binding(binding);
+                                    process_binding(binding, node_position);
                                 }});
                                 bindingsStreamCall.on('end', () => {{
                                     let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
@@ -893,6 +916,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     f_toggle_graph_config +
                                     f_reset_graph +
                                     f_query_clicked_node_formatting +
+                                    f_fix_release_nodes +
                                     f_process_binding)
 
     net.html = net.html.replace('// initialize global variables.', f_graph_vars)
