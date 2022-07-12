@@ -266,16 +266,25 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     "enabled": false
                                 }
                             },
+                            "edges": {
+                                length: 850
+                            },
                             "physics": {
                                 enabled: true,
-                                minVelocity: 1,
+                                minVelocity: 0.75,
                                 maxVelocity: 100,
-                                solver: "forceAtlas2Based",
+                                solver: "repulsion",
                                 forceAtlas2Based: {
                                     gravitationalConstant: -3500,
-                                    centralGravity: 0.15,
-                                    springLength: 250,
-                                    springConstant: 0.01
+                                    centralGravity: 0.09,
+                                    springLength: 350,
+                                    springConstant: 1
+                                },
+                                repulsion: {
+                                    nodeDistance: 200,
+                                    centralGravity: 1.05,
+                                    springConstant: 0.25,
+                                    springLength: 100
                                 },
                                 stabilization: {
                                     enabled: true,
