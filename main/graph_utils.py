@@ -819,10 +819,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }});
         
         network.on("click", function(e) {{
+            // stop the simulation
+            console.log("stopping simulation");
+            network.stopSimulation();
             if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
-                // stop the simulation
-                console.log("stopping simulation");
-                network.stopSimulation();
                 let clicked_node = nodes.get(e.nodes[0]);
                 if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                     clicked_node['expanded'] = true;
