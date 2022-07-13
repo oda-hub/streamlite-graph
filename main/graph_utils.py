@@ -118,7 +118,10 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
 
 def set_html_content(net, output_path, graph_config_names_list=None, graph_config_obj_dict=None):
     html_code = '''
-        <div style="margin: 5px 0px 15px 5px"><button type="button" onclick="reset_graph()">Reset graph!</button></div>
+        <div style="margin: 5px 0px 15px 5px">
+            <button type="button" onclick="reset_graph()">Reset graph!</button>
+            <button type="button" onclick="fit_graph()">Fit graph!</button>
+        </div>
         
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Change graph layout</div>
         
@@ -416,6 +419,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 update_nodes(nodes_to_update, graph_config_obj_default['default']);
             }
             reset_legend();
+        }
+    '''
+
+    f_fit_graph = '''
+        function fit_graph() {
+            network.fit();
         }
     '''
 
@@ -912,6 +921,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     f_enable_filter +
                                     f_apply_layout +
                                     f_toggle_graph_config +
+                                    f_fit_graph +
                                     f_reset_graph +
                                     f_query_clicked_node_formatting +
                                     f_fix_release_nodes +
