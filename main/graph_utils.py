@@ -281,7 +281,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     nodeDistance: 350,
                                     centralGravity: 1.05,
                                     springConstant: 0.3,
-                                    springLength: 450
+                                    springLength: 250
                                 },
                                 stabilization: {
                                     enabled: true,
