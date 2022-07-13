@@ -266,9 +266,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     "enabled": false
                                 }
                             },
-                            "edges": {
-                                length: 850
-                            },
                             "physics": {
                                 enabled: true,
                                 minVelocity: 0.75,
@@ -281,10 +278,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     springConstant: 1
                                 },
                                 repulsion: {
-                                    nodeDistance: 200,
+                                    nodeDistance: 350,
                                     centralGravity: 1.05,
-                                    springConstant: 0.25,
-                                    springLength: 100
+                                    springConstant: 0.3,
+                                    springLength: 450
                                 },
                                 stabilization: {
                                     enabled: true,
