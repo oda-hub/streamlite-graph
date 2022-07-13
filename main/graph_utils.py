@@ -819,54 +819,53 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }});
         
         network.on("click", function(e) {{
-            if(e.nodes[0]) {{
+            if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
+                // stop the simulation
+                console.log("stopping simulation");
+                network.stopSimulation();
                 let clicked_node = nodes.get(e.nodes[0]);
-                if (clicked_node['clickable']) {{
-                    if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
-                        clicked_node['expanded'] = true;
-                        // stop the simulation and fix all the current nodes
-                        console.log("stopping simulation");
-                        network.stopSimulation();
-                        fix_release_nodes();
-                        (async() => {{
-                            const bindingsStreamCall = await myEngine.queryQuads(
-                                format_query_clicked_node(clicked_node.id),
-                                {{
-                                    sources: [ store ]
-                                }}
-                            );
-                            bindingsStreamCall.on('data', (binding) => {{
-                                process_binding(binding);
-                            }});
-                            bindingsStreamCall.on('end', () => {{
-                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                                apply_layout(checked_radiobox);
-                            }});
-                            bindingsStreamCall.on('error', (error) => {{ 
-                                console.error(error);
-                            }});
-                        }})();
-                    }}
-                    else {{
-                        let connected_to_nodes = network.getConnectedNodes(clicked_node.id);
-                        let nodes_to_remove = [];
-                        let edges_to_remove = [];
-                        if (connected_to_nodes.length > 0) {{
-                            for (let i in connected_to_nodes) {{
-                                let connected_to_node = connected_to_nodes[i];
-                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
-                                if (connected_to_connected_to_node.length == 1) {{
-                                    nodes_to_remove.push(connected_to_node);
-                                    edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
-                                }}
+                if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
+                    clicked_node['expanded'] = true;
+                    //  fix all the current nodes
+                    fix_release_nodes();
+                    (async() => {{
+                        const bindingsStreamCall = await myEngine.queryQuads(
+                            format_query_clicked_node(clicked_node.id),
+                            {{
+                                sources: [ store ]
+                            }}
+                        );
+                        bindingsStreamCall.on('data', (binding) => {{
+                            process_binding(binding);
+                        }});
+                        bindingsStreamCall.on('end', () => {{
+                            let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                            apply_layout(checked_radiobox);
+                        }});
+                        bindingsStreamCall.on('error', (error) => {{ 
+                            console.error(error);
+                        }});
+                    }})();
+                }}
+                else {{
+                    let connected_to_nodes = network.getConnectedNodes(clicked_node.id);
+                    let nodes_to_remove = [];
+                    let edges_to_remove = [];
+                    if (connected_to_nodes.length > 0) {{
+                        for (let i in connected_to_nodes) {{
+                            let connected_to_node = connected_to_nodes[i];
+                            connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
+                            if (connected_to_connected_to_node.length == 1) {{
+                                nodes_to_remove.push(connected_to_node);
+                                edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
                             }}
                         }}
-                        
-                        edges.remove(edges_to_remove);
-                        nodes.remove(nodes_to_remove);
-                        
-                        clicked_node['expanded'] = false;
                     }}
+                    
+                    edges.remove(edges_to_remove);
+                    nodes.remove(nodes_to_remove);
+                    
+                    clicked_node['expanded'] = false;
                 }}
             }}
         }});
