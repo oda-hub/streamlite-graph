@@ -280,7 +280,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 repulsion: {
                                     nodeDistance: 350,
                                     centralGravity: 1.05,
-                                    springConstant: 0.15,
+                                    springConstant: 0.05,
                                     springLength: 250
                                 },
                                 stabilization: {
