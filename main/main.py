@@ -41,6 +41,8 @@ def stream_graph(cmd_line_args):
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph_two_commands.ttl'
 
+    graph_reduction_config_fn = 'graph_data/graph_reduction_config.json'
+
     col1, col2, col3 = st.columns(3)
     with col1:
         graph_selected = st.selectbox('Which graph example would you like to explore?',
@@ -73,8 +75,11 @@ def stream_graph(cmd_line_args):
     # for compatibility with Javascript
     graph_config_obj_str = json.dumps(graph_config_obj)
 
+    with open(graph_reduction_config_fn) as graph_reduction_config_fn_f:
+        graph_reduction_config_obj = json.load(graph_reduction_config_fn_f)
+
     graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj_dict=graph_config_obj_str)
-    graph_utils.set_html_content(net, html_fn, graph_config_names_list=graph_config_names_list, graph_config_obj_dict=graph_config_obj)
+    graph_utils.set_html_content(net, html_fn, graph_config_names_list=graph_config_names_list, graph_config_obj_dict=graph_config_obj, graph_reduction_config_dict=graph_reduction_config_obj)
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')

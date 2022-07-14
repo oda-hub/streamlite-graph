@@ -116,7 +116,7 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def set_html_content(net, output_path, graph_config_names_list=None, graph_config_obj_dict=None):
+def set_html_content(net, output_path, graph_config_names_list=None, graph_config_obj_dict=None, graph_reduction_config_dict=None):
     html_code = '''
         <div style="margin: 5px 0px 15px 5px">
             <button type="button" onclick="reset_graph()">Reset graph!</button>
@@ -124,7 +124,7 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
             <button type="button" onclick="stop_animation()">Stop animation!</button>
         </div>
         <div style="display:flex;">
-            <div style="margin: 5px 0px 15px 15px">
+            <div style="background-color: #F7F7F7; border-left: 1px double; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">
                 <h3 style="margin: 15px 0px 10px 5px;">Change graph layout</h3>
                 
                 <div style="margin: 5px">
@@ -137,7 +137,7 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
                 </div>
             </div>
             
-            <div style="margin: 5px 0px 15px 15px">
+            <div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">
                 <h3 style="margin: 15px 0px 10px 5px;">Enable/disable selections for the graph</h3>
                 
                 <div style="margin: 5px">
@@ -146,9 +146,23 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
                 </div>
             </div>
         '''
+    # if graph_reduction_config_dict is not None:
+    #     html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
+    #                   '<h3 style="margin: 15px 0px 10px 5px;">Apply reductoins on the graph</h3>')
+    #     for reduction_obj in graph_reduction_config_dict:
+    #         reduction_id = "_".join(reduction_obj["name"].split(' '))
+    #         html_code += (f'''
+    #             <div style="margin: 5px">
+    #                 <label><input type="checkbox" id="reduction_config_{reduction_id}"
+    #                 value="{reduction_id}" checked>{reduction_obj["name"]}</label>
+    #             </div>
+    #         ''')
+    #     html_code += '</div>'
+
     checkboxes_config_added = []
     if graph_config_names_list is not None:
-        html_code += ('<div style="margin: 5px 0px 15px 5px"><h3 style="margin: 15px 0px 10px 5px;">Enable/disable graphical configurations for the graph</h3>')
+        html_code += ('<div style="border-right: 1px double; padding: 5px; background-color: #F7F7F7; margin: 5px 0px 15px 5px">'
+                      '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable graphical configurations for the graph</h3>')
         for config_node_type in graph_config_obj_dict:
             if 'config_file' in graph_config_obj_dict[config_node_type]:
                 graph_config_name = graph_config_obj_dict[config_node_type]['config_file']
@@ -504,14 +518,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         a ?s_type ;
                         ?p_literal ?s_literal .
                     
-                    <` + clicked_node_id + `> ?p ?o .
+                    <${clicked_node_id}> ?p ?o .
                     ?o a ?o_type . 
                     ?o ?p_literal ?o_literal .
                 
                     ?action a <http://schema.org/Action> ;
                         <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
             
-                    <${clicked_node_id}> a ?activityType ;
+                    ?activity a ?activityType ;
                         <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
                         <http://www.w3.org/ns/prov#hadPlan> ?action .
                 }
@@ -578,10 +592,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         ?action a <http://schema.org/Action> ;
                             <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
                              
-                        <${clicked_node_id}> a ?activityType ;
+                        ?activity a ?activityType ;
                             <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
                             <http://www.w3.org/ns/prov#qualifiedAssociation>/<http://www.w3.org/ns/prov#hadPlan> ?action .
-                            
+                        
+                        FILTER (?activity = <${clicked_node_id}> ||
+                                ?action = <${clicked_node_id}> ) .
+                        
                     }
                 }`;
                 
@@ -599,7 +616,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }
     '''
     f_process_binding = '''
-        function process_binding(binding) {
+        function process_binding(binding, position_clicked_node) {
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
@@ -652,6 +669,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                       'multi': "html",
                       'face': "courier",
                      }
+            }
+            
+            if (position_clicked_node) {
+                subj_node['x'] = position_clicked_node.x;
+                subj_node['y'] = position_clicked_node.y;
+                
+                obj_node['x'] = position_clicked_node.x;
+                obj_node['y'] = position_clicked_node.y;
             }
             
             if(!nodes.get(subj_id)) {
@@ -845,7 +870,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         network.on("click", function(e) {{
             if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
                 let clicked_node = nodes.get(e.nodes[0]);
-                console.log(e.nodes);
+                let position_clicked_node = network.getPosition(e.nodes[0]);
+                console.log(position_clicked_node);
                 if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                     clicked_node['expanded'] = true;
                     // fix all the current nodes
@@ -858,7 +884,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             }}
                         );
                         bindingsStreamCall.on('data', (binding) => {{
-                            process_binding(binding);
+                            process_binding(binding, position_clicked_node);
                         }});
                         bindingsStreamCall.on('end', () => {{
                             let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
