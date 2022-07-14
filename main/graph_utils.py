@@ -123,29 +123,32 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
             <button type="button" onclick="fit_graph()">Fit graph!</button>
             <button type="button" onclick="stop_animation()">Stop animation!</button>
         </div>
-        
-        <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Change graph layout</div>
-        
-        <div style="margin: 5px">
-            <label><input type="radio" id="repulsion_layout" name="graph_layout" value="repulsion" onchange="apply_layout(this)" checked>
-            Random</label>
-        </div>
-        <div style="margin: 5px">
-            <label><input type="radio" id="hierarchical_layout" name="graph_layout" value="hierarchicalRepulsion" onchange="apply_layout(this)" unchecked>
-            Hierarchical</label>
-        </div>
-        
-        <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable selections for the graph</div>
-        
-        <div style="margin: 5px">
-            <label><input type="checkbox" id="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
-            oda astroquery-related nodes</label>
-        </div>
-        
+        <div style="display:flex;">
+            <div style="margin: 5px 0px 15px 15px">
+                <h3 style="margin: 15px 0px 10px 5px;">Change graph layout</h3>
+                
+                <div style="margin: 5px">
+                    <label><input type="radio" id="repulsion_layout" name="graph_layout" value="repulsion" onchange="apply_layout(this)" checked>
+                    Random</label>
+                </div>
+                <div style="margin: 5px">
+                    <label><input type="radio" id="hierarchical_layout" name="graph_layout" value="hierarchicalRepulsion" onchange="apply_layout(this)" unchecked>
+                    Hierarchical</label>
+                </div>
+            </div>
+            
+            <div style="margin: 5px 0px 15px 15px">
+                <h3 style="margin: 15px 0px 10px 5px;">Enable/disable selections for the graph</h3>
+                
+                <div style="margin: 5px">
+                    <label><input type="checkbox" id="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
+                    oda astroquery-related nodes</label>
+                </div>
+            </div>
         '''
     checkboxes_config_added = []
     if graph_config_names_list is not None:
-        html_code += ('<div style="margin: 15px 0px 10px 5px; font-weight: bold;">Enable/disable graphical configurations for the graph</div>')
+        html_code += ('<div style="margin: 5px 0px 15px 5px"><h3 style="margin: 15px 0px 10px 5px;">Enable/disable graphical configurations for the graph</h3>')
         for config_node_type in graph_config_obj_dict:
             if 'config_file' in graph_config_obj_dict[config_node_type]:
                 graph_config_name = graph_config_obj_dict[config_node_type]['config_file']
@@ -159,6 +162,8 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
                     '''
                     checkboxes_config_added.append(graph_config_name)
     html_code += '''
+                </div>
+            </div>
             <div style="display: flex;">
                 <div style="margin:10px;">
                     <div style="margin: 0px 0px 5px 5px; font-weight: bold; ">Legend</div>
