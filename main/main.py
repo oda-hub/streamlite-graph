@@ -77,8 +77,10 @@ def stream_graph(cmd_line_args):
 
     with open(graph_reduction_config_fn) as graph_reduction_config_fn_f:
         graph_reduction_config_obj = json.load(graph_reduction_config_fn_f)
+    # for compatibility with Javascript
+    graph_reductions_obj_str = json.dumps(graph_reduction_config_obj)
 
-    graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj_dict=graph_config_obj_str)
+    graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj_dict=graph_config_obj_str, graph_reductions_obj_dict=graph_reductions_obj_str)
     graph_utils.set_html_content(net, html_fn, graph_config_names_list=graph_config_names_list, graph_config_obj_dict=graph_config_obj, graph_reduction_config_dict=graph_reduction_config_obj)
     graph_utils.update_js_libraries(html_fn)
 

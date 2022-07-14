@@ -148,13 +148,12 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
         '''
     if graph_reduction_config_dict is not None:
         html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
-                      '<h3 style="margin: 15px 0px 10px 5px;">Apply reductoins on the graph</h3>')
-        for reduction_obj in graph_reduction_config_dict:
-            reduction_id = "_".join(reduction_obj["name"].split(' '))
+                      '<h3 style="margin: 15px 0px 10px 5px;">Apply reductions on the graph</h3>')
+        for reduction_obj_id in graph_reduction_config_dict:
             html_code += (f'''
                 <div style="margin: 5px">
-                    <label><input type="checkbox" id="reduction_config_{reduction_id}" onchange="apply_reduction_change(this)
-                    value="{reduction_id}" unchecked>{reduction_obj["name"]}</label>
+                    <label><input type="checkbox" id="reduction_config_{reduction_obj_id}" onchange="apply_reduction_change(this)"
+                    value="{reduction_obj_id}" unchecked>{graph_reduction_config_dict[reduction_obj_id]["name"]}</label>
                 </div>
             ''')
         html_code += '</div>'
@@ -192,7 +191,7 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
         out.write(net.html)
 
 
-def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_config_obj_dict=None):
+def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_config_obj_dict=None, graph_reductions_obj_dict=None):
     f_graph_vars = f'''
     
         // initialize global variables and graph configuration
@@ -214,6 +213,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 "margin": 10
            }}
         }}
+        var graph_reductions_obj = JSON.parse('{graph_reductions_obj_dict}');
         var graph_config_obj = JSON.parse('{graph_config_obj_dict}');
         
         const parser = new N3.Parser({{ format: 'ttl' }});
@@ -249,7 +249,37 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     f_apply_reduction_change = '''
         function apply_reduction_change(check_box_element) {
-            
+            let checked_reduction_id = check_box_element.id.replace("reduction_config_", "");
+            if (checked_reduction_id in graph_reductions_obj) {
+                let reduction_subset =  graph_reductions_obj[checked_reduction_id];
+                let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
+                let origin_node_type = reduction_subset["origin_node_type"];
+                let origin_node_list = nodes.get({
+                    filter: function (item) {
+                        return (item.hasOwnProperty("type_name") && item.type_name == origin_node_type);
+                    }
+                });
+                if(check_box_element.checked) {
+                    for (i in origin_node_list) {
+                        let origin_node = origin_node_list[i];
+                        let connected_edges = network.getConnectedEdges(origin_node.id);
+                        for (j in connected_edges) {
+                            let connected_edge = edges.get(connected_edges[j]);
+                            if (predicates_to_absorb_list.indexOf(connected_edge.title) > -1) {
+                                let edge_nodes = network.getConnectedNodes(connected_edges[j]);
+                                edges.remove(connected_edges[j]);
+                                if (edge_nodes[0] == origin_node.id)
+                                    nodes.remove(edge_nodes[1]);
+                                else
+                                    nodes.remove(edge_nodes[0]);
+                                
+                            }
+                        }
+                    }
+                } else {
+                
+                }
+            }
         }
     '''
 
@@ -968,6 +998,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     f_toggle_graph_config +
                                     f_stop_animation +
                                     f_fit_graph +
+                                    f_apply_reduction_change +
                                     f_reset_graph +
                                     f_query_clicked_node_formatting +
                                     f_fix_release_nodes +
