@@ -121,6 +121,7 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
         <div style="margin: 5px 0px 15px 5px">
             <button type="button" onclick="reset_graph()">Reset graph!</button>
             <button type="button" onclick="fit_graph()">Fit graph!</button>
+            <button type="button" onclick="stop_animation()">Stop animation!</button>
         </div>
         
         <div style="margin: 15px 0px 10px 5px; font-weight: bold;">Change graph layout</div>
@@ -198,6 +199,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         
         const parser = new N3.Parser({{ format: 'ttl' }});
         let prefixes_graph = {{}};
+        const stack_promises = [];
         const store = new N3.Store();
         const myEngine = new Comunica.QueryEngine();
         const query_initial_graph = `CONSTRUCT {{
@@ -252,9 +254,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 },
                                 stabilization: {
                                     enabled: true,
-                                    fit: true,
-                                    updateInterval: 10,
-                                    iterations: 10
+                                    updateInterval: 25,
+                                    iterations: 1000
                                 },
                             }
                         }
@@ -272,12 +273,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             "physics": {
                                 enabled: true,
                                 minVelocity: 0.75,
+                                 timestep: 0.35,
                                 maxVelocity: 100,
                                 solver: "repulsion",
                                 forceAtlas2Based: {
                                     gravitationalConstant: -3500,
                                     centralGravity: 0.09,
-                                    springLength: 350,
+                                    springLength: 300,
                                     springConstant: 1
                                 },
                                 repulsion: {
@@ -287,8 +289,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     springLength: 250
                                 },
                                 stabilization: {
-                                    enabled: true,
-                                    fit: true,
+                                    enabled: false,
+                                    updateInterval: 25,
+                                    iterations: 1000
                                 },
                             }
                         }
@@ -425,6 +428,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     f_fit_graph = '''
         function fit_graph() {
             network.fit();
+        }
+    '''
+
+    f_stop_animation = '''
+        function stop_animation() {
+            // fix_release_nodes(false);
+            network.setOptions( { "physics": { enabled: false } } );
         }
     '''
 
@@ -579,6 +589,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             nodes.forEach(node => {
                 nodes.update({id: node.id, fixed: fix});
             });
+            // console.log("nodes fixed");
         }
     '''
     f_process_binding = '''
@@ -817,25 +828,20 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         );
         
         network.on("stabilized", function (e) {{
-            console.log("stabilized event triggered!");
-            fix_release_nodes(false);
-            network.setOptions( {{ "physics": {{ enabled: false }} }} );
+            stop_animation();
         }});
         
         network.on("dragStart", function (e) {{
-            fix_release_nodes(false);
-            network.setOptions( {{ "physics": {{ enabled: false }} }} );
+            stop_animation();    
+            fix_release_nodes(false);    
         }});
         
         network.on("click", function(e) {{
-            // stop the simulation
-            console.log("stopping simulation");
-            network.stopSimulation();
             if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
                 let clicked_node = nodes.get(e.nodes[0]);
                 if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                     clicked_node['expanded'] = true;
-                    //  fix all the current nodes
+                    // fix all the current nodes
                     fix_release_nodes();
                     (async() => {{
                         const bindingsStreamCall = await myEngine.queryQuads(
@@ -921,6 +927,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     f_enable_filter +
                                     f_apply_layout +
                                     f_toggle_graph_config +
+                                    f_stop_animation +
                                     f_fit_graph +
                                     f_reset_graph +
                                     f_query_clicked_node_formatting +
