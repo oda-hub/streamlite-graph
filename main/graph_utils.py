@@ -511,7 +511,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     ?action a <http://schema.org/Action> ;
                         <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
             
-                    ?activity a ?activityType ;
+                    <${clicked_node_id}> a ?activityType ;
                         <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
                         <http://www.w3.org/ns/prov#hadPlan> ?action .
                 }
@@ -578,9 +578,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         ?action a <http://schema.org/Action> ;
                             <https://swissdatasciencecenter.github.io/renku-ontology#command> ?actionCommand .
                              
-                        ?activity a ?activityType ;
+                        <${clicked_node_id}> a ?activityType ;
                             <http://www.w3.org/ns/prov#startedAtTime> ?activityTime ;
                             <http://www.w3.org/ns/prov#qualifiedAssociation>/<http://www.w3.org/ns/prov#hadPlan> ?action .
+                            
                     }
                 }`;
                 
@@ -844,6 +845,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         network.on("click", function(e) {{
             if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
                 let clicked_node = nodes.get(e.nodes[0]);
+                console.log(e.nodes);
                 if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                     clicked_node['expanded'] = true;
                     // fix all the current nodes
