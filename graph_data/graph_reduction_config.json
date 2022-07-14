@@ -1,0 +1,7 @@
+[
+  {
+    "name": "Inputs and outputs ",
+    "origin_node": "Action",
+    "predicates_to_absorb": "hasOutputs,hasInputs"
+   }
+]
