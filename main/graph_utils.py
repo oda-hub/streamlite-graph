@@ -146,18 +146,18 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
                 </div>
             </div>
         '''
-    # if graph_reduction_config_dict is not None:
-    #     html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
-    #                   '<h3 style="margin: 15px 0px 10px 5px;">Apply reductoins on the graph</h3>')
-    #     for reduction_obj in graph_reduction_config_dict:
-    #         reduction_id = "_".join(reduction_obj["name"].split(' '))
-    #         html_code += (f'''
-    #             <div style="margin: 5px">
-    #                 <label><input type="checkbox" id="reduction_config_{reduction_id}"
-    #                 value="{reduction_id}" checked>{reduction_obj["name"]}</label>
-    #             </div>
-    #         ''')
-    #     html_code += '</div>'
+    if graph_reduction_config_dict is not None:
+        html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
+                      '<h3 style="margin: 15px 0px 10px 5px;">Apply reductoins on the graph</h3>')
+        for reduction_obj in graph_reduction_config_dict:
+            reduction_id = "_".join(reduction_obj["name"].split(' '))
+            html_code += (f'''
+                <div style="margin: 5px">
+                    <label><input type="checkbox" id="reduction_config_{reduction_id}" onchange="apply_reduction_change(this)
+                    value="{reduction_id}" unchecked>{reduction_obj["name"]}</label>
+                </div>
+            ''')
+        html_code += '</div>'
 
     checkboxes_config_added = []
     if graph_config_names_list is not None:
@@ -247,6 +247,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }
     '''
 
+    f_apply_reduction_change = '''
+        function apply_reduction_change(check_box_element) {
+            
+        }
+    '''
+
     f_apply_layout = '''
         function apply_layout(radio_box_element) {
             let layout_id = radio_box_element.id;
@@ -308,7 +314,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     springLength: 250
                                 },
                                 stabilization: {
-                                    enabled: false,
+                                    enabled: true,
                                     updateInterval: 25,
                                     iterations: 1000
                                 },
