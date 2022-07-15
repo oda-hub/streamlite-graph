@@ -282,7 +282,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 if (origin_node.hasOwnProperty('child_nodes_list_content'))
                                     child_nodes_list_content = origin_node.child_nodes_list_content; 
                                 child_nodes_list_content.push([JSON.stringify(node_removed), JSON.stringify(connected_edge)]);
-                                new_label += '\\n' + node_removed.displayed_type_name + ': ' + node_removed.label;
+                                
+                                let label_to_add = '\\n' + node_removed.displayed_type_name + ': ' + 
+                                    node_removed.label.replaceAll('\\n', '')
+                                                      .replaceAll(node_removed.displayed_type_name, '');
+                                
+                                new_label += label_to_add;
                                 origin_node = nodes.get(origin_node.id);
                             }
                         }
@@ -447,52 +452,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     legend_container.append(outer_li);
                 }
             }
-            /*
-            // retrieve all nodes that are not part of the legend
-            let nodes_to_remove = nodes.get({
-              filter: function (item) {
-                return (item.hasOwnProperty("group" ) && item.group.startsWith("legend_config_"));
-              }
-            });
-            
-            nodes.remove(nodes_to_remove);
-            
-            var mynetwork = document.getElementById("mynetwork");
-            var x = -mynetwork.clientWidth / 2 + 50;
-            var y = -mynetwork.clientHeight / 2 + 50;
-            var step = 70;
-            var m = 0;
-            // default node legend
-            nodes.add([{
-                id: "legend_config_default",
-                x: x,
-                y: y + m++ * step,
-                label: "default",
-                shape: "dot",
-                color: graph_config_obj_default['default']['color'],
-                value: 15,
-                fixed: true,
-                physics: false,
-                group: "legend_config_" + graph_config_obj_default['default']['config_file']
-            }]);
-            for (let config in graph_config_obj) {
-                check_box_config = document.getElementById('config_' + graph_config_obj[config]['config_file']);
-                if(check_box_config && check_box_config.checked) {
-                    nodes.add([{
-                        id: "legend_config_" + config,
-                        x: x,
-                        y: y + m++ * step,
-                        label: config,
-                        shape: "dot",
-                        color: graph_config_obj[config]['color'],
-                        value: 15,
-                        fixed: true,
-                        physics: false,
-                        group: "legend_config_" + graph_config_obj[config]['config_file']
-                    }]);
-                }
-            }
-            */
         }
     
         function toggle_graph_config(check_box_element) {
