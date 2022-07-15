@@ -205,6 +205,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 "value": 20,
                 "config_file": null,
                 "font": {{
+                    "multi": "html",
+                    "face": "courier",
                     "size": 24,
                     "bold": {{
                         "size": 36
