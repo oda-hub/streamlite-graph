@@ -263,21 +263,62 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     for (i in origin_node_list) {
                         let origin_node = origin_node_list[i];
                         let connected_edges = network.getConnectedEdges(origin_node.id);
+                        let new_label = origin_node.label;
+                        let original_label = origin_node.label;
+                        let child_nodes_list_content = []
                         for (j in connected_edges) {
                             let connected_edge = edges.get(connected_edges[j]);
                             if (predicates_to_absorb_list.indexOf(connected_edge.title) > -1) {
                                 let edge_nodes = network.getConnectedNodes(connected_edges[j]);
                                 edges.remove(connected_edges[j]);
-                                if (edge_nodes[0] == origin_node.id)
+                                let node_removed = nodes.get(edge_nodes[1]);
+                                if (edge_nodes[0] == origin_node.id) {
                                     nodes.remove(edge_nodes[1]);
-                                else
+                                }
+                                else {
+                                    node_removed = nodes.get(edge_nodes[0]);
                                     nodes.remove(edge_nodes[0]);
-                                
+                                }
+                                if (origin_node.hasOwnProperty('child_nodes_list_content'))
+                                    child_nodes_list_content = origin_node.child_nodes_list_content; 
+                                child_nodes_list_content.push([JSON.stringify(node_removed), JSON.stringify(connected_edge)]);
+                                new_label += '\\n' + node_removed.displayed_type_name + ': ' + node_removed.label;
+                                origin_node = nodes.get(origin_node.id);
                             }
                         }
+                        nodes.update({ 
+                            id: origin_node.id,
+                            label: new_label,
+                            original_label: original_label,
+                            child_nodes_list_content: child_nodes_list_content
+                        });
+                        
                     }
                 } else {
-                
+                    for (i in origin_node_list) {
+                        // fix all the current nodes
+                        fix_release_nodes();
+                        let origin_node = origin_node_list[i];
+                        if (origin_node.hasOwnProperty('child_nodes_list_content') && 
+                            origin_node.child_nodes_list_content.length > 0) {
+                            let position_origin_node = network.getPosition(origin_node.id);
+                            for (j in origin_node.child_nodes_list_content) {
+                                let child_node_obj = JSON.parse(origin_node.child_nodes_list_content[j][0]);
+                                let edge_obj = JSON.parse(origin_node.child_nodes_list_content[j][1]);
+                                child_node_obj['x'] = position_origin_node.x;
+                                child_node_obj['y'] = position_origin_node.y; 
+                                nodes.add([child_node_obj]);
+                                edges.add([edge_obj]);
+                            }
+                            nodes.update({ 
+                                id: origin_node.id,
+                                label: origin_node.original_label,
+                                child_nodes_list_content: []
+                            });
+                            let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                            apply_layout(checked_radiobox);
+                        }
+                    }
                 }
             }
         }
@@ -735,7 +776,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     // displayed_information:title/literals/both
                     if('displayed_information' in node_properties) {
                         switch (node_properties['displayed_information']) {
-                        
                             case 'title': 
                             case 'both':
                                 if('displayed_type_name' in node_properties)
@@ -770,6 +810,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     label: subj_node_to_update['label'],
                                     title: subj_node_to_update['title'],
                                     type_name: type_name,
+                                    displayed_type_name: node_properties['displayed_type_name'] ? node_properties['displayed_type_name'] : type_name,
                                     color: node_properties['color'],
                                     border: node_properties['color'],
                                     cellborder: node_properties['color'],
