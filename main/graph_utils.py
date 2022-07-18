@@ -266,6 +266,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         let origin_node = origin_node_list[i];
                         let connected_edges = network.getConnectedEdges(origin_node.id);
                         let new_label = origin_node.label;
+                        let longest_line = -1;
                         let original_label = origin_node.label;
                         let child_nodes_list_content = []
                         for (j in connected_edges) {
@@ -288,7 +289,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 let label_to_add = '\\n' + node_removed.displayed_type_name + ': ' + 
                                     node_removed.label.replaceAll('\\n', '')
                                                       .replaceAll(node_removed.displayed_type_name, '');
-                                
                                 new_label += label_to_add;
                                 origin_node = nodes.get(origin_node.id);
                             }
@@ -299,7 +299,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             original_label: original_label,
                             child_nodes_list_content: child_nodes_list_content
                         });
-                        
                     }
                 } else {
                     for (i in origin_node_list) {
@@ -308,26 +307,32 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         let origin_node = origin_node_list[i];
                         if (origin_node.hasOwnProperty('child_nodes_list_content') && 
                             origin_node.child_nodes_list_content.length > 0) {
-                            let position_origin_node = network.getPosition(origin_node.id);
-                            for (j in origin_node.child_nodes_list_content) {
-                                let child_node_obj = JSON.parse(origin_node.child_nodes_list_content[j][0]);
-                                let edge_obj = JSON.parse(origin_node.child_nodes_list_content[j][1]);
-                                child_node_obj['x'] = position_origin_node.x;
-                                child_node_obj['y'] = position_origin_node.y; 
-                                nodes.add([child_node_obj]);
-                                edges.add([edge_obj]);
-                            }
-                            nodes.update({ 
-                                id: origin_node.id,
-                                label: origin_node.original_label,
-                                child_nodes_list_content: []
-                            });
-                            let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                            apply_layout(checked_radiobox);
+                            draw_child_nodes(origin_node);
                         }
                     }
                 }
             }
+        }
+    '''
+
+    f_generate_child_nodes = '''
+        function draw_child_nodes(origin_node) {
+            let position_origin_node = network.getPosition(origin_node.id);
+            for (j in origin_node.child_nodes_list_content) {
+                let child_node_obj = JSON.parse(origin_node.child_nodes_list_content[j][0]);
+                let edge_obj = JSON.parse(origin_node.child_nodes_list_content[j][1]);
+                child_node_obj['x'] = position_origin_node.x;
+                child_node_obj['y'] = position_origin_node.y; 
+                nodes.add([child_node_obj]);
+                edges.add([edge_obj]);
+            }
+            nodes.update({ 
+                id: origin_node.id,
+                label: origin_node.original_label,
+                child_nodes_list_content: []
+            });
+            let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+            apply_layout(checked_radiobox);
         }
     '''
 
@@ -650,11 +655,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             nodes.forEach(node => {
                 nodes.update({id: node.id, fixed: fix});
             });
-            // console.log("nodes fixed");
         }
     '''
     f_process_binding = '''
-        function process_binding(binding, position_clicked_node) {
+        function process_binding(binding, position_clicked_node, list_node_ids_already_added, list_edge_ids_already_added) {
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
@@ -717,9 +721,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 obj_node['y'] = position_clicked_node.y;
             }
             
-            if(!nodes.get(subj_id)) {
+            if(!nodes.get(subj_id) &&
+                (list_node_ids_already_added === undefined ||
+                list_node_ids_already_added.indexOf(subj_id) < 0)) {
                 nodes.add([subj_node]); 
             }
+            
             if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
                 idx_slash = obj_id.lastIndexOf("/");
@@ -730,8 +737,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         type_name = substr_q.slice(idx_hash + 1); 
                 }
                 subj_node_to_update = nodes.get(subj_id);
+                
                 // check type_name property of the node ahs already been defined previously
-                if(!('type_name' in subj_node_to_update)) {
+                if(subj_node_to_update !== null && !('type_name' in subj_node_to_update)) {
                     let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
                     // displayed_literals_format:defaultValue:yes/defaultValue:no
                     // displayed_information:title/literals/both
@@ -784,7 +792,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 }
             }
             else {
-                if(!edges.get(edge_id)) {
+                if(!edges.get(edge_id) &&
+                    (list_edge_ids_already_added === undefined ||
+                    list_edge_ids_already_added.indexOf(edge_id) < 0)) {
                     literal_predicate_index = edge_obj['title'].lastIndexOf("/");
                     literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
                     if (literal_predicate) {
@@ -801,77 +811,81 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 if(!nodes.get(obj_id)) {
                     if(binding.object.termType === "Literal") {
                         subj_node_to_update = nodes.get(subj_id);
-                        literal_predicate_index = edge_obj['title'].lastIndexOf("/");
-                        literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
-                        if (literal_predicate) {
-                            idx_hash = literal_predicate.indexOf("#");
-                            if (idx_hash)
-                              literal_predicate = literal_predicate.slice(idx_hash + 1); 
-                        }
-                        
-                        let literal_label = '';
-                        
-                        if('type_name' in subj_node_to_update) {
-                            let type_name = subj_node_to_update['type_name']
-                            let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
-                            // displayed_literals_format:defaultValue:yes / defaultValue:no
-                            // displayed_information:title / literals / both
-                            if('literals_keyword_to_substitute' in node_properties) {
-                                let literals_keyword_to_substitute = node_properties['literals_keyword_to_substitute'].split(";");
-                                for(let i in literals_keyword_to_substitute) {
-                                    let literal_for_substitution = literals_keyword_to_substitute[i].split(":");
-                                    if (literal_for_substitution[0] === literal_predicate) {
-                                        let keywords_substitution_list = literal_for_substitution[1].split(",");
-                                        for(let j in keywords_substitution_list) {
-                                            let keyword = keywords_substitution_list[j];
-                                            if (obj_node['label'].indexOf(keyword) > -1) {
-                                                obj_node['label'] = keyword;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
+                        if(subj_node_to_update !== null) {
+                            literal_predicate_index = edge_obj['title'].lastIndexOf("/");
+                            literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
+                            if (literal_predicate) {
+                                idx_hash = literal_predicate.indexOf("#");
+                                if (idx_hash)
+                                  literal_predicate = literal_predicate.slice(idx_hash + 1); 
                             }
                             
-                            if('displayed_information' in node_properties && node_properties['displayed_information'] !== "title" && 
-                                'displayed_literals_format' in node_properties) {
-                                if(node_properties['displayed_literals_format'].indexOf(`${literal_predicate}:`) > -1) {
-                                    let literals_display_config = node_properties['displayed_literals_format'].split(",");
-                                    for(let i in literals_display_config) {
-                                        let literal_config = literals_display_config[i].split(":");
-                                        if(literal_config[0] === literal_predicate) {
-                                            switch(literal_config[1]) {
-                                                case "yes":
-                                                    literal_label = literal_predicate + ': ' + obj_node['label'];
+                            let literal_label = '';
+                            
+                            if(subj_node_to_update !== null && 'type_name' in subj_node_to_update) {
+                                let type_name = subj_node_to_update['type_name']
+                                let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
+                                // displayed_literals_format:defaultValue:yes / defaultValue:no
+                                // displayed_information:title / literals / both
+                                if('literals_keyword_to_substitute' in node_properties) {
+                                    let literals_keyword_to_substitute = node_properties['literals_keyword_to_substitute'].split(";");
+                                    for(let i in literals_keyword_to_substitute) {
+                                        let literal_for_substitution = literals_keyword_to_substitute[i].split(":");
+                                        if (literal_for_substitution[0] === literal_predicate) {
+                                            let keywords_substitution_list = literal_for_substitution[1].split(",");
+                                            for(let j in keywords_substitution_list) {
+                                                let keyword = keywords_substitution_list[j];
+                                                if (obj_node['label'].indexOf(keyword) > -1) {
+                                                    obj_node['label'] = keyword;
                                                     break;
-                                                case "no":
-                                                    literal_label = obj_node['label'];
-                                                    break;
-                                                default:
-                                                    literal_label = literal_predicate + ': ' + obj_node['label'];
-                                                    break;
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            } else if(! ('displayed_information' in node_properties)) {
+                                
+                                if('displayed_information' in node_properties && node_properties['displayed_information'] !== "title" && 
+                                    'displayed_literals_format' in node_properties) {
+                                    if(node_properties['displayed_literals_format'].indexOf(`${literal_predicate}:`) > -1) {
+                                        let literals_display_config = node_properties['displayed_literals_format'].split(",");
+                                        for(let i in literals_display_config) {
+                                            let literal_config = literals_display_config[i].split(":");
+                                            if(literal_config[0] === literal_predicate) {
+                                                switch(literal_config[1]) {
+                                                    case "yes":
+                                                        literal_label = literal_predicate + ': ' + obj_node['label'];
+                                                        break;
+                                                    case "no":
+                                                        literal_label = obj_node['label'];
+                                                        break;
+                                                    default:
+                                                        literal_label = literal_predicate + ': ' + obj_node['label'];
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else if(! ('displayed_information' in node_properties)) {
+                                    literal_label = literal_predicate + ': ' + obj_node['label'];
+                                }
+                            } else {
                                 literal_label = literal_predicate + ': ' + obj_node['label'];
                             }
-                        } else {
-                            literal_label = literal_predicate + ': ' + obj_node['label'];
-                        }
-                        if(literal_label !== '' && subj_node_to_update['label'].indexOf(literal_label) === -1) {
-                            if (subj_node_to_update['label']) {
-                                literal_label = "\\n" + literal_label;
+                            if(literal_label !== '' && subj_node_to_update['label'].indexOf(literal_label) === -1) {
+                                if (subj_node_to_update['label']) {
+                                    literal_label = "\\n" + literal_label;
+                                }
+                                nodes.update({
+                                    id: subj_id, 
+                                    label:  subj_node_to_update['label'] + literal_label,
+                                });
                             }
-                            nodes.update({
-                                id: subj_id, 
-                                label:  subj_node_to_update['label'] + literal_label,
-                            });
                         }
                     }
                     else
-                        nodes.add([obj_node]);
+                         if (list_node_ids_already_added === undefined ||
+                                list_node_ids_already_added.indexOf(obj_node.id) < 0)
+                            nodes.add([obj_node]);
                 }
             }
         }
@@ -909,11 +923,22 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
                 let clicked_node = nodes.get(e.nodes[0]);
                 let position_clicked_node = network.getPosition(e.nodes[0]);
-                console.log(position_clicked_node);
                 if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                     clicked_node['expanded'] = true;
                     // fix all the current nodes
                     fix_release_nodes();
+                    let list_node_ids_already_added = [];
+                    let list_edge_ids_already_added = [];
+                    if (clicked_node.hasOwnProperty('child_nodes_list_content') && 
+                        clicked_node.child_nodes_list_content.length > 0) {{
+                        // get list of node ids not to be added
+                        for (j in clicked_node.child_nodes_list_content) {{
+                            let child_node_obj = JSON.parse(clicked_node.child_nodes_list_content[j][0]);
+                            let edge_obj =  JSON.parse(clicked_node.child_nodes_list_content[j][1]);
+                            list_node_ids_already_added.push(child_node_obj.id);
+                            list_edge_ids_already_added.push(edge_obj.id);
+                        }}
+                    }}
                     (async() => {{
                         const bindingsStreamCall = await myEngine.queryQuads(
                             format_query_clicked_node(clicked_node.id),
@@ -922,7 +947,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             }}
                         );
                         bindingsStreamCall.on('data', (binding) => {{
-                            process_binding(binding, position_clicked_node);
+                            process_binding(binding, position_clicked_node, list_node_ids_already_added, list_edge_ids_already_added);
                         }});
                         bindingsStreamCall.on('end', () => {{
                             let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
@@ -1001,6 +1026,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     f_stop_animation +
                                     f_fit_graph +
                                     f_apply_reduction_change +
+                                    f_generate_child_nodes +
                                     f_reset_graph +
                                     f_query_clicked_node_formatting +
                                     f_fix_release_nodes +
