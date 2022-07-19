@@ -255,10 +255,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             if (checked_reduction_id in graph_reductions_obj) {
                 let reduction_subset =  graph_reductions_obj[checked_reduction_id];
                 let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
-                let origin_node_type = reduction_subset["origin_node_type"];
                 let origin_node_list = nodes.get({
                     filter: function (item) {
-                        return (item.hasOwnProperty("type_name") && item.type_name == origin_node_type);
+                        return (item.hasOwnProperty("type_name") && item.type_name == checked_reduction_id);
                     }
                 });
                 if(check_box_element.checked) {
@@ -658,7 +657,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }
     '''
     f_process_binding = '''
-        function process_binding(binding, position_clicked_node, list_node_ids_already_added, list_edge_ids_already_added) {
+        function process_binding(binding, clicked_node, list_node_ids_already_added, list_edge_ids_already_added, node_reduction_obj) {
+            let checkbox_reduction;
+            if (clicked_node !== undefined && clicked_node.hasOwnProperty("type_name"))
+                checkbox_reduction = document.getElementById('reduction_config_' + clicked_node.type_name);
+        
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
@@ -713,7 +716,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                      }
             }
             
-            if (position_clicked_node) {
+            if (clicked_node !== undefined) {
+                let position_clicked_node = network.getPosition(clicked_node.id);
+                
                 subj_node['x'] = position_clicked_node.x;
                 subj_node['y'] = position_clicked_node.y;
                 
@@ -792,19 +797,22 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 }
             }
             else {
+                literal_predicate_index = edge_obj['title'].lastIndexOf("/");
+                literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
+                if (literal_predicate) {
+                    idx_hash = literal_predicate.indexOf("#");
+                    if (idx_hash)
+                      literal_predicate = literal_predicate.slice(idx_hash + 1); 
+                }
+                if(literal_predicate)
+                    edge_obj['title'] = literal_predicate;
                 if(!edges.get(edge_id) &&
                     (list_edge_ids_already_added === undefined ||
-                    list_edge_ids_already_added.indexOf(edge_id) < 0)) {
-                    literal_predicate_index = edge_obj['title'].lastIndexOf("/");
-                    literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
-                    if (literal_predicate) {
-                        idx_hash = literal_predicate.indexOf("#");
-                        if (idx_hash)
-                          literal_predicate = literal_predicate.slice(idx_hash + 1); 
-                    }
-                    if(literal_predicate) {
-                        edge_obj['title'] = literal_predicate;
-                    }
+                    list_edge_ids_already_added.indexOf(edge_id) < 0) && 
+                    (node_reduction_obj === undefined || 
+                    node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0 ||
+                        (node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) > -1 && 
+                        checkbox_reduction !== undefined && !checkbox_reduction.checked))) {
                     edge_obj['label'] = literal_predicate;
                     edges.add([edge_obj]);
                 }
@@ -922,16 +930,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         network.on("click", function(e) {{
             if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
                 let clicked_node = nodes.get(e.nodes[0]);
-                let position_clicked_node = network.getPosition(e.nodes[0]);
                 if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
                     clicked_node['expanded'] = true;
                     // fix all the current nodes
                     fix_release_nodes();
+                    // get list of node and edge ids not to be added
                     let list_node_ids_already_added = [];
                     let list_edge_ids_already_added = [];
                     if (clicked_node.hasOwnProperty('child_nodes_list_content') && 
                         clicked_node.child_nodes_list_content.length > 0) {{
-                        // get list of node ids not to be added
                         for (j in clicked_node.child_nodes_list_content) {{
                             let child_node_obj = JSON.parse(clicked_node.child_nodes_list_content[j][0]);
                             let edge_obj =  JSON.parse(clicked_node.child_nodes_list_content[j][1]);
@@ -939,6 +946,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             list_edge_ids_already_added.push(edge_obj.id);
                         }}
                     }}
+                    // get checked reductions checkboxes
+                    let node_reduction_obj = graph_reductions_obj[clicked_node.type_name];
                     (async() => {{
                         const bindingsStreamCall = await myEngine.queryQuads(
                             format_query_clicked_node(clicked_node.id),
@@ -947,7 +956,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             }}
                         );
                         bindingsStreamCall.on('data', (binding) => {{
-                            process_binding(binding, position_clicked_node, list_node_ids_already_added, list_edge_ids_already_added);
+                            process_binding(binding, clicked_node, list_node_ids_already_added, list_edge_ids_already_added, node_reduction_obj);
                         }});
                         bindingsStreamCall.on('end', () => {{
                             let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
