@@ -728,9 +728,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             
             if(!nodes.get(subj_id) &&
                 (list_node_ids_already_added === undefined ||
-                list_node_ids_already_added.indexOf(subj_id) < 0)) {
+                (list_node_ids_already_added.indexOf(subj_id) < 0 &&
+                    (checkbox_reduction !== undefined && !checkbox_reduction.checked))))
                 nodes.add([subj_node]); 
-            }
             
             if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
@@ -892,7 +892,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     }
                     else
                          if (list_node_ids_already_added === undefined ||
-                                list_node_ids_already_added.indexOf(obj_node.id) < 0)
+                                (list_node_ids_already_added.indexOf(obj_id) < 0 &&
+                                (checkbox_reduction !== undefined && !checkbox_reduction.checked)))
                             nodes.add([obj_node]);
                 }
             }
@@ -928,64 +929,66 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }});
         
         network.on("click", function(e) {{
-            if(e.nodes[0] && nodes.get(e.nodes[0])['clickable']) {{
-                let clicked_node = nodes.get(e.nodes[0]);
-                if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
-                    clicked_node['expanded'] = true;
-                    // fix all the current nodes
-                    fix_release_nodes();
-                    // get list of node and edge ids not to be added
-                    let list_node_ids_already_added = [];
-                    let list_edge_ids_already_added = [];
-                    if (clicked_node.hasOwnProperty('child_nodes_list_content') && 
-                        clicked_node.child_nodes_list_content.length > 0) {{
-                        for (j in clicked_node.child_nodes_list_content) {{
-                            let child_node_obj = JSON.parse(clicked_node.child_nodes_list_content[j][0]);
-                            let edge_obj =  JSON.parse(clicked_node.child_nodes_list_content[j][1]);
-                            list_node_ids_already_added.push(child_node_obj.id);
-                            list_edge_ids_already_added.push(edge_obj.id);
-                        }}
-                    }}
-                    // get checked reductions checkboxes
-                    let node_reduction_obj = graph_reductions_obj[clicked_node.type_name];
-                    (async() => {{
-                        const bindingsStreamCall = await myEngine.queryQuads(
-                            format_query_clicked_node(clicked_node.id),
-                            {{
-                                sources: [ store ]
-                            }}
-                        );
-                        bindingsStreamCall.on('data', (binding) => {{
-                            process_binding(binding, clicked_node, list_node_ids_already_added, list_edge_ids_already_added, node_reduction_obj);
-                        }});
-                        bindingsStreamCall.on('end', () => {{
-                            let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                            apply_layout(checked_radiobox);
-                        }});
-                        bindingsStreamCall.on('error', (error) => {{ 
-                            console.error(error);
-                        }});
-                    }})();
-                }}
-                else {{
-                    let connected_to_nodes = network.getConnectedNodes(clicked_node.id);
-                    let nodes_to_remove = [];
-                    let edges_to_remove = [];
-                    if (connected_to_nodes.length > 0) {{
-                        for (let i in connected_to_nodes) {{
-                            let connected_to_node = connected_to_nodes[i];
-                            connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
-                            if (connected_to_connected_to_node.length == 1) {{
-                                nodes_to_remove.push(connected_to_node);
-                                edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
+            if(e.nodes[0]) {{
+                if(nodes.get(e.nodes[0])['clickable']) {{
+                    let clicked_node = nodes.get(e.nodes[0]);
+                    if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
+                        clicked_node['expanded'] = true;
+                        // fix all the current nodes
+                        fix_release_nodes();
+                        // get list of node and edge ids not to be added
+                        let list_node_ids_already_added = [];
+                        let list_edge_ids_already_added = [];
+                        if (clicked_node.hasOwnProperty('child_nodes_list_content') && 
+                            clicked_node.child_nodes_list_content.length > 0) {{
+                            for (j in clicked_node.child_nodes_list_content) {{
+                                let child_node_obj = JSON.parse(clicked_node.child_nodes_list_content[j][0]);
+                                let edge_obj =  JSON.parse(clicked_node.child_nodes_list_content[j][1]);
+                                list_node_ids_already_added.push(child_node_obj.id);
+                                list_edge_ids_already_added.push(edge_obj.id);
                             }}
                         }}
+                        // get checked reductions checkboxes
+                        let node_reduction_obj = graph_reductions_obj[clicked_node.type_name];
+                        (async() => {{
+                            const bindingsStreamCall = await myEngine.queryQuads(
+                                format_query_clicked_node(clicked_node.id),
+                                {{
+                                    sources: [ store ]
+                                }}
+                            );
+                            bindingsStreamCall.on('data', (binding) => {{
+                                process_binding(binding, clicked_node, list_node_ids_already_added, list_edge_ids_already_added, node_reduction_obj);
+                            }});
+                            bindingsStreamCall.on('end', () => {{
+                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                                apply_layout(checked_radiobox);
+                            }});
+                            bindingsStreamCall.on('error', (error) => {{ 
+                                console.error(error);
+                            }});
+                        }})();
                     }}
-                    
-                    edges.remove(edges_to_remove);
-                    nodes.remove(nodes_to_remove);
-                    
-                    clicked_node['expanded'] = false;
+                    else {{
+                        let connected_to_nodes = network.getConnectedNodes(clicked_node.id);
+                        let nodes_to_remove = [];
+                        let edges_to_remove = [];
+                        if (connected_to_nodes.length > 0) {{
+                            for (let i in connected_to_nodes) {{
+                                let connected_to_node = connected_to_nodes[i];
+                                connected_to_connected_to_node = network.getConnectedNodes(connected_to_node);
+                                if (connected_to_connected_to_node.length == 1) {{
+                                    nodes_to_remove.push(connected_to_node);
+                                    edges_to_remove.push(...network.getConnectedEdges(connected_to_node));
+                                }}
+                            }}
+                        }}
+                        
+                        edges.remove(edges_to_remove);
+                        nodes.remove(nodes_to_remove);
+                        
+                        clicked_node['expanded'] = false;
+                    }}
                 }}
             }}
         }});
