@@ -725,13 +725,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 obj_node['x'] = position_clicked_node.x;
                 obj_node['y'] = position_clicked_node.y;
             }
-            
-            if(!nodes.get(subj_id) &&
-                (list_node_ids_already_added === undefined ||
-                (list_node_ids_already_added.indexOf(subj_id) < 0 &&
-                    (checkbox_reduction !== undefined && !checkbox_reduction.checked))))
-                nodes.add([subj_node]); 
-            
+            let type_name;
             if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
                 idx_slash = obj_id.lastIndexOf("/");
@@ -741,8 +735,30 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     if (idx_hash)
                         type_name = substr_q.slice(idx_hash + 1); 
                 }
-                subj_node_to_update = nodes.get(subj_id);
-                
+            }
+            
+            let literal_predicate_index = edge_obj['title'].lastIndexOf("/");
+            let literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
+            if (literal_predicate) {
+                idx_hash = literal_predicate.indexOf("#");
+                if (idx_hash)
+                  literal_predicate = literal_predicate.slice(idx_hash + 1); 
+            }
+            
+            if(!nodes.get(subj_id) &&
+                (list_node_ids_already_added === undefined ||
+                (list_node_ids_already_added.indexOf(subj_id) < 0 &&
+                ((checkbox_reduction !== null && !checkbox_reduction.checked) ||
+                    (checkbox_reduction !== null && checkbox_reduction.checked && node_reduction_obj !== undefined && 
+                        (literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0) &&
+                        (type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0)
+                    )
+                )))
+            )
+                nodes.add([subj_node]); 
+            
+            if(binding.predicate.value.endsWith('#type')) {
+                let subj_node_to_update = nodes.get(subj_id);
                 // check type_name property of the node ahs already been defined previously
                 if(subj_node_to_update !== null && !('type_name' in subj_node_to_update)) {
                     let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
@@ -797,13 +813,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 }
             }
             else {
-                literal_predicate_index = edge_obj['title'].lastIndexOf("/");
-                literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
-                if (literal_predicate) {
-                    idx_hash = literal_predicate.indexOf("#");
-                    if (idx_hash)
-                      literal_predicate = literal_predicate.slice(idx_hash + 1); 
-                }
                 if(literal_predicate)
                     edge_obj['title'] = literal_predicate;
                 if(!edges.get(edge_id) &&
@@ -891,9 +900,16 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         }
                     }
                     else
-                         if (list_node_ids_already_added === undefined ||
+                         if ((list_node_ids_already_added === undefined ||
                                 (list_node_ids_already_added.indexOf(obj_id) < 0 &&
-                                (checkbox_reduction !== undefined && !checkbox_reduction.checked)))
+                                ((checkbox_reduction !== null && !checkbox_reduction.checked) ||
+                                    (checkbox_reduction !== null && checkbox_reduction.checked && node_reduction_obj !== undefined && 
+                                        (literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0) &&
+                                        (type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0)
+                                    )
+                                )))
+                            )
+                                
                             nodes.add([obj_node]);
                 }
             }
