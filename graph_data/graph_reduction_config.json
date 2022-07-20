@@ -2,7 +2,7 @@
   "Action": {
     "name": "Inputs and outputs",
     "nodes_to_absorb": "CommandInput,CommandOutput",
-    "predicates_to_absorb": "hasOutputs,hasInputs"
+    "predicates_to_absorb": "hasOutputs,defaultValue,position,hasInputs"
   },
   "AstrophysicalImage": {
     "name": "AstrophysicalImage parameters",
