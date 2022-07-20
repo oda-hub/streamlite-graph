@@ -750,33 +750,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 obj_node['x'] = position_clicked_node.x;
                 obj_node['y'] = position_clicked_node.y;
             }
-            
-            let promises_array = [];
-            //
-            /*let type_name_obj;
-            if(!binding.predicate.value.endsWith('#type') && binding.object.termType !== "Literal") {
-                type_name_obj_promise = await query_type_node(obj_node["id"]);
-                const type_name_obj_promise_results = await type_name_obj_promise.toArray();
-                if (type_name_obj_promise_results.length == 1) {
-                    type_name_obj = extract_type_string(type_name_obj_promise_results[0].get('type').value);
-                }
-                promises_array.push(type_name_obj);
-            }*/
-            //
-            let type_name_subj;
             let type_name;
             if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
                 type_name_subj = extract_type_string(obj_id);
                 type_name_subj = type_name;
-            } /*else {
-                type_name_subj_promise = await query_type_node(subj_node["id"]);
-                const type_name_subj_promise_results = await type_name_subj_promise.toArray();
-                if (type_name_subj_promise_results.length == 1) {
-                    type_name_subj = extract_type_string(type_name_subj_promise_results[0].get('type').value);
-                }
-                promises_array.push(type_name_subj);
-            }*/
+            }
             //
             let literal_predicate_index = edge_obj['title'].lastIndexOf("/");
             let literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
