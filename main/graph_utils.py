@@ -492,6 +492,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }
     '''
 
+    f_extract_type_string = '''
+        function extract_type_string(string_to_parse) {
+            idx_slash = string_to_parse.lastIndexOf("/");
+            substr_q = string_to_parse.slice(idx_slash + 1); 
+            if (substr_q) {
+                idx_hash = substr_q.indexOf("#");
+                if (idx_hash)
+                    return type = substr_q.slice(idx_hash + 1); 
+            }
+        }
+    '''
+
     f_stop_animation = '''
         function stop_animation() {
             // fix_release_nodes(false);
@@ -529,6 +541,19 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 });
             })();
             
+        }
+    '''
+
+    f_query_node_type = '''
+        function query_type_node(node_id) {
+            let type;
+            let query = `SELECT ?type WHERE { <${node_id}> a ?type }`;
+            return myEngine.queryBindings(
+                query,
+                {
+                    sources: [ store ]
+                }
+            );
         }
     '''
 
@@ -725,18 +750,34 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 obj_node['x'] = position_clicked_node.x;
                 obj_node['y'] = position_clicked_node.y;
             }
+            
+            let promises_array = [];
+            //
+            /*let type_name_obj;
+            if(!binding.predicate.value.endsWith('#type') && binding.object.termType !== "Literal") {
+                type_name_obj_promise = await query_type_node(obj_node["id"]);
+                const type_name_obj_promise_results = await type_name_obj_promise.toArray();
+                if (type_name_obj_promise_results.length == 1) {
+                    type_name_obj = extract_type_string(type_name_obj_promise_results[0].get('type').value);
+                }
+                promises_array.push(type_name_obj);
+            }*/
+            //
+            let type_name_subj;
             let type_name;
             if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
-                idx_slash = obj_id.lastIndexOf("/");
-                substr_q = obj_id.slice(idx_slash + 1); 
-                if (substr_q) {
-                    idx_hash = substr_q.indexOf("#");
-                    if (idx_hash)
-                        type_name = substr_q.slice(idx_hash + 1); 
+                type_name_subj = extract_type_string(obj_id);
+                type_name_subj = type_name;
+            } /*else {
+                type_name_subj_promise = await query_type_node(subj_node["id"]);
+                const type_name_subj_promise_results = await type_name_subj_promise.toArray();
+                if (type_name_subj_promise_results.length == 1) {
+                    type_name_subj = extract_type_string(type_name_subj_promise_results[0].get('type').value);
                 }
-            }
-            
+                promises_array.push(type_name_subj);
+            }*/
+            //
             let literal_predicate_index = edge_obj['title'].lastIndexOf("/");
             let literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
             if (literal_predicate) {
@@ -745,19 +786,26 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                   literal_predicate = literal_predicate.slice(idx_hash + 1); 
             }
             
+            let type_node_not_to_be_absorbed = node_reduction_obj !== undefined && type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0;
+            let predicate_not_to_be_absorbed = node_reduction_obj !== undefined && literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0;
+            
             if(!nodes.get(subj_id) &&
                 (list_node_ids_already_added === undefined ||
                 (list_node_ids_already_added.indexOf(subj_id) < 0 &&
-                ((checkbox_reduction !== null && !checkbox_reduction.checked) ||
-                    (checkbox_reduction !== null && checkbox_reduction.checked && node_reduction_obj !== undefined && 
-                        (literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0) &&
-                        (type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0)
-                    )
+                 (checkbox_reduction === null || 
+                 (checkbox_reduction !== null && !checkbox_reduction.checked) ||
+                 (checkbox_reduction !== null && checkbox_reduction.checked && predicate_not_to_be_absorbed && type_node_not_to_be_absorbed)
+                )
                 )))
-            )
-                nodes.add([subj_node]); 
+                nodes.add([subj_node]);
+            else {
+                // add info in the node
+                
+            }
             
             if(binding.predicate.value.endsWith('#type')) {
+                // extract type name
+                type_name = extract_type_string(obj_id);
                 let subj_node_to_update = nodes.get(subj_id);
                 // check type_name property of the node ahs already been defined previously
                 if(subj_node_to_update !== null && !('type_name' in subj_node_to_update)) {
@@ -902,14 +950,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     else
                          if ((list_node_ids_already_added === undefined ||
                                 (list_node_ids_already_added.indexOf(obj_id) < 0 &&
-                                ((checkbox_reduction !== null && !checkbox_reduction.checked) ||
-                                    (checkbox_reduction !== null && checkbox_reduction.checked && node_reduction_obj !== undefined && 
-                                        (literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0) &&
-                                        (type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0)
-                                    )
+                                (checkbox_reduction === null || 
+                                 (checkbox_reduction !== null && !checkbox_reduction.checked) ||
+                                 (checkbox_reduction !== null && checkbox_reduction.checked && predicate_not_to_be_absorbed && type_node_not_to_be_absorbed)
                                 )))
                             )
-                                
                             nodes.add([obj_node]);
                 }
             }
@@ -1056,6 +1101,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     f_apply_reduction_change +
                                     f_generate_child_nodes +
                                     f_reset_graph +
+                                    f_extract_type_string +
+                                    f_query_node_type +
                                     f_query_clicked_node_formatting +
                                     f_fix_release_nodes +
                                     f_process_binding)
