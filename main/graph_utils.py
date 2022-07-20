@@ -751,18 +751,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 obj_node['y'] = position_clicked_node.y;
             }
             let type_name;
-            if(binding.predicate.value.endsWith('#type')) {
-                // extract type name
-                type_name_subj = extract_type_string(obj_id);
-                type_name_subj = type_name;
-            }
+            if(binding.predicate.value.endsWith('#type'))
+                type_name = extract_type_string(obj_id);
             //
             let literal_predicate_index = edge_obj['title'].lastIndexOf("/");
             let literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
             if (literal_predicate) {
                 idx_hash = literal_predicate.indexOf("#");
                 if (idx_hash)
-                  literal_predicate = literal_predicate.slice(idx_hash + 1); 
+                    literal_predicate = literal_predicate.slice(idx_hash + 1); 
             }
             
             let type_node_not_to_be_absorbed = node_reduction_obj !== undefined && type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0;
