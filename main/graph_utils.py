@@ -256,7 +256,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 let origin_node = origin_node_list[i];
                 let connected_edges = network.getConnectedEdges(origin_node.id);
                 let new_label = origin_node.label;
-                let original_label = origin_node.label;
                 let child_nodes_list_content = []
                 for (j in connected_edges) {
                     let connected_edge = edges.get(connected_edges[j]);
@@ -292,7 +291,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 nodes.update({ 
                     id: origin_node.id,
                     label: new_label,
-                    original_label: original_label,
                     child_nodes_list_content: child_nodes_list_content
                 });
             }
@@ -704,6 +702,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             subj_node = {
                 id: subj_id,
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
+                original_label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
                 clickable: true,
                 color: graph_config_obj_default['default']['color'],
@@ -735,6 +734,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             obj_node = {
                 id: obj_id,
                 label: binding.object.value ? binding.object.value : binding.object.id,
+                original_label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
                 clickable: true,
                 color: graph_config_obj_default['default']['color'],
@@ -820,6 +820,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         node_properties = graph_config_obj_default['default'];
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
+                                    original_label: subj_node_to_update['label'],
                                     title: subj_node_to_update['title'],
                                     type_name: type_name,
                                     displayed_type_name: node_properties['displayed_type_name'] ? node_properties['displayed_type_name'] : type_name,
@@ -910,7 +911,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 }
                                 nodes.update({
                                     id: subj_id, 
-                                    label:  subj_node_to_update['label'] + literal_label,
+                                    label: subj_node_to_update['label'] + literal_label,
+                                    original_label: subj_node_to_update['label'] + literal_label,
                                 });
                             }
                         }
@@ -955,7 +957,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 if(nodes.get(e.nodes[0])['clickable']) {{
                     let clicked_node = nodes.get(e.nodes[0]);
                     if (!('expanded' in clicked_node) || !clicked_node['expanded']) {{
-                        clicked_node['expanded'] = true;
+                        nodes.update({{
+                            id: clicked_node.id,
+                            expanded: true
+                        }});
                         // fix all the current nodes
                         fix_release_nodes();
                         let checkbox_reduction;
@@ -1020,10 +1025,11 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 }}
                             }}
                         }}
-                        let new_label = clicked_node.hasOwnProperty('original_label') ? clicked_node.original_label : clicked_node.label;
+                        
+                        let original_label = clicked_node.hasOwnProperty('original_label') ? clicked_node.original_label : clicked_node.label;
                         nodes.update({{
                             id: clicked_node.id,
-                            label: new_label,
+                            label: original_label,
                             child_nodes_list_content: [],
                             expanded: false
                         }});
