@@ -1,0 +1,100 @@
+@prefix ns1: <http://schema.org/> .
+@prefix ns3: <http://www.w3.org/ns/prov#> .
+@prefix ns4: <https://swissdatasciencecenter.github.io/renku-ontology#> .
+@prefix ns5: <http://purl.org/dc/terms/> .
+@prefix ns6: <http://www.w3.org/ns/oa#> .
+@prefix oda: <http://odahub.io/ontology#> .
+@prefix odas: <https://odahub.io/ontology#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<file:///home/gabriele/Workspace/renku-aqs/renku-aqs-test-case/0f6615bc-62ef-11ec-bfd9-c71647c8f78e> a oda:Run ;
+    oda:isRequestingAstroObject odas:AstroObjectMrk_421 ;
+    oda:isUsing odas:AQModuleSimbadClass ;
+    ns5:title "query_object_0f6615bc-62ef-11ec-bfd9-c71647c8f78e" ;
+    ns6:hasTarget <file:///activities/776a8ec01e594a369d8d6e3219a45d3e> .
+
+<file:///home/gabriele/Workspace/renku-aqs/renku-aqs-test-case/0f6615bd-62ef-11ec-bfd9-c71647c8f78e> a oda:Run ;
+    oda:isRequestingAstroRegion odas:AstroRegionbdba881e38a75f02bfbe5e1e36242cade6fe8487b191365f6904bc420d54533b ;
+    oda:isUsing odas:AQModuleSDSSClass ;
+    ns5:title "query_region_0f6615bd-62ef-11ec-bfd9-c71647c8f78e" ;
+    ns6:hasTarget <file:///activities/776a8ec01e594a369d8d6e3219a45d3e> .
+
+<file:///home/gabriele/Workspace/renku-aqs/renku-aqs-test-case/0f6615be-62ef-11ec-bfd9-c71647c8f78e> a oda:Run ;
+    oda:isRequestingAstroImage odas:AstroImage18f20077402d3dcb0808204f4ef4408e510c295074460c6f5e77ae303c51762e ;
+    oda:isUsing odas:AQModuleSkyViewClass ;
+    ns5:title "get_images_0f6615be-62ef-11ec-bfd9-c71647c8f78e" ;
+    ns6:hasTarget <file:///activities/776a8ec01e594a369d8d6e3219a45d3e> .
+
+<file:///activities/776a8ec01e594a369d8d6e3219a45d3e/association> ns3:hadPlan <file:///plans/7b971b36549e49dd84278c1b0c252bac> .
+
+<file:///plans/7b971b36549e49dd84278c1b0c252bac> a ns1:Action ;
+    ns4:command "papermill" ;
+    ns4:hasInputs <file:///plans/7b971b36549e49dd84278c1b0c252bac/inputs/1> ;
+    ns4:hasOutputs <file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/2>,
+        <file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/27209215053a4fb89da46105aad6438e>,
+        <file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/8055ab0c37bf4ba0ad758b4e622c1fa4>,
+        <file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/a5f49232eb624c2da03ffdf07b06e9b3>,
+        <file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/da9249f2d55e4eb78e9428357fc51cc5> .
+
+<file:///plans/7b971b36549e49dd84278c1b0c252bac/inputs/1> a ns4:CommandInput ;
+    ns1:defaultValue "final-an.ipynb" ;
+    ns4:position 1 .
+
+<file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/2> a ns4:CommandOutput ;
+    ns1:defaultValue "out.ipynb" ;
+    ns4:position 2 .
+
+<file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/27209215053a4fb89da46105aad6438e> a ns4:CommandOutput ;
+    ns1:defaultValue "figs/figure_spectrum.png" .
+
+<file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/8055ab0c37bf4ba0ad758b4e622c1fa4> a ns4:CommandOutput ;
+    ns1:defaultValue "figs/figure_sky_model.png" .
+
+<file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/a5f49232eb624c2da03ffdf07b06e9b3> a ns4:CommandOutput ;
+    ns1:defaultValue "figs/figure_time.png" .
+
+<file:///plans/7b971b36549e49dd84278c1b0c252bac/outputs/da9249f2d55e4eb78e9428357fc51cc5> a ns4:CommandOutput ;
+    ns1:defaultValue "figs/figure_sky.png" .
+
+odas:AQModuleSDSSClass a oda:AstroqueryModule ;
+    odas:AQModule "SDSSClass" .
+
+odas:AQModuleSimbadClass a oda:AstroqueryModule ;
+    odas:AQModule "SimbadClass" .
+
+odas:AQModuleSkyViewClass a oda:AstroqueryModule ;
+    odas:AQModule "SkyViewClass" .
+
+odas:Anglee8a905234095f81070077b05a31a4fc29e87eaabbbc902b8d16eebfc48c375dd a oda:Angle ;
+    ns5:title "3arcmin" .
+
+odas:AstroImage18f20077402d3dcb0808204f4ef4408e510c295074460c6f5e77ae303c51762e a oda:AstrophysicalImage ;
+    oda:isUsingCoordinates odas:Coordinatesfcc7c6ac1b62f84948cd4a19b2e4fa76033eec52f021777e32e8fc5e4a73c3e6 ;
+    oda:isUsingPixels odas:Pixels11eb5a5a0c0a63e5035e37fdf24bb94b469b8c25c5300d289358564f2617542a ;
+    oda:isUsingPosition odas:Position3380a95cd9c4ef95c9b99bd7f93ee5968e61e4e2b1cf7d99cd83027654314331 ;
+    ns5:title "11 04 27.3139,+38 12 31.798J2000_360,360" .
+
+odas:AstroObjectMrk_421 a oda:AstrophysicalObject ;
+    odas:AstroObject "Mrk 421" .
+
+odas:AstroRegionbdba881e38a75f02bfbe5e1e36242cade6fe8487b191365f6904bc420d54533b a oda:AstrophysicalRegion ;
+    oda:isUsingRadius odas:Anglee8a905234095f81070077b05a31a4fc29e87eaabbbc902b8d16eebfc48c375dd ;
+    oda:isUsingSkyCoordinates odas:SkyCoordinates953161d54a0f35a4afebd63349b69ee45f7efa1461ee1e5cf703bb545a63cd7d ;
+    ns5:title "3arcmin 166.114 38.2088" .
+
+odas:Coordinatesfcc7c6ac1b62f84948cd4a19b2e4fa76033eec52f021777e32e8fc5e4a73c3e6 a oda:Coordinates ;
+    ns5:title "J2000" .
+
+odas:Pixels11eb5a5a0c0a63e5035e37fdf24bb94b469b8c25c5300d289358564f2617542a a oda:Pixels ;
+    ns5:title "360,360" .
+
+odas:Position3380a95cd9c4ef95c9b99bd7f93ee5968e61e4e2b1cf7d99cd83027654314331 a oda:Position ;
+    ns5:title "11 04 27.3139,+38 12 31.798" .
+
+odas:SkyCoordinates953161d54a0f35a4afebd63349b69ee45f7efa1461ee1e5cf703bb545a63cd7d a oda:SkyCoordinates ;
+    ns5:title "166.114 38.2088" .
+
+<file:///activities/776a8ec01e594a369d8d6e3219a45d3e> a ns3:Activity ;
+    ns3:qualifiedAssociation <file:///activities/776a8ec01e594a369d8d6e3219a45d3e/association> ;
+    ns3:startedAtTime "2021-12-22T07:19:01+01:00"^^xsd:dateTime .
+
