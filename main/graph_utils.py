@@ -272,13 +272,20 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             nodes.remove(edge_nodes[0]);
                         }
                         if (origin_node.hasOwnProperty('child_nodes_list_content'))
-                            child_nodes_list_content = origin_node.child_nodes_list_content; 
-                        child_nodes_list_content.push([JSON.stringify(node_removed), JSON.stringify(connected_edge)]);
-                        
-                        let label_to_add = '\\n' + node_removed.displayed_type_name + ': ' + 
-                            node_removed.label.replaceAll('\\n', '')
-                                              .replaceAll(node_removed.displayed_type_name, '');
-                        new_label += label_to_add;
+                            child_nodes_list_content = origin_node.child_nodes_list_content;
+                        let node_removed_str = JSON.stringify(node_removed);
+                        let edge_removed_str = JSON.stringify(connected_edge);
+                        let matching_node_list_content = child_nodes_list_content.filter(function(el) {
+                            return ( el[0].indexOf('\"id\":\"' + node_removed.id + '\",') > -1 && 
+                                el[1].indexOf('\"id\":\"' + connected_edge.id + '\",') > -1 );
+                        }); 
+                        if (matching_node_list_content.length == 0) {
+                            child_nodes_list_content.push([node_removed_str, edge_removed_str]);
+                            let label_to_add = '\\n' + node_removed.displayed_type_name + ': ' + 
+                                node_removed.label.replaceAll('\\n', '')
+                                                  .replaceAll(node_removed.displayed_type_name, '');
+                            new_label += label_to_add;
+                        }
                         origin_node = nodes.get(origin_node.id);
                     }
                 }
