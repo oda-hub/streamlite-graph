@@ -250,55 +250,59 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     '''
 
     f_apply_reduction_change = '''
+    
+        function absorb_nodes(origin_node_list, predicates_to_absorb_list) {
+            for (i in origin_node_list) {
+                let origin_node = origin_node_list[i];
+                let connected_edges = network.getConnectedEdges(origin_node.id);
+                let new_label = origin_node.label;
+                let original_label = origin_node.label;
+                let child_nodes_list_content = []
+                for (j in connected_edges) {
+                    let connected_edge = edges.get(connected_edges[j]);
+                    if (predicates_to_absorb_list.indexOf(connected_edge.title) > -1) {
+                        let edge_nodes = network.getConnectedNodes(connected_edges[j]);
+                        edges.remove(connected_edges[j]);
+                        let node_removed = nodes.get(edge_nodes[1]);
+                        if (edge_nodes[0] == origin_node.id) {
+                            nodes.remove(edge_nodes[1]);
+                        }
+                        else {
+                            node_removed = nodes.get(edge_nodes[0]);
+                            nodes.remove(edge_nodes[0]);
+                        }
+                        if (origin_node.hasOwnProperty('child_nodes_list_content'))
+                            child_nodes_list_content = origin_node.child_nodes_list_content; 
+                        child_nodes_list_content.push([JSON.stringify(node_removed), JSON.stringify(connected_edge)]);
+                        
+                        let label_to_add = '\\n' + node_removed.displayed_type_name + ': ' + 
+                            node_removed.label.replaceAll('\\n', '')
+                                              .replaceAll(node_removed.displayed_type_name, '');
+                        new_label += label_to_add;
+                        origin_node = nodes.get(origin_node.id);
+                    }
+                }
+                nodes.update({ 
+                    id: origin_node.id,
+                    label: new_label,
+                    original_label: original_label,
+                    child_nodes_list_content: child_nodes_list_content
+                });
+            }
+        }
+    
         function apply_reduction_change(check_box_element) {
             let checked_reduction_id = check_box_element.id.replace("reduction_config_", "");
             if (checked_reduction_id in graph_reductions_obj) {
-                let reduction_subset =  graph_reductions_obj[checked_reduction_id];
-                let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
                 let origin_node_list = nodes.get({
                     filter: function (item) {
                         return (item.hasOwnProperty("type_name") && item.type_name == checked_reduction_id);
                     }
                 });
                 if(check_box_element.checked) {
-                    for (i in origin_node_list) {
-                        let origin_node = origin_node_list[i];
-                        let connected_edges = network.getConnectedEdges(origin_node.id);
-                        let new_label = origin_node.label;
-                        let longest_line = -1;
-                        let original_label = origin_node.label;
-                        let child_nodes_list_content = []
-                        for (j in connected_edges) {
-                            let connected_edge = edges.get(connected_edges[j]);
-                            if (predicates_to_absorb_list.indexOf(connected_edge.title) > -1) {
-                                let edge_nodes = network.getConnectedNodes(connected_edges[j]);
-                                edges.remove(connected_edges[j]);
-                                let node_removed = nodes.get(edge_nodes[1]);
-                                if (edge_nodes[0] == origin_node.id) {
-                                    nodes.remove(edge_nodes[1]);
-                                }
-                                else {
-                                    node_removed = nodes.get(edge_nodes[0]);
-                                    nodes.remove(edge_nodes[0]);
-                                }
-                                if (origin_node.hasOwnProperty('child_nodes_list_content'))
-                                    child_nodes_list_content = origin_node.child_nodes_list_content; 
-                                child_nodes_list_content.push([JSON.stringify(node_removed), JSON.stringify(connected_edge)]);
-                                
-                                let label_to_add = '\\n' + node_removed.displayed_type_name + ': ' + 
-                                    node_removed.label.replaceAll('\\n', '')
-                                                      .replaceAll(node_removed.displayed_type_name, '');
-                                new_label += label_to_add;
-                                origin_node = nodes.get(origin_node.id);
-                            }
-                        }
-                        nodes.update({ 
-                            id: origin_node.id,
-                            label: new_label,
-                            original_label: original_label,
-                            child_nodes_list_content: child_nodes_list_content
-                        });
-                    }
+                    let reduction_subset =  graph_reductions_obj[checked_reduction_id];
+                    let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
+                    absorb_nodes(origin_node_list, predicates_to_absorb_list);
                 } else {
                     for (i in origin_node_list) {
                         // fix all the current nodes
@@ -567,18 +571,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 let filter_o = '';
                 let filter_p_literal = '';
                 for (let prefix_idx in prefixes_graph) {
-                        let checkbox_config = document.getElementById(prefix_idx + '_filter');
-                        if (checkbox_config !== null && !checkbox_config.checked) {
-                            let values_input = checkbox_config.value.split(",");
-                            for (let value_input_idx in values_input) {
-                                filter_s_type += `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
-                                filter_s += `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
-                                filter_o_type += `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
-                                filter_o += `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
-                                filter_p_literal += `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
-                            }
+                    let checkbox_config = document.getElementById(prefix_idx + '_filter');
+                    if (checkbox_config !== null && !checkbox_config.checked) {
+                        let values_input = checkbox_config.value.split(",");
+                        for (let value_input_idx in values_input) {
+                            filter_s_type += `FILTER ( ! STRSTARTS(STR(?s_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                            filter_s += `FILTER ( ! STRSTARTS(STR(?s), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                            filter_o_type += `FILTER ( ! STRSTARTS(STR(?o_type), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                            filter_o += `FILTER ( ! STRSTARTS(STR(?o), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
+                            filter_p_literal += `FILTER ( ! STRSTARTS(STR(?p_literal), "${prefixes_graph[values_input[value_input_idx].trim()]}") ). `;
                         }
                     }
+                }
 
                 let query = `CONSTRUCT {
                     ?s ?p <${clicked_node_id}> ;
@@ -762,17 +766,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     literal_predicate = literal_predicate.slice(idx_hash + 1); 
             }
             
-            let type_node_not_to_be_absorbed = node_reduction_obj !== undefined && type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0;
-            let predicate_not_to_be_absorbed = node_reduction_obj !== undefined && literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0;
+            //let type_node_not_to_be_absorbed = node_reduction_obj !== undefined && type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0;
+            //let predicate_not_to_be_absorbed = node_reduction_obj !== undefined && literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0;
             
-            if(!nodes.get(subj_id) &&
+            if(!nodes.get(subj_id) /* &&
                 (list_node_ids_already_added === undefined ||
                 (list_node_ids_already_added.indexOf(subj_id) < 0 &&
                  (checkbox_reduction === null || 
                  (checkbox_reduction !== null && !checkbox_reduction.checked) ||
                  (checkbox_reduction !== null && checkbox_reduction.checked && predicate_not_to_be_absorbed && type_node_not_to_be_absorbed)
                 )
-                )))
+                ))*/
+                )
                 nodes.add([subj_node]);
             else {
                 // add info in the node
@@ -839,13 +844,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             else {
                 if(literal_predicate)
                     edge_obj['title'] = literal_predicate;
-                if(!edges.get(edge_id) &&
+                if(!edges.get(edge_id) /* &&
                     (list_edge_ids_already_added === undefined ||
                     list_edge_ids_already_added.indexOf(edge_id) < 0) && 
                     (node_reduction_obj === undefined || 
                     node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0 ||
                         (node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) > -1 && 
-                        checkbox_reduction !== undefined && !checkbox_reduction.checked))) {
+                        checkbox_reduction !== undefined && !checkbox_reduction.checked)) */ ) {
                     edge_obj['label'] = literal_predicate;
                     edges.add([edge_obj]);
                 }
@@ -924,13 +929,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         }
                     }
                     else
-                         if ((list_node_ids_already_added === undefined ||
+                         /*if ((list_node_ids_already_added === undefined ||
                                 (list_node_ids_already_added.indexOf(obj_id) < 0 &&
                                 (checkbox_reduction === null || 
                                  (checkbox_reduction !== null && !checkbox_reduction.checked) ||
                                  (checkbox_reduction !== null && checkbox_reduction.checked && predicate_not_to_be_absorbed && type_node_not_to_be_absorbed)
                                 )))
-                            )
+                            )*/
                             nodes.add([obj_node]);
                 }
             }
@@ -998,6 +1003,22 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 process_binding(binding, clicked_node, list_node_ids_already_added, list_edge_ids_already_added, node_reduction_obj);
                             }});
                             bindingsStreamCall.on('end', () => {{
+                                if (clicked_node !== undefined && clicked_node.hasOwnProperty("type_name")) {{
+                                    let checkbox_reduction = document.getElementById('reduction_config_' + clicked_node.type_name);
+                                    if (checkbox_reduction !== null && clicked_node.type_name in graph_reductions_obj) {{
+                                        let reduction_subset =  graph_reductions_obj[clicked_node.type_name];
+                                        let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
+                                        let origin_node_list = nodes.get({{
+                                            filter: function (item) {{
+                                                return (item.hasOwnProperty("type_name") && item.type_name == clicked_node.type_name);
+                                            }}
+                                        }});
+                                        if(checkbox_reduction.checked) {{
+                                            absorb_nodes(origin_node_list, predicates_to_absorb_list);
+                                        }}
+                                    }}
+                                }}
+                                
                                 let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
                                 apply_layout(checked_radiobox);
                             }});
