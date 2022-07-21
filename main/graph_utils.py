@@ -974,9 +974,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         apply_invisibility_new_nodes = false;
                         if (clicked_node.hasOwnProperty("type_name")) {{
                             checkbox_reduction = document.getElementById('reduction_config_' + clicked_node.type_name);
-                            if(checkbox_reduction !== null && checkbox_reduction.checked)
-                                apply_invisibility_new_nodes = true;
                         }}
+                        apply_invisibility_new_nodes = true;
                         (async() => {{
                             const bindingsStreamCall = await myEngine.queryQuads(
                                 format_query_clicked_node(clicked_node.id),
@@ -988,7 +987,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 process_binding(binding, clicked_node, apply_invisibility_new_nodes);
                             }});
                             bindingsStreamCall.on('end', () => {{
-                                if (checkbox_reduction !== null && clicked_node.type_name in graph_reductions_obj) {{
+                                // apply layout
+                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                                apply_layout(checked_radiobox);
+                                //
+                                if (checkbox_reduction !== undefined &&
+                                    checkbox_reduction !== null &&
+                                    clicked_node.type_name in graph_reductions_obj) {{
                                     let reduction_subset =  graph_reductions_obj[clicked_node.type_name];
                                     let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
                                     let origin_node_list = nodes.get({{
@@ -1009,9 +1014,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 hidden_nodes_ids.forEach(node => {{
                                     nodes.update({{id: node.id, hidden: false}});
                                 }});
-                                // apply layout
-                                let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                                apply_layout(checked_radiobox);
                             }});
                             bindingsStreamCall.on('error', (error) => {{ 
                                 console.error(error);
