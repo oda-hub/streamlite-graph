@@ -523,7 +523,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     f_stop_animation = '''
         function stop_animation() {
-            network.setOptions( { "physics": { enabled: false } } );
+            if (network.physics.options.enabled)
+                network.setOptions( { "physics": { enabled: false } } );
         }
     '''
 
