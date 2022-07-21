@@ -261,15 +261,19 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     let connected_edge = edges.get(connected_edges[j]);
                     if (predicates_to_absorb_list.indexOf(connected_edge.title) > -1) {
                         let edge_nodes = network.getConnectedNodes(connected_edges[j]);
-                        edges.remove(connected_edges[j]);
                         let node_removed = nodes.get(edge_nodes[1]);
                         if (edge_nodes[0] == origin_node.id) {
-                            nodes.remove(edge_nodes[1]);
+                            let connected_edges_node_to_remove = network.getConnectedEdges(edge_nodes[1]);
+                            if (connected_edges_node_to_remove.length == 1)
+                                nodes.remove(edge_nodes[1]);
                         }
                         else {
                             node_removed = nodes.get(edge_nodes[0]);
-                            nodes.remove(edge_nodes[0]);
+                            let connected_edges_node_to_remove = network.getConnectedEdges(edge_nodes[0]);
+                            if (connected_edges_node_to_remove.length == 1)
+                                nodes.remove(edge_nodes[0]);
                         }
+                        edges.remove(connected_edges[j]);
                         if (origin_node.hasOwnProperty('child_nodes_list_content'))
                             child_nodes_list_content = origin_node.child_nodes_list_content;
                         let node_removed_str = JSON.stringify(node_removed);
@@ -335,8 +339,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 child_node_obj['x'] = position_origin_node.x;
                 child_node_obj['y'] = position_origin_node.y;
                 child_node_obj['hidden'] = false;
-                nodes.add([child_node_obj]);
-                edges.add([edge_obj]);
+                if(!nodes.get(child_node_obj.id))
+                    nodes.add([child_node_obj]);
+                if(!edges.get(edge_obj.id))
+                    edges.add([edge_obj]);
             }
             nodes.update({ 
                 id: origin_node.id,
