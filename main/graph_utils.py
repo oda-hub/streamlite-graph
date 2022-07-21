@@ -960,7 +960,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         fix_release_nodes();
                         let checkbox_reduction;
                         apply_invisibility_new_nodes = false;
-                        if (clicked_node !== undefined && clicked_node.hasOwnProperty("type_name")) {{
+                        if (clicked_node.hasOwnProperty("type_name")) {{
                             checkbox_reduction = document.getElementById('reduction_config_' + clicked_node.type_name);
                             if(checkbox_reduction !== null && checkbox_reduction.checked)
                                 apply_invisibility_new_nodes = true;
@@ -1020,6 +1020,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 }}
                             }}
                         }}
+                        let new_label = clicked_node.hasOwnProperty('original_label') ? clicked_node.original_label : clicked_node.label;
+                        nodes.update({{
+                            id: clicked_node.id,
+                            label: new_label,
+                            child_nodes_list_content: []
+                        }});
                         
                         edges.remove(edges_to_remove);
                         nodes.remove(nodes_to_remove);
