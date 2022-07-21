@@ -310,15 +310,17 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
                     absorb_nodes(origin_node_list, predicates_to_absorb_list);
                 } else {
+                    fix_release_nodes();
                     for (i in origin_node_list) {
                         // fix all the current nodes
-                        fix_release_nodes();
                         let origin_node = origin_node_list[i];
                         if (origin_node.hasOwnProperty('child_nodes_list_content') && 
                             origin_node.child_nodes_list_content.length > 0) {
                             draw_child_nodes(origin_node);
                         }
                     }
+                    let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
+                    apply_layout(checked_radiobox);
                 }
             }
         }
@@ -331,7 +333,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 let child_node_obj = JSON.parse(origin_node.child_nodes_list_content[j][0]);
                 let edge_obj = JSON.parse(origin_node.child_nodes_list_content[j][1]);
                 child_node_obj['x'] = position_origin_node.x;
-                child_node_obj['y'] = position_origin_node.y; 
+                child_node_obj['y'] = position_origin_node.y;
+                child_node_obj['hidden'] = false;
                 nodes.add([child_node_obj]);
                 edges.add([edge_obj]);
             }
@@ -340,8 +343,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 label: origin_node.original_label,
                 child_nodes_list_content: []
             });
-            let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-            apply_layout(checked_radiobox);
         }
     '''
 
@@ -516,7 +517,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     f_stop_animation = '''
         function stop_animation() {
-            // fix_release_nodes(false);
             network.setOptions( { "physics": { enabled: false } } );
         }
     '''
