@@ -686,11 +686,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }
     '''
     f_process_binding = '''
-        function process_binding(binding, clicked_node, list_node_ids_already_added, list_edge_ids_already_added, node_reduction_obj) {
-            let checkbox_reduction;
-            if (clicked_node !== undefined && clicked_node.hasOwnProperty("type_name"))
-                checkbox_reduction = document.getElementById('reduction_config_' + clicked_node.type_name);
-        
+        function process_binding(binding, clicked_node, apply_invisibility_new_nodes) {
+            if (apply_invisibility_new_nodes === undefined || apply_invisibility_new_nodes === null)
+                apply_invisibility_new_nodes = false;
+                
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
@@ -709,6 +708,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 level: graph_config_obj_default['default']['level'],
                 config_file: graph_config_obj_default['default']['config_file'],
                 margin: graph_config_obj_default['default']['margin'],
+                hidden: apply_invisibility_new_nodes,
                 font: {
                       'multi': "html",
                       'face': "courier",
@@ -739,6 +739,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 config_file: graph_config_obj_default['default']['config_file'],
                 level: graph_config_obj_default['default']['level'],
                 margin: graph_config_obj_default['default']['margin'],
+                hidden: apply_invisibility_new_nodes,
                 font: {
                       'multi': "html",
                       'face': "courier",
@@ -766,23 +767,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     literal_predicate = literal_predicate.slice(idx_hash + 1); 
             }
             
-            //let type_node_not_to_be_absorbed = node_reduction_obj !== undefined && type_name !== null && node_reduction_obj["nodes_to_absorb"].indexOf(type_name) < 0;
-            //let predicate_not_to_be_absorbed = node_reduction_obj !== undefined && literal_predicate !== null && node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0;
-            
-            if(!nodes.get(subj_id) /* &&
-                (list_node_ids_already_added === undefined ||
-                (list_node_ids_already_added.indexOf(subj_id) < 0 &&
-                 (checkbox_reduction === null || 
-                 (checkbox_reduction !== null && !checkbox_reduction.checked) ||
-                 (checkbox_reduction !== null && checkbox_reduction.checked && predicate_not_to_be_absorbed && type_node_not_to_be_absorbed)
-                )
-                ))*/
-                )
+            if(!nodes.get(subj_id))
                 nodes.add([subj_node]);
-            else {
-                // add info in the node
-                
-            }
             
             if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
@@ -844,13 +830,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             else {
                 if(literal_predicate)
                     edge_obj['title'] = literal_predicate;
-                if(!edges.get(edge_id) /* &&
-                    (list_edge_ids_already_added === undefined ||
-                    list_edge_ids_already_added.indexOf(edge_id) < 0) && 
-                    (node_reduction_obj === undefined || 
-                    node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) < 0 ||
-                        (node_reduction_obj["predicates_to_absorb"].indexOf(literal_predicate) > -1 && 
-                        checkbox_reduction !== undefined && !checkbox_reduction.checked)) */ ) {
+                if(!edges.get(edge_id)) {
                     edge_obj['label'] = literal_predicate;
                     edges.add([edge_obj]);
                 }
@@ -929,14 +909,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         }
                     }
                     else
-                         /*if ((list_node_ids_already_added === undefined ||
-                                (list_node_ids_already_added.indexOf(obj_id) < 0 &&
-                                (checkbox_reduction === null || 
-                                 (checkbox_reduction !== null && !checkbox_reduction.checked) ||
-                                 (checkbox_reduction !== null && checkbox_reduction.checked && predicate_not_to_be_absorbed && type_node_not_to_be_absorbed)
-                                )))
-                            )*/
-                            nodes.add([obj_node]);
+                        nodes.add([obj_node]);
                 }
             }
         }
@@ -978,20 +951,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         clicked_node['expanded'] = true;
                         // fix all the current nodes
                         fix_release_nodes();
-                        // get list of node and edge ids not to be added
-                        let list_node_ids_already_added = [];
-                        let list_edge_ids_already_added = [];
-                        if (clicked_node.hasOwnProperty('child_nodes_list_content') && 
-                            clicked_node.child_nodes_list_content.length > 0) {{
-                            for (j in clicked_node.child_nodes_list_content) {{
-                                let child_node_obj = JSON.parse(clicked_node.child_nodes_list_content[j][0]);
-                                let edge_obj =  JSON.parse(clicked_node.child_nodes_list_content[j][1]);
-                                list_node_ids_already_added.push(child_node_obj.id);
-                                list_edge_ids_already_added.push(edge_obj.id);
-                            }}
+                        let checkbox_reduction;
+                        apply_invisibility_new_nodes = false;
+                        if (clicked_node !== undefined && clicked_node.hasOwnProperty("type_name")) {{
+                            checkbox_reduction = document.getElementById('reduction_config_' + clicked_node.type_name);
+                            if(checkbox_reduction !== null && checkbox_reduction.checked)
+                                apply_invisibility_new_nodes = true;
                         }}
-                        // get checked reductions checkboxes
-                        let node_reduction_obj = graph_reductions_obj[clicked_node.type_name];
                         (async() => {{
                             const bindingsStreamCall = await myEngine.queryQuads(
                                 format_query_clicked_node(clicked_node.id),
@@ -1000,25 +966,31 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                 }}
                             );
                             bindingsStreamCall.on('data', (binding) => {{
-                                process_binding(binding, clicked_node, list_node_ids_already_added, list_edge_ids_already_added, node_reduction_obj);
+                                process_binding(binding, clicked_node, apply_invisibility_new_nodes);
                             }});
                             bindingsStreamCall.on('end', () => {{
-                                if (clicked_node !== undefined && clicked_node.hasOwnProperty("type_name")) {{
-                                    let checkbox_reduction = document.getElementById('reduction_config_' + clicked_node.type_name);
-                                    if (checkbox_reduction !== null && clicked_node.type_name in graph_reductions_obj) {{
-                                        let reduction_subset =  graph_reductions_obj[clicked_node.type_name];
-                                        let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
-                                        let origin_node_list = nodes.get({{
-                                            filter: function (item) {{
-                                                return (item.hasOwnProperty("type_name") && item.type_name == clicked_node.type_name);
-                                            }}
-                                        }});
-                                        if(checkbox_reduction.checked) {{
-                                            absorb_nodes(origin_node_list, predicates_to_absorb_list);
+                                if (checkbox_reduction !== null && clicked_node.type_name in graph_reductions_obj) {{
+                                    let reduction_subset =  graph_reductions_obj[clicked_node.type_name];
+                                    let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
+                                    let origin_node_list = nodes.get({{
+                                        filter: function (item) {{
+                                            return (item.hasOwnProperty("type_name") && item.type_name == clicked_node.type_name);
                                         }}
+                                    }});
+                                    if(checkbox_reduction.checked) {{
+                                        absorb_nodes(origin_node_list, predicates_to_absorb_list);
                                     }}
                                 }}
-                                
+                                // show any hidden nodes
+                                const hidden_nodes_ids = nodes.get({{
+                                    filter: function (item) {{
+                                        return (item.hasOwnProperty("hidden") && item.hidden === true);
+                                    }}
+                                }});
+                                hidden_nodes_ids.forEach(node => {{
+                                    nodes.update({{id: node.id, hidden: false}});
+                                }});
+                                // apply layout
                                 let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
                                 apply_layout(checked_radiobox);
                             }});
