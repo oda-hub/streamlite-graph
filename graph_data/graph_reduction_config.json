@@ -1,14 +1,14 @@
 {
   "Action": {
     "name": "Inputs and outputs",
-    "predicates_to_absorb": "hasOutputs,position,defaultValue,hasInputs"
+    "predicates_to_absorb": "hasOutputs,hasInputs"
   },
   "AstrophysicalImage": {
     "name": "AstrophysicalImage parameters",
-    "predicates_to_absorb": "isUsingPosition,title,isUsingPixels,isUsingCoordinates"
+    "predicates_to_absorb": "isUsingPosition,isUsingCoordinates"
   },
   "AstrophysicalRegion": {
     "name": "AstrophysicalRegion parameters",
-    "predicates_to_absorb": "isUsingRadius,title,isUsingSkyCoordinates"
+    "predicates_to_absorb": "isUsingRadius,isUsingSkyCoordinates"
   }
 }
