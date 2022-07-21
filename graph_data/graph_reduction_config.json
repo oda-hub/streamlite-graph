@@ -5,7 +5,7 @@
   },
   "AstrophysicalImage": {
     "name": "AstrophysicalImage parameters",
-    "predicates_to_absorb": "isUsingPosition,isUsingCoordinates,isUsingPixels"
+    "predicates_to_absorb": "isUsingPosition,isUsingCoordinates,isUsingPixels,isUsingRadius"
   },
   "AstrophysicalRegion": {
     "name": "AstrophysicalRegion parameters",
