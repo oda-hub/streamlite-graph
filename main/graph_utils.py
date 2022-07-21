@@ -1024,13 +1024,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         nodes.update({{
                             id: clicked_node.id,
                             label: new_label,
-                            child_nodes_list_content: []
+                            child_nodes_list_content: [],
+                            expanded: false
                         }});
                         
                         edges.remove(edges_to_remove);
                         nodes.remove(nodes_to_remove);
-                        
-                        clicked_node['expanded'] = false;
                     }}
                 }}
             }}
