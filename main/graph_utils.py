@@ -298,6 +298,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     
         function apply_reduction_change(check_box_element) {
             let checked_reduction_id = check_box_element.id.replace("reduction_config_", "");
+            
             if (checked_reduction_id in graph_reductions_obj) {
                 let origin_node_list = nodes.get({
                     filter: function (item) {
@@ -986,7 +987,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                                     let predicates_to_absorb_list = reduction_subset["predicates_to_absorb"].split(",");
                                     let origin_node_list = nodes.get({{
                                         filter: function (item) {{
-                                            return (item.hasOwnProperty("type_name") && item.type_name == clicked_node.type_name);
+                                            return (item.id === clicked_node.id);
                                         }}
                                     }});
                                     if(checkbox_reduction.checked) {{
