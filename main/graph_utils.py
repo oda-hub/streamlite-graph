@@ -690,12 +690,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             }
             '''
     f_fix_release_nodes = '''
-        function fix_release_nodes(fix) {
+        function fix_release_nodes(fix, node_id) {
             if (fix === undefined)
                 fix = true;
-            nodes.forEach(node => {
-                nodes.update({id: node.id, fixed: fix});
-            });
+            if (node_id === undefined)
+                nodes.forEach(node => {
+                    nodes.update({id: node.id, fixed: fix});
+                });
+            else
+                nodes.update({id: node_id, fixed: fix});
         }
     '''
     f_process_binding = '''
@@ -956,8 +959,9 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
         }});
         
         network.on("dragStart", function (e) {{
-            stop_animation();    
-            fix_release_nodes(false);    
+            stop_animation();
+            if(e.nodes[0])
+                fix_release_nodes(false, e.nodes[0]);
         }});
         
         network.on("click", function(e) {{
