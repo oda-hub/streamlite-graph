@@ -467,7 +467,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     
                     let name_span = document.createElement("span");
                     name_span.setAttribute("style", "margin-left: 20px;");
-                    name_span.innerText = config;
+                    
+                    let legend_label = config;
+                    if (graph_config_obj[config].hasOwnProperty("displayed_type_name"))
+                        legend_label = graph_config_obj[config].displayed_type_name;
+                    
+                    name_span.innerText = legend_label;
                     
                     outer_li.appendChild(color_span);
                     outer_li.appendChild(name_span);
@@ -709,6 +714,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             let subj_id = binding.subject.id ? binding.subject.id : binding.subject.value;
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
+            
+            console.log(binding.predicate);
             
             subj_node = {
                 id: subj_id,
