@@ -521,13 +521,28 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                 let nodes_graph_config_obj_asArray = Object.entries(nodes_graph_config_obj);
                 let node_config_subset = nodes_graph_config_obj_asArray.filter(config => 'config_' + config[1].config_file === checked_config_id);
                 for (let config_idx in node_config_subset) {
-                    let node_properties = node_config_subset[config_idx][1];
+                    // let node_properties = node_config_subset[config_idx][1];
+                    let node_properties =  { ... graph_node_config_obj_default['default'], ... node_config_subset[config_idx][1]};
                     let nodes_to_update = nodes.get({
                         filter: function (node) {
                             return (node.type_name === node_config_subset[config_idx][0]);
                         }
                     });
-                    update_nodes(nodes_to_update, node_properties);
+                    // update_nodes(nodes_to_update, node_properties);
+                    for (let i in nodes_to_update) {
+                        node_to_update_id = nodes_to_update[i]['id'];
+                        nodes.update({ 
+                            id: node_to_update_id,
+                            color: node_properties['color'],
+                            border: node_properties['color'],
+                            cellborder: node_properties['color'],
+                            shape: node_properties['shape'],
+                            style: node_properties['style'],
+                            value: node_properties['value'],
+                            config_file: node_properties['config_file'],
+                            label: nodes_to_update[i]['original_label']
+                        });
+                    }
                 }
                 for (let config_idx in edge_config_subset) {
                     // let edge_properties = edge_config_subset[config_idx][1];
@@ -556,8 +571,23 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                         return ('config_' + node.config_file === checked_config_id);
                     }
                 });
-                update_nodes(nodes_to_update, graph_node_config_obj_default['default']);
-                
+                // update_nodes(nodes_to_update, graph_node_config_obj_default['default']);
+                let node_properties = graph_node_config_obj_default['default'];
+                for (let i in nodes_to_update) {
+                    node_to_update_id = nodes_to_update[i]['id'];
+                    nodes.update({ 
+                        id: node_to_update_id,
+                        color: node_properties['color'],
+                        border: node_properties['color'],
+                        cellborder: node_properties['color'],
+                        shape: node_properties['shape'],
+                        style: node_properties['style'],
+                        value: node_properties['value'],
+                        config_file: node_properties['config_file'],
+                        label: nodes_to_update[i]['default_label']
+                    });
+                }       
+                         
                 let edge_properties = graph_edge_config_obj_default['default'];
                 let edges_to_update = edges.get({
                     filter: function (edge) {
@@ -893,10 +923,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                     }
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
-                    if(checkbox_config && !checkbox_config.checked)
+                    if(checkbox_config && !checkbox_config.checked) {
                         node_properties = graph_node_config_obj_default['default'];
+                        subj_node_to_update['label'] = type_name;
+                    }
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
+                                    default_label: type_name,
                                     original_label: subj_node_to_update['label'],
                                     title: subj_node_to_update['title'],
                                     type_name: type_name,
