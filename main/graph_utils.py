@@ -956,8 +956,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                     if (idx_hash)
                         literal_predicate = literal_predicate.slice(idx_hash + 1); 
                 }
-                if(literal_predicate)
+                if(literal_predicate) {
+                    edge_obj['prefix'] = edge_obj['title'].replace(literal_predicate, '');
                     edge_obj['title'] = literal_predicate;
+                }
                 if(!edges.get(edge_id)) {
                     
                     let edge_properties =  { ... graph_edge_config_obj_default['default'], ... (edges_graph_config_obj[edge_obj['title']] ? edges_graph_config_obj[edge_obj['title']] : graph_edge_config_obj_default['default'])};
@@ -1113,14 +1115,12 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                     if (checkbox_config !== null && !checkbox_config.checked) {{
                                         let values_input = checkbox_config.value.split(",");
                                         for (let value_input_idx in values_input) {{
-                                            // "${{prefixes_graph[values_input[value_input_idx].trim()]}}"
-                                            let origin_node_list = nodes.get({{
+                                            let nodes_to_remove = nodes.get({{
                                                 filter: function (item) {{
                                                     return (item.prefix === prefixes_graph[values_input[value_input_idx].trim()]);
                                                 }}
                                             }});
-                                            // console.log(origin_node_list);
-                                            nodes.remove(origin_node_list);
+                                            nodes.remove(nodes_to_remove);
                                         }}
                                     }}
                                 }}
@@ -1152,6 +1152,14 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                 hidden_nodes_ids.forEach(node => {{
                                     nodes.update({{id: node.id, hidden: false}});
                                 }});
+                                // remove edges that are not visible because one of the connected nodes has been rmeoved
+                                let edges_to_remove = edges.get({{
+                                    filter: function (item) {{
+                                        return (nodes.get(item.from) === null || nodes.get(item.to) === null);
+                                    }}
+                                }});
+                                edges.remove(edges_to_remove);
+                                
                             }});
                             bindingsStreamCall.on('error', (error) => {{ 
                                 console.error(error);
