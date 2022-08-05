@@ -617,14 +617,16 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
         }
     '''
 
-    f_extract_type_string = '''
-        function extract_type_string(string_to_parse) {
+    f_extract_info_string = '''
+        function extract_info_string(string_to_parse) {
             idx_slash = string_to_parse.lastIndexOf("/");
             substr_q = string_to_parse.slice(idx_slash + 1); 
             if (substr_q) {
                 idx_hash = substr_q.indexOf("#");
-                if (idx_hash)
-                    return type = substr_q.slice(idx_hash + 1); 
+                if (idx_hash) {
+                    let type_name = substr_q.slice(idx_hash + 1); 
+                    return [type_name, string_to_parse.replace(type_name, '')];
+                } 
             }
         }
     '''
@@ -685,13 +687,13 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
     f_query_clicked_node_formatting = '''
 
             function format_query_clicked_node(clicked_node_id) {
-            
+
                 let filter_s_type = '';
                 let filter_s = '';
                 let filter_o_type = '';
                 let filter_o = '';
                 let filter_p_literal = '';
-                for (let prefix_idx in prefixes_graph) {
+/*                for (let prefix_idx in prefixes_graph) {
                     let checkbox_config = document.getElementById(prefix_idx + '_filter');
                     if (checkbox_config !== null && !checkbox_config.checked) {
                         let values_input = checkbox_config.value.split(",");
@@ -704,7 +706,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                         }
                     }
                 }
-
+*/
                 let query = `CONSTRUCT {
                     ?s ?p <${clicked_node_id}> ;
                         a ?s_type ;
@@ -877,16 +879,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                 obj_node['x'] = position_clicked_node.x;
                 obj_node['y'] = position_clicked_node.y;
             }
-            let type_name;
-            if(binding.predicate.value.endsWith('#type'))
-                type_name = extract_type_string(obj_id);
             
             if(!nodes.get(subj_id))
                 nodes.add([subj_node]);
             
             if(binding.predicate.value.endsWith('#type')) {
                 // extract type name
-                type_name = extract_type_string(obj_id);
+                let info_obj = extract_info_string(obj_id);;
+                let type_name = info_obj[0]; 
+                let prefix = info_obj[1];
                 let subj_node_to_update = nodes.get(subj_id);
                 // check type_name property of the node ahs already been defined previously
                 if(subj_node_to_update !== null && !('type_name' in subj_node_to_update)) {
@@ -933,6 +934,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                     original_label: subj_node_to_update['label'],
                                     title: subj_node_to_update['title'],
                                     type_name: type_name,
+                                    prefix: prefix,
                                     displayed_type_name: node_properties['displayed_type_name'] ? node_properties['displayed_type_name'] : type_name,
                                     color: node_properties['color'],
                                     border: node_properties['color'],
@@ -1105,10 +1107,28 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                 process_binding(binding, clicked_node, apply_invisibility_new_nodes);
                             }});
                             bindingsStreamCall.on('end', () => {{
+                                // enable/disable subsets of nodes from the graph
+                                for (let prefix_idx in prefixes_graph) {{
+                                    let checkbox_config = document.getElementById(prefix_idx + '_filter');
+                                    if (checkbox_config !== null && !checkbox_config.checked) {{
+                                        let values_input = checkbox_config.value.split(",");
+                                        for (let value_input_idx in values_input) {{
+                                            // "${{prefixes_graph[values_input[value_input_idx].trim()]}}"
+                                            let origin_node_list = nodes.get({{
+                                                filter: function (item) {{
+                                                    return (item.prefix === prefixes_graph[values_input[value_input_idx].trim()]);
+                                                }}
+                                            }});
+                                            // console.log(origin_node_list);
+                                            nodes.remove(origin_node_list);
+                                        }}
+                                    }}
+                                }}
+                            
                                 // apply layout
                                 let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
                                 apply_layout(checked_radiobox);
-                                //
+                                // apply reductions
                                 if (checkbox_reduction !== undefined &&
                                     checkbox_reduction !== null &&
                                     clicked_node.type_name in graph_reductions_obj) {{
@@ -1215,7 +1235,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                     f_apply_reduction_change +
                                     f_generate_child_nodes +
                                     f_reset_graph +
-                                    f_extract_type_string +
+                                    f_extract_info_string +
                                     f_query_node_type +
                                     f_query_clicked_node_formatting +
                                     f_fix_release_nodes +
