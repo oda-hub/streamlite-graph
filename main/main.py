@@ -62,26 +62,45 @@ def stream_graph(cmd_line_args):
     graph_ttl_str = fd.read()
     fd.close()
     graph_config_obj = {}
+    nodes_graph_config_obj = {}
+    edges_graph_config_obj = {}
 
     graph_config_names_list = []
     for graph_config_fn in graph_config_fn_list:
         with open(graph_config_fn) as graph_config_fn_f:
             graph_config_loaded = json.load(graph_config_fn_f)
-        if graph_config_loaded is not None:
-            for config_type in graph_config_loaded:
-                graph_config_loaded[config_type]['config_file'] = graph_config_fn
-            graph_config_obj.update(graph_config_loaded)
-            graph_config_names_list.append(graph_config_fn)
+            nodes_graph_config_obj_loaded = graph_config_loaded.get('Nodes', {})
+            edges_graph_config_obj_loaded = graph_config_loaded.get('Edges', {})
+
+        if nodes_graph_config_obj_loaded:
+            for config_type in nodes_graph_config_obj_loaded:
+                nodes_graph_config_obj_loaded[config_type]['config_file'] = graph_config_fn
+            nodes_graph_config_obj.update(nodes_graph_config_obj_loaded)
+        if edges_graph_config_obj_loaded:
+            for config_type in edges_graph_config_obj_loaded:
+                edges_graph_config_obj_loaded[config_type]['config_file'] = graph_config_fn
+            edges_graph_config_obj.update(edges_graph_config_obj_loaded)
+            # graph_config_obj.update(graph_config_loaded)
+        graph_config_names_list.append(graph_config_fn)
     # for compatibility with Javascript
-    graph_config_obj_str = json.dumps(graph_config_obj)
+    nodes_graph_config_obj_str = json.dumps(nodes_graph_config_obj)
+    edges_graph_config_obj_str = json.dumps(edges_graph_config_obj)
 
     with open(graph_reduction_config_fn) as graph_reduction_config_fn_f:
         graph_reduction_config_obj = json.load(graph_reduction_config_fn_f)
     # for compatibility with Javascript
     graph_reductions_obj_str = json.dumps(graph_reduction_config_obj)
 
-    graph_utils.add_js_click_functionality(net, html_fn, graph_ttl_stream=graph_ttl_str, graph_config_obj_dict=graph_config_obj_str, graph_reductions_obj_dict=graph_reductions_obj_str)
-    graph_utils.set_html_content(net, html_fn, graph_config_names_list=graph_config_names_list, graph_config_obj_dict=graph_config_obj, graph_reduction_config_dict=graph_reduction_config_obj)
+    graph_utils.add_js_click_functionality(net, html_fn,
+                                           graph_ttl_stream=graph_ttl_str,
+                                           nodes_graph_config_obj_dict=nodes_graph_config_obj_str,
+                                           edges_graph_config_obj_dict=edges_graph_config_obj_str,
+                                           graph_reductions_obj_dict=graph_reductions_obj_str)
+    graph_utils.set_html_content(net, html_fn,
+                                 graph_config_names_list=graph_config_names_list,
+                                 nodes_graph_config_obj_dict=nodes_graph_config_obj,
+                                 edges_graph_config_obj_dict=edges_graph_config_obj,
+                                 graph_reduction_config_dict=graph_reduction_config_obj)
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')

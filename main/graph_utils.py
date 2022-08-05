@@ -116,7 +116,11 @@ def get_edge_label(edge: typing.Union[pydotplus.Edge]) -> str:
     return edge_label
 
 
-def set_html_content(net, output_path, graph_config_names_list=None, graph_config_obj_dict=None, graph_reduction_config_dict=None):
+def set_html_content(net, output_path,
+                     graph_config_names_list=None,
+                     nodes_graph_config_obj_dict=None,
+                     edges_graph_config_obj_dict=None,
+                     graph_reduction_config_dict=None):
     html_code = '''
         <div style="margin: 5px 0px 15px 5px">
             <button type="button" onclick="reset_graph()">Reset graph!</button>
@@ -162,9 +166,9 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
     if graph_config_names_list is not None:
         html_code += ('<div style="border-right: 1px double; padding: 5px; background-color: #F7F7F7; margin: 5px 0px 15px 5px">'
                       '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable graphical configurations for the graph</h3>')
-        for config_node_type in graph_config_obj_dict:
-            if 'config_file' in graph_config_obj_dict[config_node_type]:
-                graph_config_name = graph_config_obj_dict[config_node_type]['config_file']
+        for config_node_type in nodes_graph_config_obj_dict:
+            if 'config_file' in nodes_graph_config_obj_dict[config_node_type]:
+                graph_config_name = nodes_graph_config_obj_dict[config_node_type]['config_file']
                 if graph_config_name not in checkboxes_config_added:
                     # for graph_config_name in graph_config_names_list:
                     html_code += f'''
@@ -191,11 +195,14 @@ def set_html_content(net, output_path, graph_config_names_list=None, graph_confi
         out.write(net.html)
 
 
-def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_config_obj_dict=None, graph_reductions_obj_dict=None):
+def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
+                               nodes_graph_config_obj_dict=None,
+                               edges_graph_config_obj_dict=None,
+                               graph_reductions_obj_dict=None):
     f_graph_vars = f'''
     
         // initialize global variables and graph configuration
-        const graph_config_obj_default = {{ 
+        const graph_node_config_obj_default = {{ 
             "default": {{
                 "shape": "box",
                 "color": "#FFFFFF",
@@ -215,10 +222,23 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 "margin": 10
            }}
         }}
+        const graph_edge_config_obj_default = {{ 
+            "default": {{
+                config_file: null,
+                font: {{
+                      "multi": "html",
+                      "face": "courier",
+                      "size": 24
+                     }}
+           }}
+        }}
+        
         var graph_reductions_obj = JSON.parse('{graph_reductions_obj_dict}');
-        var graph_config_obj = JSON.parse('{graph_config_obj_dict}');
+        var nodes_graph_config_obj = JSON.parse('{nodes_graph_config_obj_dict}');
+        var edges_graph_config_obj = JSON.parse('{edges_graph_config_obj_dict}');
         
         const parser = new N3.Parser({{ format: 'ttl' }});
+        
         let prefixes_graph = {{}};
         const stack_promises = [];
         const store = new N3.Store();
@@ -430,6 +450,17 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
 
     f_toggle_graph_config = '''
     
+        function update_edges(edges_to_update, edge_properties) {
+            for (let i in edges_to_update) {
+                edge_to_update_id = edges_to_update[i]['id'];
+                edges.update({ 
+                    id: edge_to_update_id,
+                    font: edge_properties['font'],
+                    config_file: edge_properties['config_file']
+                });
+            }
+        }
+    
         function update_nodes(nodes_to_update, node_properties) {
             for (let i in nodes_to_update) {
                 node_to_update_id = nodes_to_update[i]['id'];
@@ -453,8 +484,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             }
             
             let legend_container = document.getElementById('legend_container');
-            for (let config in graph_config_obj) {
-                let check_box_config = document.getElementById('config_' + graph_config_obj[config]['config_file']);
+            for (let config in nodes_graph_config_obj) {
+                let check_box_config = document.getElementById('config_' + nodes_graph_config_obj[config]['config_file']);
                 if(check_box_config && check_box_config.checked) {
                 
                     let outer_li = document.createElement("li");
@@ -462,15 +493,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     outer_li.setAttribute("style", "position: relative; margin: 5px; font-size: small;");
                     
                     let color_span = document.createElement("span");
-                    let color = graph_config_obj[config]['color'];
+                    let color = nodes_graph_config_obj[config]['color'];
                     color_span.setAttribute("style", `border-style: solid; border-width: 1px; width: 14px; height: 14px; display: inline-block; position: absolute; background-color: ${color};`);
                     
                     let name_span = document.createElement("span");
                     name_span.setAttribute("style", "margin-left: 20px;");
                     
                     let legend_label = config;
-                    if (graph_config_obj[config].hasOwnProperty("displayed_type_name"))
-                        legend_label = graph_config_obj[config].displayed_type_name;
+                    if (nodes_graph_config_obj[config].hasOwnProperty("displayed_type_name"))
+                        legend_label = nodes_graph_config_obj[config].displayed_type_name;
                     
                     name_span.innerText = legend_label;
                     
@@ -484,17 +515,40 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
     
         function toggle_graph_config(check_box_element) {
             let checked_config_id = check_box_element.id;
+            let edges_graph_config_obj_asArray = Object.entries(edges_graph_config_obj);
+            let edge_config_subset = edges_graph_config_obj_asArray.filter(config => 'config_' + config[1].config_file === checked_config_id);
             if(check_box_element.checked) {
-                let graph_config_obj_asArray = Object.entries(graph_config_obj);
-                let config_subset =  graph_config_obj_asArray.filter(config => 'config_' + config[1].config_file === checked_config_id);
-                for (let config_idx in config_subset) {
-                    let node_properties = config_subset[config_idx][1];
+                let nodes_graph_config_obj_asArray = Object.entries(nodes_graph_config_obj);
+                let node_config_subset = nodes_graph_config_obj_asArray.filter(config => 'config_' + config[1].config_file === checked_config_id);
+                for (let config_idx in node_config_subset) {
+                    let node_properties = node_config_subset[config_idx][1];
                     let nodes_to_update = nodes.get({
                         filter: function (node) {
-                            return (node.type_name === config_subset[config_idx][0]);
+                            return (node.type_name === node_config_subset[config_idx][0]);
                         }
                     });
                     update_nodes(nodes_to_update, node_properties);
+                }
+                for (let config_idx in edge_config_subset) {
+                    // let edge_properties = edge_config_subset[config_idx][1];
+                    let edge_properties =  { ... graph_edge_config_obj_default['default'], ... edge_config_subset[config_idx][1]};
+                    // edge_properties['label'] = edge_properties.hasOwnProperty('displayed_type_name') ? edge_properties['displayed_type_name'] : literal_predicate;
+                    let edges_to_update = edges.get({
+                        filter: function (edge) {
+                            return (edge.original_label === edge_config_subset[config_idx][0]);
+                        }
+                    });
+                    // update_edges(edges_to_update, edge_properties);
+                    for (let i in edges_to_update) {
+                        edge_to_update_id = edges_to_update[i]['id'];
+                        let custom_label = edge_properties['displayed_type_name'];
+                        edges.update({
+                            id: edge_to_update_id,
+                            font: edge_properties['font'],
+                            label: custom_label,
+                            config_file: edge_properties['config_file']
+                        });
+                    }
                 }
             } else {
                 let nodes_to_update = nodes.get({
@@ -502,7 +556,26 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                         return ('config_' + node.config_file === checked_config_id);
                     }
                 });
-                update_nodes(nodes_to_update, graph_config_obj_default['default']);
+                update_nodes(nodes_to_update, graph_node_config_obj_default['default']);
+                
+                let edge_properties = graph_edge_config_obj_default['default'];
+                let edges_to_update = edges.get({
+                    filter: function (edge) {
+                        return ('config_' + edge.config_file === checked_config_id);
+                    }
+                });
+                // update_edges(edges_to_update, edge_properties);
+                for (let i in edges_to_update) {
+                    edge_to_update_id = edges_to_update[i]['id'];
+                    let original_label = edges_to_update[i]['original_label'];
+                    edges.update({ 
+                        id: edge_to_update_id,
+                        font: edge_properties['font'],
+                        label: original_label,
+                        config_file: edge_properties['config_file']
+                    });
+                }
+                
             }
             reset_legend();
         }
@@ -715,23 +788,21 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             let obj_id = binding.object.id ? binding.object.id : binding.object.value;
             let edge_id = subj_id + "_" + obj_id;
             
-            console.log(binding.predicate);
-            
             subj_node = {
                 id: subj_id,
                 label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 original_label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
                 clickable: true,
-                color: graph_config_obj_default['default']['color'],
-                shape: graph_config_obj_default['default']['shape'],
-                style: graph_config_obj_default['default']['style'],
-                border: graph_config_obj_default['default']['border'],
-                cellborder: graph_config_obj_default['default']['cellborder'],
-                value: graph_config_obj_default['default']['value'],
-                level: graph_config_obj_default['default']['level'],
-                config_file: graph_config_obj_default['default']['config_file'],
-                margin: graph_config_obj_default['default']['margin'],
+                color: graph_node_config_obj_default['default']['color'],
+                shape: graph_node_config_obj_default['default']['shape'],
+                style: graph_node_config_obj_default['default']['style'],
+                border: graph_node_config_obj_default['default']['border'],
+                cellborder: graph_node_config_obj_default['default']['cellborder'],
+                value: graph_node_config_obj_default['default']['value'],
+                level: graph_node_config_obj_default['default']['level'],
+                config_file: graph_node_config_obj_default['default']['config_file'],
+                margin: graph_node_config_obj_default['default']['margin'],
                 hidden: apply_invisibility_new_nodes,
                 font: {
                       'multi': "html",
@@ -742,12 +813,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 id: edge_id,
                 from: subj_id,
                 to: obj_id,
-                title: binding.predicate.value,
-                font: {
-                      'multi': "html",
-                      'face': "courier",
-                      'size': 24
-                     }
+                config_file: graph_edge_config_obj_default['default']['config_file'],
+                title: binding.predicate.value
             }
             obj_node = {
                 id: obj_id,
@@ -755,15 +822,15 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 original_label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
                 clickable: true,
-                color: graph_config_obj_default['default']['color'],
-                shape: graph_config_obj_default['default']['shape'],
-                style: graph_config_obj_default['default']['style'],
-                border: graph_config_obj_default['default']['border'],
-                cellborder: graph_config_obj_default['default']['cellborder'],
-                value: graph_config_obj_default['default']['value'],
-                config_file: graph_config_obj_default['default']['config_file'],
-                level: graph_config_obj_default['default']['level'],
-                margin: graph_config_obj_default['default']['margin'],
+                color: graph_node_config_obj_default['default']['color'],
+                shape: graph_node_config_obj_default['default']['shape'],
+                style: graph_node_config_obj_default['default']['style'],
+                border: graph_node_config_obj_default['default']['border'],
+                cellborder: graph_node_config_obj_default['default']['cellborder'],
+                value: graph_node_config_obj_default['default']['value'],
+                config_file: graph_node_config_obj_default['default']['config_file'],
+                level: graph_node_config_obj_default['default']['level'],
+                margin: graph_node_config_obj_default['default']['margin'],
                 hidden: apply_invisibility_new_nodes,
                 font: {
                       'multi': "html",
@@ -783,14 +850,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
             let type_name;
             if(binding.predicate.value.endsWith('#type'))
                 type_name = extract_type_string(obj_id);
-            //
-            let literal_predicate_index = edge_obj['title'].lastIndexOf("/");
-            let literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
-            if (literal_predicate) {
-                idx_hash = literal_predicate.indexOf("#");
-                if (idx_hash)
-                    literal_predicate = literal_predicate.slice(idx_hash + 1); 
-            }
             
             if(!nodes.get(subj_id))
                 nodes.add([subj_node]);
@@ -801,7 +860,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 let subj_node_to_update = nodes.get(subj_id);
                 // check type_name property of the node ahs already been defined previously
                 if(subj_node_to_update !== null && !('type_name' in subj_node_to_update)) {
-                    let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
+                    let node_properties =  { ... graph_node_config_obj_default['default'], ... (nodes_graph_config_obj[type_name] ? nodes_graph_config_obj[type_name] : graph_node_config_obj_default['default'])};
                     // displayed_literals_format:defaultValue:yes/defaultValue:no
                     // displayed_information:title/literals/both
                     if('displayed_information' in node_properties) {
@@ -835,7 +894,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                     let config_value = node_properties['config_file'];
                     let checkbox_config = document.getElementById('config_' + config_value);
                     if(checkbox_config && !checkbox_config.checked)
-                        node_properties = graph_config_obj_default['default'];
+                        node_properties = graph_node_config_obj_default['default'];
                     nodes.update({ id: subj_id,
                                     label: subj_node_to_update['label'],
                                     original_label: subj_node_to_update['label'],
@@ -854,10 +913,24 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                 }
             }
             else {
+                //
+                let literal_predicate_index = edge_obj['title'].lastIndexOf("/");
+                let literal_predicate = edge_obj['title'].slice(literal_predicate_index + 1);
+                if (literal_predicate) {
+                    idx_hash = literal_predicate.indexOf("#");
+                    if (idx_hash)
+                        literal_predicate = literal_predicate.slice(idx_hash + 1); 
+                }
                 if(literal_predicate)
                     edge_obj['title'] = literal_predicate;
                 if(!edges.get(edge_id)) {
-                    edge_obj['label'] = literal_predicate;
+                    
+                    let edge_properties =  { ... graph_edge_config_obj_default['default'], ... (edges_graph_config_obj[edge_obj['title']] ? edges_graph_config_obj[edge_obj['title']] : graph_edge_config_obj_default['default'])};
+                    edge_obj['original_label'] = literal_predicate;
+                    edge_obj['label'] = edge_properties.hasOwnProperty('displayed_type_name') ? edge_properties['displayed_type_name'] : literal_predicate;
+                    edge_obj['font'] = edge_properties['font'];
+                    edge_obj['config_file'] = edge_properties['config_file'];
+                    
                     edges.add([edge_obj]);
                 }
                 if(!nodes.get(obj_id)) {
@@ -876,7 +949,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None, graph_co
                             
                             if(subj_node_to_update !== null && 'type_name' in subj_node_to_update) {
                                 let type_name = subj_node_to_update['type_name']
-                                let node_properties =  { ... graph_config_obj_default['default'], ... (graph_config_obj[type_name] ? graph_config_obj[type_name] : graph_config_obj_default['default'])};
+                                let node_properties =  { ... graph_node_config_obj_default['default'], ... (nodes_graph_config_obj[type_name] ? nodes_graph_config_obj[type_name] : graph_node_config_obj_default['default'])};
                                 // displayed_literals_format:defaultValue:yes / defaultValue:no
                                 // displayed_information:title / literals / both
                                 if('literals_keyword_to_substitute' in node_properties) {
