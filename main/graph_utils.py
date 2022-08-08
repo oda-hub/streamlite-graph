@@ -120,8 +120,8 @@ def set_html_content(net, output_path,
                      graph_config_names_list=None,
                      nodes_graph_config_obj_dict=None,
                      edges_graph_config_obj_dict=None,
-                     graph_reduction_config_dict=None,
-                     graph_nodes_subset_config_dict=None):
+                     graph_reduction_config_obj_dict=None,
+                     graph_nodes_subset_config_obj_dict=None):
     html_code = '''
         <div style="margin: 5px 0px 15px 5px">
             <button type="button" onclick="reset_graph()">Reset graph!</button>
@@ -143,11 +143,11 @@ def set_html_content(net, output_path,
             </div>
         '''
 
-    if graph_nodes_subset_config_dict is not None:
+    if graph_nodes_subset_config_obj_dict is not None:
         html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
                       '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable selections for the graph</h3>')
-        for nodes_subset_obj in graph_nodes_subset_config_dict:
-            prefixes_values = graph_nodes_subset_config_dict[nodes_subset_obj]['prefixes']
+        for nodes_subset_obj in graph_nodes_subset_config_obj_dict:
+            prefixes_values = graph_nodes_subset_config_obj_dict[nodes_subset_obj]['prefixes']
             html_code += (f'''
                 <div style="margin: 5px">
                     <label><input type="checkbox" id="{nodes_subset_obj}_filter" 
@@ -158,14 +158,14 @@ def set_html_content(net, output_path,
                 </div>
             ''')
 
-    if graph_reduction_config_dict is not None:
+    if graph_reduction_config_obj_dict is not None:
         html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
                       '<h3 style="margin: 15px 0px 10px 5px;">Apply reductions on the graph</h3>')
-        for reduction_obj_id in graph_reduction_config_dict:
+        for reduction_obj_id in graph_reduction_config_obj_dict:
             html_code += (f'''
                 <div style="margin: 5px">
                     <label><input type="checkbox" id="reduction_config_{reduction_obj_id}" onchange="apply_reduction_change(this)"
-                    value="{reduction_obj_id}" unchecked>{graph_reduction_config_dict[reduction_obj_id]["name"]}</label>
+                    value="{reduction_obj_id}" unchecked>{graph_reduction_config_obj_dict[reduction_obj_id]["name"]}</label>
                 </div>
             ''')
         html_code += '</div>'
@@ -204,9 +204,10 @@ def set_html_content(net, output_path,
 
 
 def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
-                               nodes_graph_config_obj_dict=None,
-                               edges_graph_config_obj_dict=None,
-                               graph_reductions_obj_dict=None):
+                               nodes_graph_config_obj_str=None,
+                               edges_graph_config_obj_str=None,
+                               graph_reductions_obj_str=None,
+                               graph_nodes_subset_config_obj_str=None):
     f_graph_vars = f'''
     
         // initialize global variables and graph configuration
@@ -241,9 +242,10 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
            }}
         }}
         
-        var graph_reductions_obj = JSON.parse('{graph_reductions_obj_dict}');
-        var nodes_graph_config_obj = JSON.parse('{nodes_graph_config_obj_dict}');
-        var edges_graph_config_obj = JSON.parse('{edges_graph_config_obj_dict}');
+        var graph_reductions_obj = JSON.parse('{graph_reductions_obj_str}');
+        var nodes_graph_config_obj = JSON.parse('{nodes_graph_config_obj_str}');
+        var edges_graph_config_obj = JSON.parse('{edges_graph_config_obj_str}');
+        var subset_nodes_config_obj = JSON.parse('{graph_nodes_subset_config_obj_str}');
         
         const parser = new N3.Parser({{ format: 'ttl' }});
         

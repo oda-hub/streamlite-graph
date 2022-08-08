@@ -89,15 +89,18 @@ def stream_graph():
 
     graph_utils.add_js_click_functionality(net, html_fn,
                                            graph_ttl_stream=graph_ttl_str,
-                                           nodes_graph_config_obj_dict=nodes_graph_config_obj_str,
-                                           edges_graph_config_obj_dict=edges_graph_config_obj_str,
-                                           graph_reductions_obj_dict=graph_reductions_obj_str)
+                                           nodes_graph_config_obj_str=nodes_graph_config_obj_str,
+                                           edges_graph_config_obj_str=edges_graph_config_obj_str,
+                                           graph_reductions_obj_str=graph_reductions_obj_str,
+                                           graph_nodes_subset_config_obj_str=graph_nodes_subset_config_obj_str)
+
     graph_utils.set_html_content(net, html_fn,
                                  graph_config_names_list=graph_config_names_list,
                                  nodes_graph_config_obj_dict=nodes_graph_config_obj,
                                  edges_graph_config_obj_dict=edges_graph_config_obj,
-                                 graph_reduction_config_dict=graph_reduction_config_obj,
-                                 graph_nodes_subset_config_dict=graph_nodes_subset_config_obj)
+                                 graph_reduction_config_obj_dict=graph_reduction_config_obj,
+                                 graph_nodes_subset_config_obj_dict=graph_nodes_subset_config_obj)
+
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')
