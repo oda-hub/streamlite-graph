@@ -41,6 +41,8 @@ def stream_graph(cmd_line_args):
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph_two_commands.ttl'
 
+    graph_nodes_subset_config_fn = 'graph_data/graph_nodes_subset_config.json'
+
     graph_reduction_config_fn = 'graph_data/graph_reduction_config.json'
 
     col1, col2, col3 = st.columns(3)
@@ -61,7 +63,6 @@ def stream_graph(cmd_line_args):
     fd = open(graph_selected_fn, 'r')
     graph_ttl_str = fd.read()
     fd.close()
-    graph_config_obj = {}
     nodes_graph_config_obj = {}
     edges_graph_config_obj = {}
 
@@ -80,7 +81,6 @@ def stream_graph(cmd_line_args):
             for config_type in edges_graph_config_obj_loaded:
                 edges_graph_config_obj_loaded[config_type]['config_file'] = graph_config_fn
             edges_graph_config_obj.update(edges_graph_config_obj_loaded)
-            # graph_config_obj.update(graph_config_loaded)
         graph_config_names_list.append(graph_config_fn)
     # for compatibility with Javascript
     nodes_graph_config_obj_str = json.dumps(nodes_graph_config_obj)
@@ -88,8 +88,15 @@ def stream_graph(cmd_line_args):
 
     with open(graph_reduction_config_fn) as graph_reduction_config_fn_f:
         graph_reduction_config_obj = json.load(graph_reduction_config_fn_f)
+
     # for compatibility with Javascript
     graph_reductions_obj_str = json.dumps(graph_reduction_config_obj)
+
+    with open(graph_nodes_subset_config_fn) as graph_nodes_subset_config_fn_f:
+        graph_nodes_subset_config_obj = json.load(graph_nodes_subset_config_fn_f)
+
+    # for compatibility with Javascript
+    graph_nodes_subset_config_obj_str = json.dumps(graph_nodes_subset_config_obj)
 
     graph_utils.add_js_click_functionality(net, html_fn,
                                            graph_ttl_stream=graph_ttl_str,
@@ -100,7 +107,8 @@ def stream_graph(cmd_line_args):
                                  graph_config_names_list=graph_config_names_list,
                                  nodes_graph_config_obj_dict=nodes_graph_config_obj,
                                  edges_graph_config_obj_dict=edges_graph_config_obj,
-                                 graph_reduction_config_dict=graph_reduction_config_obj)
+                                 graph_reduction_config_dict=graph_reduction_config_obj,
+                                 graph_nodes_subset_config_dict=graph_nodes_subset_config_obj)
     graph_utils.update_js_libraries(html_fn)
 
     # webbrowser.open('graph_data/graph.html')

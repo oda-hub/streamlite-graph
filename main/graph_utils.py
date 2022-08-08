@@ -120,7 +120,8 @@ def set_html_content(net, output_path,
                      graph_config_names_list=None,
                      nodes_graph_config_obj_dict=None,
                      edges_graph_config_obj_dict=None,
-                     graph_reduction_config_dict=None):
+                     graph_reduction_config_dict=None,
+                     graph_nodes_subset_config_dict=None):
     html_code = '''
         <div style="margin: 5px 0px 15px 5px">
             <button type="button" onclick="reset_graph()">Reset graph!</button>
@@ -140,16 +141,23 @@ def set_html_content(net, output_path,
                     Hierarchical</label>
                 </div>
             </div>
-            
-            <div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">
-                <h3 style="margin: 15px 0px 10px 5px;">Enable/disable selections for the graph</h3>
-                
-                <div style="margin: 5px">
-                    <label><input type="checkbox" id="oda_filter" value="oda, odas" onchange="enable_filter(this)" checked>
-                    oda astroquery-related nodes</label>
-                </div>
-            </div>
         '''
+
+    if graph_nodes_subset_config_dict is not None:
+        html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
+                      '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable selections for the graph</h3>')
+        for nodes_subset_obj in graph_nodes_subset_config_dict:
+            prefixes_values = graph_nodes_subset_config_dict[nodes_subset_obj]['prefixes']
+            html_code += (f'''
+                <div style="margin: 5px">
+                    <label><input type="checkbox" id="{nodes_subset_obj}_filter" 
+                        value="{prefixes_values}" 
+                        onchange="enable_filter(this)" checked>
+                        oda astroquery-related nodes</label>
+                    </div>
+                </div>
+            ''')
+
     if graph_reduction_config_dict is not None:
         html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
                       '<h3 style="margin: 15px 0px 10px 5px;">Apply reductions on the graph</h3>')
