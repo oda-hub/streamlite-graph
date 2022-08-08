@@ -17,26 +17,15 @@ st.set_page_config(page_title=apptitle, page_icon=":eyeglasses:", layout="wide")
 st.title('Graph Quick-Look')
 
 
-def stream_graph(cmd_line_args):
+def stream_graph():
 
-    graph_config_fn_list = []
-    graph_exports_dict = {}
-    if cmd_line_args:
-        for cmd_line_arg in cmd_line_args:
-            if cmd_line_arg.endswith('.json'):
-                graph_config_fn_list.append(cmd_line_arg)
-            if cmd_line_arg.endswith('.ttl'):
-                graph_exports_dict[cmd_line_arg] = cmd_line_arg
+    graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
 
-    if not graph_config_fn_list:
-        graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
-
-    if not graph_exports_dict:
-        graph_exports_dict = {
-            # 'oda-sdss': '',
-            'renku-aqs-test-case one execution': 'graph_data/graph.ttl',
-            'renku-aqs-test-case two executions': 'graph_data/graph_two_commands.ttl',
-        }
+    graph_exports_dict = {
+        # 'oda-sdss': '',
+        'renku-aqs-test-case one execution': 'graph_data/graph.ttl',
+        'renku-aqs-test-case two executions': 'graph_data/graph_two_commands.ttl',
+    }
 
     html_fn = 'graph_data/graph.html'
     ttl_fn = 'graph_data/graph_two_commands.ttl'
@@ -118,6 +107,4 @@ def stream_graph(cmd_line_args):
 
 
 if __name__ == '__main__':
-    cmd_line_args = sys.argv[1:]
-
-    stream_graph(cmd_line_args)
+    stream_graph()
