@@ -22,7 +22,6 @@ def stream_graph():
     graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
 
     graph_exports_dict = {
-        # 'oda-sdss': '',
         'renku-aqs-test-case one execution': 'graph_data/graph.ttl',
         'renku-aqs-test-case two executions': 'graph_data/graph_two_commands.ttl',
     }

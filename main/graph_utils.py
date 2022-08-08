@@ -408,7 +408,8 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                             },
                             "physics": {
                                 enabled: true,
-                                minVelocity: 1,
+                                minVelocity: 0.75,
+                                timestep: 0.35,
                                 maxVelocity: 100,
                                 solver: "hierarchicalRepulsion",
                                 hierarchicalRepulsion: {
@@ -435,7 +436,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                             "physics": {
                                 enabled: true,
                                 minVelocity: 0.75,
-                                 timestep: 0.35,
+                                timestep: 0.35,
                                 maxVelocity: 100,
                                 solver: "repulsion",
                                 forceAtlas2Based: {
@@ -476,33 +477,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                 }
             });
             edges.remove(edges_to_remove);
-        }
-    
-        function update_edges(edges_to_update, edge_properties) {
-            for (let i in edges_to_update) {
-                edge_to_update_id = edges_to_update[i]['id'];
-                edges.update({ 
-                    id: edge_to_update_id,
-                    font: edge_properties['font'],
-                    config_file: edge_properties['config_file']
-                });
-            }
-        }
-    
-        function update_nodes(nodes_to_update, node_properties) {
-            for (let i in nodes_to_update) {
-                node_to_update_id = nodes_to_update[i]['id'];
-                nodes.update({ 
-                    id: node_to_update_id,
-                    color: node_properties['color'],
-                    border: node_properties['color'],
-                    cellborder: node_properties['color'],
-                    shape: node_properties['shape'],
-                    style: node_properties['style'],
-                    value: node_properties['value'],
-                    config_file: node_properties['config_file'],
-                });
-            }
         }
         
         function reset_legend() {
@@ -581,7 +555,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                             return (edge.original_label === edge_config_subset[config_idx][0]);
                         }
                     });
-                    // update_edges(edges_to_update, edge_properties);
                     for (let i in edges_to_update) {
                         edge_to_update_id = edges_to_update[i]['id'];
                         let custom_label = edge_properties['displayed_type_name'];
@@ -599,7 +572,6 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                         return ('config_' + node.config_file === checked_config_id);
                     }
                 });
-                // update_nodes(nodes_to_update, graph_node_config_obj_default['default']);
                 let node_properties = graph_node_config_obj_default['default'];
                 for (let i in nodes_to_update) {
                     node_to_update_id = nodes_to_update[i]['id'];
