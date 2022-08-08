@@ -24,9 +24,7 @@ def set_graph_options(net, output_path):
                 },
             },
             edges: {
-                smooth: {
-                    type: "continuous"
-                },
+                smooth: false,
                 arrows: {
                   to: {
                     enabled: true,
@@ -133,11 +131,11 @@ def set_html_content(net, output_path,
                 <h3 style="margin: 15px 0px 10px 5px;">Change graph layout</h3>
                 
                 <div style="margin: 5px">
-                    <label><input type="radio" id="repulsion_layout" name="graph_layout" value="repulsion" onchange="apply_layout(this)" checked>
+                    <label><input type="radio" id="repulsion_layout" name="graph_layout" value="repulsion" onchange="toggle_layout(this)" checked>
                     Random</label>
                 </div>
                 <div style="margin: 5px">
-                    <label><input type="radio" id="hierarchical_layout" name="graph_layout" value="hierarchicalRepulsion" onchange="apply_layout(this)" unchecked>
+                    <label><input type="radio" id="hierarchical_layout" name="graph_layout" value="hierarchicalRepulsion" onchange="toggle_layout(this)" unchecked>
                     Hierarchical</label>
                 </div>
             </div>
@@ -238,7 +236,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                       "multi": "html",
                       "face": "courier",
                       "size": 24
-                     }}
+                     }},
            }}
         }}
         
@@ -362,7 +360,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                         }
                     }
                     let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                    apply_layout(checked_radiobox);
+                    toggle_layout(checked_radiobox);
                 }
             }
         }
@@ -391,22 +389,29 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
     '''
 
     f_apply_layout = '''
-        function apply_layout(radio_box_element) {
+        function toggle_layout(radio_box_element) {
             let layout_id = radio_box_element.id;
             let layout_name = layout_id.split("_")[0];
+            apply_layout(layout_name);
+        }
+    
+        function apply_layout(layout_name) {
             switch (layout_name) {
                 case "hierarchical":
                     network.setOptions(
                         {
-                            "layout": {
-                                "hierarchical": {
+                            edges: {
+                                smooth: false
+                            },
+                            layout: {
+                                hierarchical: {
                                     enabled: true,
                                     levelSeparation: 300,
                                     sortMethod: "directed",
                                     nodeSpacing: 150
                                 }
                             },
-                            "physics": {
+                            physics: {
                                 enabled: true,
                                 minVelocity: 0.75,
                                 timestep: 0.35,
@@ -428,23 +433,20 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                 case "repulsion": 
                     network.setOptions(
                         {
-                            "layout": {
+                            edges: {
+                                smooth: false
+                            },
+                            layout: {
                                 "hierarchical": {
                                     "enabled": false
                                 }
                             },
-                            "physics": {
+                            physics: {
                                 enabled: true,
                                 minVelocity: 0.75,
                                 timestep: 0.35,
                                 maxVelocity: 100,
                                 solver: "repulsion",
-                                forceAtlas2Based: {
-                                    gravitationalConstant: -3500,
-                                    centralGravity: 0.09,
-                                    springLength: 300,
-                                    springConstant: 1
-                                },
                                 repulsion: {
                                     nodeDistance: 350,
                                     centralGravity: 1.05,
@@ -661,7 +663,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                 });
                 bindingsStreamCall.on('end', () => {
                     let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                    apply_layout(checked_radiobox);
+                    toggle_layout(checked_radiobox);
                 });
                 bindingsStreamCall.on('error', (error) => {
                     console.error(error);
@@ -1132,7 +1134,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                 //
                                 // apply layout
                                 let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                                apply_layout(checked_radiobox);
+                                toggle_layout(checked_radiobox);
                                 //
                                 // apply reductions
                                 if (checkbox_reduction !== undefined &&
@@ -1208,7 +1210,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
             }});
             bindingsStreamCall.on('end', () => {{
                 let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
-                apply_layout(checked_radiobox);
+                toggle_layout(checked_radiobox);
             }});
             bindingsStreamCall.on('error', (error) => {{ 
                 console.error(error);
