@@ -263,9 +263,17 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
 
     f_enable_filter = '''
         function enable_filter(check_box_element) {
-            /* if(check_box_element.checked) {
-                
-            } */
+            let values_input = check_box_element.value.split(",");
+            for (let value_input_idx in values_input) {
+                let nodes_to_filter = nodes.get({
+                    filter: function (item) {
+                        return (item.prefix === prefixes_graph[values_input[value_input_idx].trim()]);
+                    }
+                });
+                nodes_to_filter.forEach(node => {
+                    nodes.update({id: node.id, hidden: !check_box_element.checked, filtered_out: !check_box_element.checked});
+                });
+            }
         }
     '''
 
@@ -449,6 +457,16 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
     '''
 
     f_toggle_graph_config = '''
+    
+        function remove_unused_edges() {
+            // remove edges that are not visible because one of the connected nodes has been removed
+            let edges_to_remove = edges.get({
+                filter: function (item) {
+                    return (nodes.get(item.from) === null || nodes.get(item.to) === null);
+                }
+            });
+            edges.remove(edges_to_remove);
+        }
     
         function update_edges(edges_to_update, edge_properties) {
             for (let i in edges_to_update) {
@@ -826,6 +844,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                 original_label: binding.subject.value ? binding.subject.value : binding.subject.id,
                 title: subj_id,
                 clickable: true,
+                filtered_out: false,
                 color: graph_node_config_obj_default['default']['color'],
                 shape: graph_node_config_obj_default['default']['shape'],
                 style: graph_node_config_obj_default['default']['style'],
@@ -854,6 +873,7 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                 original_label: binding.object.value ? binding.object.value : binding.object.id,
                 title: obj_id,
                 clickable: true,
+                filtered_out: false,
                 color: graph_node_config_obj_default['default']['color'],
                 shape: graph_node_config_obj_default['default']['shape'],
                 style: graph_node_config_obj_default['default']['style'],
@@ -1109,25 +1129,29 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                 process_binding(binding, clicked_node, apply_invisibility_new_nodes);
                             }});
                             bindingsStreamCall.on('end', () => {{
-                                // enable/disable subsets of nodes from the graph
+                                // enable/disable subsets of nodes selection from the graph
                                 for (let prefix_idx in prefixes_graph) {{
                                     let checkbox_config = document.getElementById(prefix_idx + '_filter');
                                     if (checkbox_config !== null && !checkbox_config.checked) {{
                                         let values_input = checkbox_config.value.split(",");
                                         for (let value_input_idx in values_input) {{
-                                            let nodes_to_remove = nodes.get({{
+                                            let nodes_to_filter = nodes.get({{
                                                 filter: function (item) {{
                                                     return (item.prefix === prefixes_graph[values_input[value_input_idx].trim()]);
                                                 }}
                                             }});
-                                            nodes.remove(nodes_to_remove);
+                                            // nodes.remove(nodes_to_filter);
+                                            nodes_to_filter.forEach(node => {{
+                                                nodes.update({{id: node.id, hidden: true, filtered_out: true}});
+                                            }});
                                         }}
                                     }}
                                 }}
-                            
+                                //
                                 // apply layout
                                 let checked_radiobox = document.querySelector('input[name="graph_layout"]:checked');
                                 apply_layout(checked_radiobox);
+                                //
                                 // apply reductions
                                 if (checkbox_reduction !== undefined &&
                                     checkbox_reduction !== null &&
@@ -1143,23 +1167,18 @@ def add_js_click_functionality(net, output_path, graph_ttl_stream=None,
                                         absorb_nodes(origin_node_list, predicates_to_absorb_list);
                                     }}
                                 }}
+                                //
                                 // show any hidden nodes
                                 const hidden_nodes_ids = nodes.get({{
                                     filter: function (item) {{
-                                        return (item.hasOwnProperty("hidden") && item.hidden === true);
+                                        return (item.hasOwnProperty("hidden") && item.hidden === true && item.filtered_out === false);
                                     }}
                                 }});
                                 hidden_nodes_ids.forEach(node => {{
                                     nodes.update({{id: node.id, hidden: false}});
                                 }});
-                                // remove edges that are not visible because one of the connected nodes has been rmeoved
-                                let edges_to_remove = edges.get({{
-                                    filter: function (item) {{
-                                        return (nodes.get(item.from) === null || nodes.get(item.to) === null);
-                                    }}
-                                }});
-                                edges.remove(edges_to_remove);
-                                
+                                // remove edges that are not visible because one of the connected nodes has been removed
+                                remove_unused_edges();
                             }});
                             bindingsStreamCall.on('error', (error) => {{ 
                                 console.error(error);
