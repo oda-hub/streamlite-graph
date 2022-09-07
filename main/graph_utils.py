@@ -143,7 +143,7 @@ def set_html_content(net, output_path,
 
     if graph_nodes_subset_config_obj_dict is not None:
         html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
-                      '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable selections for the graph</h3>')
+                      '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable selections</h3>')
         for nodes_subset_obj in graph_nodes_subset_config_obj_dict:
             prefixes_values = graph_nodes_subset_config_obj_dict[nodes_subset_obj]['prefixes']
             html_code += (f'''
@@ -158,7 +158,7 @@ def set_html_content(net, output_path,
 
     if graph_reduction_config_obj_dict is not None:
         html_code += ('<div style="background-color: #F7F7F7; border-right: 1px double; padding: 5px; margin: 5px 0px 10px 5px">'
-                      '<h3 style="margin: 15px 0px 10px 5px;">Apply reductions on the graph</h3>')
+                      '<h3 style="margin: 15px 0px 10px 5px;">Apply reductions</h3>')
         for reduction_obj_id in graph_reduction_config_obj_dict:
             html_code += (f'''
                 <div style="margin: 5px">
@@ -171,7 +171,7 @@ def set_html_content(net, output_path,
     checkboxes_config_added = []
     if graph_config_names_list is not None:
         html_code += ('<div style="border-right: 1px double; padding: 5px; background-color: #F7F7F7; margin: 5px 0px 15px 5px">'
-                      '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable graphical configurations for the graph</h3>')
+                      '<h3 style="margin: 15px 0px 10px 5px;">Enable/disable graphical configurations</h3>')
         for config_node_type in nodes_graph_config_obj_dict:
             if 'config_file' in nodes_graph_config_obj_dict[config_node_type]:
                 graph_config_name = nodes_graph_config_obj_dict[config_node_type]['config_file']
