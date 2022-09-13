@@ -1,0 +1,31 @@
+{
+   "Nodes": {
+      "Run": {
+         "shape": "box",
+         "color": "#adb6ce",
+         "style": "filled",
+         "value": 35,
+         "level": 0,
+         "font": {
+              "size": 24,
+              "face": "courier"
+          },
+         "displayed_type_name": "Query",
+         "displayed_information": "literals",
+         "displayed_literals_format": "title:no",
+         "literals_keyword_to_substitute": "title:get_images,query_object,query_region"
+      },
+      "Activity": {
+         "shape": "box",
+         "color": "#00FC10",
+         "style": "filled",
+         "value": 35,
+         "level": 0
+      }
+   },
+   "Edges": {
+      "hasTarget": {
+         "displayed_type_name": "query"
+      }
+   }
+}

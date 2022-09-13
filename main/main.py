@@ -1,16 +1,14 @@
-import pydotplus
+import json
 import os
-import yaml
-import bs4
+import sys
 
 from pyvis.network import Network
+
 import graph_utils as graph_utils
 import streamlit as st
 import streamlit.components.v1 as components
 
 __this_dir__ = os.path.join(os.path.abspath(os.path.dirname(__file__)))
-graph_configuration = yaml.load(open(os.path.join(__this_dir__, "../graph_data/graph_config.yaml")), Loader=yaml.SafeLoader)
-type_configuration = yaml.load(open(os.path.join(__this_dir__, "../graph_data/type_label_values_dict.yaml")), Loader=yaml.SafeLoader)
 
 # -- Set page config
 apptitle = 'Graph Quickview'
@@ -20,98 +18,93 @@ st.title('Graph Quick-Look')
 
 
 def stream_graph():
-    # dot_fn = 'graph_data/graph_base.dot'
-    dot_fn = 'graph_data/graph.dot'
-    html_fn = 'graph_data/graph.html'
 
-    pydot_graph = pydotplus.graph_from_dot_file(dot_fn)
+    graph_config_fn_list = ['graph_data/graph_config.json', 'graph_data/graph_config_1.json']
+
+    graph_exports_dict = {
+        'renku-aqs-test-case one execution': 'graph_data/graph.ttl',
+        'renku-aqs-test-case two executions': 'graph_data/graph_two_commands.ttl',
+    }
+
+    html_fn = 'graph_data/graph.html'
+    ttl_fn = 'graph_data/graph_two_commands.ttl'
+
+    graph_nodes_subset_config_fn = 'graph_data/graph_nodes_subset_config.json'
+
+    graph_reduction_config_fn = 'graph_data/graph_reduction_config.json'
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        graph_selected = st.selectbox('Which graph example would you like to explore?',
+                                      graph_exports_dict.keys())
+
     net = Network(
         height='750px', width='100%',
     )
 
-    graph_utils.set_graph_options(net)
-
-    hidden_nodes_dic = {}
-    hidden_edges = []
-
-    for node in pydot_graph.get_nodes():
-        id_node = graph_utils.get_id_node(node)
-        if id_node is not None:
-            type_node = type_configuration[id_node]
-            node_label, node_title = graph_utils.get_node_graphical_info(node, type_node)
-            node_configuration = graph_configuration.get(type_node,
-                                                         graph_configuration['Default'])
-            node_value = node_configuration.get('value', graph_configuration['Default']['value'])
-            node_level = node_configuration.get('level', graph_configuration['Default']['level'])
-            hidden = False
-            if type_node.startswith('CommandOutput') or type_node.startswith('CommandInput')\
-                    or type_node.startswith('Angle') or type_node.startswith('Pixels') \
-                    or type_node.startswith('Coordinates') or type_node.startswith('Position') \
-                    or type_node.startswith('SkyCoordinates'):
-                hidden = True
-            if not hidden:
-                net.add_node(node.get_name(),
-                             label=node_label,
-                             title=node_title,
-                             type=type_node,
-                             color=node_configuration['color'],
-                             level=node_level,
-                             shape=node_configuration['shape'],
-                             font={
-                                 'multi': "html",
-                                 'face': "courier"
-                                })
-                             # value=node_value)
-            else:
-                node_info = dict(
-                    id=node.get_name(),
-                    label=node_label,
-                    title=node_title,
-                    type=type_node,
-                    color=node_configuration['color'],
-                    shape=node_configuration['shape'],
-                    level=node_level,
-                    font={
-                        'multi': "html",
-                        'face': "courier"
-                    }
-                )
-                    # value=node_value,
-
-                hidden_nodes_dic[node.get_name()] = node_info
-
-    # list of edges and simple color change
-    for edge in pydot_graph.get_edge_list():
-        edge_label = graph_utils.get_edge_label(edge)
-        source_node = edge.get_source()
-        dest_node = edge.get_destination()
-        hidden = False
-        edge_id = (source_node + '_' + dest_node)
-        if edge_label.startswith('isInputOf') or edge_label.startswith('hasOutputs') \
-                or edge_label.startswith('isUsing'):
-            hidden = True
-        if source_node is not None and dest_node is not None:
-            if not hidden:
-                net.add_edge(source_node, dest_node,
-                             id=edge_id,
-                             title=edge_label)
-            else:
-                edge_info = dict(
-                    source_node=source_node,
-                    dest_node=dest_node,
-                    id=edge_id,
-                    title=edge_label
-                )
-                hidden_edges.append(edge_info)
-
     # to tweak physics related options
     net.write_html(html_fn)
 
-    graph_utils.add_js_click_functionality(net, html_fn, hidden_nodes_dic, hidden_edges)
+    graph_utils.set_graph_options(net, html_fn)
 
-    graph_utils.update_vis_library_version(html_fn)
+    graph_selected_fn = graph_exports_dict.get(graph_selected, ttl_fn)
+    fd = open(graph_selected_fn, 'r')
+    graph_ttl_str = fd.read()
+    fd.close()
+    nodes_graph_config_obj = {}
+    edges_graph_config_obj = {}
+
+    graph_config_names_list = []
+    for graph_config_fn in graph_config_fn_list:
+        with open(graph_config_fn) as graph_config_fn_f:
+            graph_config_loaded = json.load(graph_config_fn_f)
+            nodes_graph_config_obj_loaded = graph_config_loaded.get('Nodes', {})
+            edges_graph_config_obj_loaded = graph_config_loaded.get('Edges', {})
+
+        if nodes_graph_config_obj_loaded:
+            for config_type in nodes_graph_config_obj_loaded:
+                nodes_graph_config_obj_loaded[config_type]['config_file'] = graph_config_fn
+            nodes_graph_config_obj.update(nodes_graph_config_obj_loaded)
+        if edges_graph_config_obj_loaded:
+            for config_type in edges_graph_config_obj_loaded:
+                edges_graph_config_obj_loaded[config_type]['config_file'] = graph_config_fn
+            edges_graph_config_obj.update(edges_graph_config_obj_loaded)
+        graph_config_names_list.append(graph_config_fn)
+    # for compatibility with Javascript
+    nodes_graph_config_obj_str = json.dumps(nodes_graph_config_obj)
+    edges_graph_config_obj_str = json.dumps(edges_graph_config_obj)
+
+    with open(graph_reduction_config_fn) as graph_reduction_config_fn_f:
+        graph_reduction_config_obj = json.load(graph_reduction_config_fn_f)
+
+    # for compatibility with Javascript
+    graph_reductions_obj_str = json.dumps(graph_reduction_config_obj)
+
+    with open(graph_nodes_subset_config_fn) as graph_nodes_subset_config_fn_f:
+        graph_nodes_subset_config_obj = json.load(graph_nodes_subset_config_fn_f)
+
+    # for compatibility with Javascript
+    graph_nodes_subset_config_obj_str = json.dumps(graph_nodes_subset_config_obj)
+
+    graph_utils.add_js_click_functionality(net, html_fn,
+                                           graph_ttl_stream=graph_ttl_str,
+                                           nodes_graph_config_obj_str=nodes_graph_config_obj_str,
+                                           edges_graph_config_obj_str=edges_graph_config_obj_str,
+                                           graph_reductions_obj_str=graph_reductions_obj_str,
+                                           graph_nodes_subset_config_obj_str=graph_nodes_subset_config_obj_str)
+
+    graph_utils.set_html_content(net, html_fn,
+                                 graph_config_names_list=graph_config_names_list,
+                                 nodes_graph_config_obj_dict=nodes_graph_config_obj,
+                                 edges_graph_config_obj_dict=edges_graph_config_obj,
+                                 graph_reduction_config_obj_dict=graph_reduction_config_obj,
+                                 graph_nodes_subset_config_obj_dict=graph_nodes_subset_config_obj)
+
+    graph_utils.update_js_libraries(html_fn)
+
     # webbrowser.open('graph_data/graph.html')
     st.components.v1.html(open(html_fn).read(), width=1700, height=1000, scrolling=True)
+
     st.markdown("***")
 
 
